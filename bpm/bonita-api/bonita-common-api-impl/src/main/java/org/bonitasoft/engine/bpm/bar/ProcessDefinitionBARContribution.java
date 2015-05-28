@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2012-2013 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -41,6 +41,10 @@ import org.bonitasoft.engine.bpm.bar.xml.CatchSignalEventTriggerDefinitionBindin
 import org.bonitasoft.engine.bpm.bar.xml.ConditionalExpressionBinding;
 import org.bonitasoft.engine.bpm.bar.xml.ConnectorDefinitionBinding;
 import org.bonitasoft.engine.bpm.bar.xml.ConnectorDefinitionInputBinding;
+import org.bonitasoft.engine.bpm.bar.xml.ConstraintDefinitionBinding;
+import org.bonitasoft.engine.bpm.bar.xml.ContextDefinitionBinding;
+import org.bonitasoft.engine.bpm.bar.xml.ContextEntryBinding;
+import org.bonitasoft.engine.bpm.bar.xml.ContractDefinitionBinding;
 import org.bonitasoft.engine.bpm.bar.xml.CorrelationBinding;
 import org.bonitasoft.engine.bpm.bar.xml.CorrelationKeyBinding;
 import org.bonitasoft.engine.bpm.bar.xml.CorrelationValueBinding;
@@ -59,6 +63,7 @@ import org.bonitasoft.engine.bpm.bar.xml.ExpressionBinding;
 import org.bonitasoft.engine.bpm.bar.xml.FlowElementBinding;
 import org.bonitasoft.engine.bpm.bar.xml.GatewayDefinitionBinding;
 import org.bonitasoft.engine.bpm.bar.xml.IncomingTransitionRefBinding;
+import org.bonitasoft.engine.bpm.bar.xml.InputDefinitionBinding;
 import org.bonitasoft.engine.bpm.bar.xml.IntermediateCatchEventBinding;
 import org.bonitasoft.engine.bpm.bar.xml.IntermediateThrowEventDefinitionBinding;
 import org.bonitasoft.engine.bpm.bar.xml.LeftOperandBinding;
@@ -91,7 +96,7 @@ import org.bonitasoft.engine.bpm.bar.xml.TransitionDefinitionBinding;
 import org.bonitasoft.engine.bpm.bar.xml.UserFilterDefinitionBinding;
 import org.bonitasoft.engine.bpm.bar.xml.UserTaskDefinitionBinding;
 import org.bonitasoft.engine.bpm.bar.xml.XMLProcessDefinition;
-import org.bonitasoft.engine.bpm.flownode.impl.FlowElementContainerDefinition;
+import org.bonitasoft.engine.bpm.flownode.FlowElementContainerDefinition;
 import org.bonitasoft.engine.bpm.process.DesignProcessDefinition;
 import org.bonitasoft.engine.exception.BonitaRuntimeException;
 import org.bonitasoft.engine.io.IOUtil;
@@ -177,6 +182,11 @@ public class ProcessDefinitionBARContribution implements BusinessArchiveContribu
         bindings.add(TargetFlowNodeBinding.class);
         bindings.add(SubProcessDefinitionBinding.class);
         bindings.add(FlowElementBinding.class);
+        bindings.add(ContractDefinitionBinding.class);
+        bindings.add(ContextDefinitionBinding.class);
+        bindings.add(ContextEntryBinding.class);
+        bindings.add(InputDefinitionBinding.class);
+        bindings.add(ConstraintDefinitionBinding.class);
 
         //        final InputStream schemaStream = ProcessDefinitionBARContribution.class.getResourceAsStream("ProcessDefinition.xsd");
         //        try {
@@ -283,7 +293,7 @@ public class ProcessDefinitionBARContribution implements BusinessArchiveContribu
     }
 
     protected String generateInfosFromDefinition(final DesignProcessDefinition processDefinition) {
-        final FlowElementContainerDefinition processContainer = processDefinition.getProcessContainer();
+        final FlowElementContainerDefinition processContainer = processDefinition.getFlowElementContainer();
         return new StringBuilder("key1:").append(processDefinition.getActorsList().size()).append(",key2:").append(processContainer.getTransitions().size())
                 .append(",key3:").append(processContainer.getActivities().size()).toString();
     }

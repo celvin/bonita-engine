@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2012 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -36,7 +36,7 @@ public enum ExpressionConstants {
     LOOP_COUNTER("loopCounter", Integer.class.getName()),
 
     API_ACCESSOR("apiAccessor", APIAccessor.class.getName()),
-    
+
     CONNECTOR_API_ACCESSOR("connectorApiAccessor", APIAccessor.class.getName()),
 
     ENGINE_EXECUTION_CONTEXT("engineExecutionContext", EngineExecutionContext.class.getName()),
@@ -57,7 +57,7 @@ public enum ExpressionConstants {
 
     private final String returnType;
 
-    private ExpressionConstants(final String engineName, final String returnType) {
+    ExpressionConstants(final String engineName, final String returnType) {
         engineConstantName = engineName;
         this.returnType = returnType;
         ExpressionConstantsResolver.initMap(this);

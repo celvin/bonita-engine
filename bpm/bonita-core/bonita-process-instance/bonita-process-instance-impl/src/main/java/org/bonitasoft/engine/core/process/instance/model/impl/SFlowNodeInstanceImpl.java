@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2011-2012 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -287,7 +287,7 @@ public abstract class SFlowNodeInstanceImpl extends SFlowElementInstanceImpl imp
 
     @Override
     public String toString() {
-        return "SFlowNodeInstanceImpl [name=" + getName() + ", stateId=" + stateId + ", stateName=" + stateName + ", previousStateId=" + previousStateId
+        return this.getClass().getName() + " [name=" + getName() + ", stateId=" + stateId + ", stateName=" + stateName + ", previousStateId=" + previousStateId
                 + ", reachedStateDate=" + reachedStateDate + ", lastUpdateDate=" + lastUpdateDate + ", displayName=" + displayName + ", displayDescription="
                 + displayDescription + ", tokenCount=" + tokenCount + ", loopCounter=" + loopCounter + ", executedBy=" + executedBy
                 + ", stateExecuting=" + stateExecuting + ", flownodeDefinitionId=" + flowNodeDefinitionId + "]";

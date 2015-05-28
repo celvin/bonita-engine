@@ -1,18 +1,16 @@
-/*
- * Copyright (C) 2014 BonitaSoft S.A.
+/**
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2.0 of the License, or
- * (at your option) any later version.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
+ * This library is free software; you can redistribute it and/or modify it under the terms
+ * of the GNU Lesser General Public License as published by the Free Software Foundation
+ * version 2.1 of the License.
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * You should have received a copy of the GNU Lesser General Public License along with this
+ * program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
+ * Floor, Boston, MA 02110-1301, USA.
+ **/
 package org.bonitasoft.engine.data;
 
 import java.util.ArrayList;
@@ -41,11 +39,20 @@ public class ParentContainerResolverImpl implements ParentContainerResolver {
 
     private final FlowNodeInstanceService flowNodeInstanceService;
     private final ProcessInstanceService processInstanceService;
+    private boolean allowUnknownContainer;
 
     public ParentContainerResolverImpl(final FlowNodeInstanceService flowNodeInstanceService, final ProcessInstanceService processInstanceService) {
         super();
         this.flowNodeInstanceService = flowNodeInstanceService;
         this.processInstanceService = processInstanceService;
+    }
+
+    public boolean getAllowUnknownContainer() {
+        return allowUnknownContainer;
+    }
+
+    public void setAllowUnknownContainer(boolean allowUnknownContainer) {
+        this.allowUnknownContainer = allowUnknownContainer;
     }
 
     @Override
@@ -71,15 +78,9 @@ public class ParentContainerResolverImpl implements ParentContainerResolver {
                 container = getNextContainer(isArchived, container, containerHierarchy);
             } while (container != null);
             return containerHierarchy;
-        } catch (SProcessInstanceNotFoundException e) {
+        } catch (SProcessInstanceNotFoundException | SFlowNodeNotFoundException e) {
             throw new SObjectNotFoundException(e);
-        } catch (SFlowNodeNotFoundException e) {
-            throw new SObjectNotFoundException(e);
-        } catch (SProcessInstanceReadException e) {
-            throw new SObjectReadException(e);
-        } catch (SBonitaReadException e) {
-            throw new SObjectReadException(e);
-        } catch (SFlowNodeReadException e) {
+        } catch (SProcessInstanceReadException | SBonitaReadException | SFlowNodeReadException e) {
             throw new SObjectReadException(e);
         }
     }
@@ -92,7 +93,11 @@ public class ParentContainerResolverImpl implements ParentContainerResolver {
         } else if (DataInstanceContainer.PROCESS_INSTANCE.name().equals(container.getRight())) {
             container = handleProcessContainer(container.getLeft(), containerHierarchy, isArchived);
         } else {
-            throw new SObjectNotFoundException("Unknown container type: " + container.getRight());
+            if(allowUnknownContainer){
+                return null;
+            }else{
+                throw new SObjectNotFoundException("Unknown container type: " + container.getRight());
+            }
         }
         return container;
     }

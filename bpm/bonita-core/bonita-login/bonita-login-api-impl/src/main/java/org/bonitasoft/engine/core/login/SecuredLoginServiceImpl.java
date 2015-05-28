@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2011-2013 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -220,9 +220,7 @@ public class SecuredLoginServiceImpl implements LoginService {
 
     protected TechnicalUser getTechnicalUser(final long tenantId) throws SLoginException {
         try {
-            final String technicalUserPropertiesPath = BonitaHomeServer.getInstance().getTenantConfFolder(tenantId) + File.separator
-                    + "bonita-server.properties";
-            final Properties properties = PropertiesManager.getProperties(new File(technicalUserPropertiesPath));
+            final Properties properties = BonitaHomeServer.getInstance().getTenantProperties(tenantId);
             final String userName = (String) properties.get("userName");
             final String password = (String) properties.get("userPassword");
             return new TechnicalUser(userName, password);

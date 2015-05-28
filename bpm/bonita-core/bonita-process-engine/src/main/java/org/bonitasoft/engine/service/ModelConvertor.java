@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2011-2014 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -10,7 +10,7 @@
  * You should have received a copy of the GNU Lesser General Public License along with this
  * program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301, USA.
- **/
+ */
 package org.bonitasoft.engine.service;
 
 import java.io.Serializable;
@@ -47,6 +47,12 @@ import org.bonitasoft.engine.bpm.connector.impl.ArchivedConnectorInstanceImpl;
 import org.bonitasoft.engine.bpm.connector.impl.ConnectorDefinitionImpl;
 import org.bonitasoft.engine.bpm.connector.impl.ConnectorInstanceImpl;
 import org.bonitasoft.engine.bpm.connector.impl.ConnectorInstanceWithFailureInfoImpl;
+import org.bonitasoft.engine.bpm.contract.ContractDefinition;
+import org.bonitasoft.engine.bpm.contract.InputDefinition;
+import org.bonitasoft.engine.bpm.contract.Type;
+import org.bonitasoft.engine.bpm.contract.impl.ConstraintDefinitionImpl;
+import org.bonitasoft.engine.bpm.contract.impl.ContractDefinitionImpl;
+import org.bonitasoft.engine.bpm.contract.impl.InputDefinitionImpl;
 import org.bonitasoft.engine.bpm.data.ArchivedDataInstance;
 import org.bonitasoft.engine.bpm.data.DataDefinition;
 import org.bonitasoft.engine.bpm.data.DataInstance;
@@ -141,6 +147,9 @@ import org.bonitasoft.engine.bpm.process.impl.internal.ProcessDeploymentInfoImpl
 import org.bonitasoft.engine.bpm.supervisor.ProcessSupervisor;
 import org.bonitasoft.engine.bpm.supervisor.impl.ProcessSupervisorImpl;
 import org.bonitasoft.engine.builder.BuilderFactory;
+import org.bonitasoft.engine.business.data.BusinessDataReference;
+import org.bonitasoft.engine.business.data.impl.MultipleBusinessDataReferenceImpl;
+import org.bonitasoft.engine.business.data.impl.SimpleBusinessDataReferenceImpl;
 import org.bonitasoft.engine.command.CommandDescriptor;
 import org.bonitasoft.engine.command.CommandDescriptorImpl;
 import org.bonitasoft.engine.command.model.SCommand;
@@ -149,6 +158,7 @@ import org.bonitasoft.engine.core.connector.parser.SConnectorImplementationDescr
 import org.bonitasoft.engine.core.document.api.DocumentService;
 import org.bonitasoft.engine.core.document.model.SMappedDocument;
 import org.bonitasoft.engine.core.document.model.archive.SAMappedDocument;
+import org.bonitasoft.engine.core.form.SFormMapping;
 import org.bonitasoft.engine.core.operation.model.SLeftOperand;
 import org.bonitasoft.engine.core.operation.model.SOperation;
 import org.bonitasoft.engine.core.operation.model.SOperatorType;
@@ -160,8 +170,12 @@ import org.bonitasoft.engine.core.process.definition.ProcessDefinitionService;
 import org.bonitasoft.engine.core.process.definition.exception.SProcessDefinitionNotFoundException;
 import org.bonitasoft.engine.core.process.definition.exception.SProcessDefinitionReadException;
 import org.bonitasoft.engine.core.process.definition.model.SConnectorDefinition;
+import org.bonitasoft.engine.core.process.definition.model.SConstraintDefinition;
+import org.bonitasoft.engine.core.process.definition.model.SContractDefinition;
+import org.bonitasoft.engine.core.process.definition.model.SInputDefinition;
 import org.bonitasoft.engine.core.process.definition.model.SProcessDefinition;
 import org.bonitasoft.engine.core.process.definition.model.SProcessDefinitionDeployInfo;
+import org.bonitasoft.engine.core.process.definition.model.SType;
 import org.bonitasoft.engine.core.process.instance.model.SActivityInstance;
 import org.bonitasoft.engine.core.process.instance.model.SAutomaticTaskInstance;
 import org.bonitasoft.engine.core.process.instance.model.SCallActivityInstance;
@@ -193,6 +207,9 @@ import org.bonitasoft.engine.core.process.instance.model.archive.SAReceiveTaskIn
 import org.bonitasoft.engine.core.process.instance.model.archive.SASendTaskInstance;
 import org.bonitasoft.engine.core.process.instance.model.archive.SASubProcessActivityInstance;
 import org.bonitasoft.engine.core.process.instance.model.archive.SAUserTaskInstance;
+import org.bonitasoft.engine.core.process.instance.model.business.data.SMultiRefBusinessDataInstance;
+import org.bonitasoft.engine.core.process.instance.model.business.data.SRefBusinessDataInstance;
+import org.bonitasoft.engine.core.process.instance.model.business.data.SSimpleRefBusinessDataInstance;
 import org.bonitasoft.engine.core.process.instance.model.event.SBoundaryEventInstance;
 import org.bonitasoft.engine.core.process.instance.model.event.SEventInstance;
 import org.bonitasoft.engine.core.process.instance.model.event.handling.SWaitingErrorEvent;
@@ -212,6 +229,9 @@ import org.bonitasoft.engine.expression.impl.ExpressionImpl;
 import org.bonitasoft.engine.expression.model.SExpression;
 import org.bonitasoft.engine.expression.model.builder.SExpressionBuilder;
 import org.bonitasoft.engine.expression.model.builder.SExpressionBuilderFactory;
+import org.bonitasoft.engine.form.FormMapping;
+import org.bonitasoft.engine.form.FormMappingTarget;
+import org.bonitasoft.engine.form.FormMappingType;
 import org.bonitasoft.engine.identity.ContactData;
 import org.bonitasoft.engine.identity.ContactDataCreator.ContactDataField;
 import org.bonitasoft.engine.identity.ExportedUser;
@@ -254,6 +274,9 @@ import org.bonitasoft.engine.operation.Operation;
 import org.bonitasoft.engine.operation.OperatorType;
 import org.bonitasoft.engine.operation.impl.LeftOperandImpl;
 import org.bonitasoft.engine.operation.impl.OperationImpl;
+import org.bonitasoft.engine.page.PageURL;
+import org.bonitasoft.engine.page.SPageMapping;
+import org.bonitasoft.engine.page.SPageURL;
 import org.bonitasoft.engine.platform.Platform;
 import org.bonitasoft.engine.platform.command.model.SPlatformCommand;
 import org.bonitasoft.engine.platform.impl.PlatformImpl;
@@ -652,6 +675,9 @@ public class ModelConvertor {
         if (saHumanTask.getExpectedEndDate() > 0) {
             activity.setExpectedEndDate(new Date(saHumanTask.getExpectedEndDate()));
         }
+        if (saHumanTask.getClaimedDate() > 0) {
+            activity.setClaimedDate(new Date(saHumanTask.getClaimedDate()));
+        }
     }
 
     /**
@@ -946,7 +972,7 @@ public class ModelConvertor {
         if (managerUserId > 0 && userIdToUser != null) {
             user.setManagerUserName(userIdToUser.get(managerUserId).getUserName());
         }
-        SUserLogin sUserLogin = sUser.getSUserLogin();
+        final SUserLogin sUserLogin = sUser.getSUserLogin();
         if (sUserLogin != null && sUserLogin.getLastConnection() != null) {
             user.setLastConnection(new Date(sUserLogin.getLastConnection()));
         }
@@ -2091,4 +2117,79 @@ public class ModelConvertor {
         return value;
     }
 
+    public static FormMapping toFormMapping(final SFormMapping sFormMapping) {
+        if (sFormMapping == null) {
+            return null;
+        }
+        final FormMapping formMapping = new FormMapping();
+        formMapping.setId(sFormMapping.getId());
+        formMapping.setTask(sFormMapping.getTask());
+        final SPageMapping pageMapping = sFormMapping.getPageMapping();
+        if (pageMapping != null) {
+            formMapping.setPageMappingKey(pageMapping.getKey());
+            formMapping.setPageId(pageMapping.getPageId());
+            formMapping.setPageURL(pageMapping.getUrl());
+        }
+        formMapping.setType(FormMappingType.getTypeFromId(sFormMapping.getType()));
+        formMapping.setTarget(sFormMapping.getTarget() == null ? null : FormMappingTarget.valueOf(sFormMapping.getTarget()));
+        formMapping.setProcessDefinitionId(sFormMapping.getProcessDefinitionId());
+        final long lastUpdateDate = sFormMapping.getLastUpdateDate();
+        formMapping.setLastUpdateDate(lastUpdateDate > 0 ? new Date(lastUpdateDate) : null);
+        formMapping.setLastUpdatedBy(sFormMapping.getLastUpdatedBy());
+        return formMapping;
+    }
+
+    public static List<FormMapping> toFormMappings(final List<SFormMapping> serverObjects) {
+        final List<FormMapping> clientObjects = new ArrayList<>(serverObjects.size());
+        for (final SFormMapping serverObject : serverObjects) {
+            clientObjects.add(toFormMapping(serverObject));
+        }
+        return clientObjects;
+    }
+
+    public static BusinessDataReference toBusinessDataReference(final SRefBusinessDataInstance sRefBusinessDataInstance) {
+        if (sRefBusinessDataInstance == null) {
+            return null;
+        }
+        if (sRefBusinessDataInstance instanceof SMultiRefBusinessDataInstance) {
+            final SMultiRefBusinessDataInstance multi = (SMultiRefBusinessDataInstance) sRefBusinessDataInstance;
+            return new MultipleBusinessDataReferenceImpl(multi.getName(), multi.getDataClassName(), multi.getDataIds());
+        }
+        final SSimpleRefBusinessDataInstance simple = (SSimpleRefBusinessDataInstance) sRefBusinessDataInstance;
+        return new SimpleBusinessDataReferenceImpl(simple.getName(), simple.getDataClassName(), simple.getDataId());
+
+    }
+
+    public static ContractDefinition toContract(final SContractDefinition sContract) {
+        final ContractDefinitionImpl contract = new ContractDefinitionImpl();
+        for (final SInputDefinition input : sContract.getInputDefinitions()) {
+            contract.addInput(toInput(input));
+        }
+        for (final SConstraintDefinition sConstraintDefinition : sContract.getConstraints()) {
+            final ConstraintDefinitionImpl constraint = new ConstraintDefinitionImpl(sConstraintDefinition.getName(), sConstraintDefinition.getExpression(),
+                    sConstraintDefinition.getExplanation());
+            for (final String inputName : sConstraintDefinition.getInputNames()) {
+                constraint.addInputName(inputName);
+            }
+            contract.addConstraint(constraint);
+        }
+        return contract;
+    }
+
+    private static InputDefinition toInput(final SInputDefinition input) {
+        final List<InputDefinition> inputDefinitions = new ArrayList<InputDefinition>();
+        for (final SInputDefinition sInputDefinition : input.getInputDefinitions()) {
+            inputDefinitions.add(toInput(sInputDefinition));
+        }
+        final SType type = input.getType();
+        final InputDefinitionImpl inputDefinition = new InputDefinitionImpl(input.getName(), type == null ? null : Type.valueOf(type.toString()),
+                input.getDescription(), input.isMultiple());
+        inputDefinition.getInputs().addAll(inputDefinitions);
+        return inputDefinition;
+
+    }
+
+    public static PageURL toPageURL(final SPageURL sPageURL) {
+        return new PageURL(sPageURL.getUrl(), sPageURL.getPageId());
+    }
 }

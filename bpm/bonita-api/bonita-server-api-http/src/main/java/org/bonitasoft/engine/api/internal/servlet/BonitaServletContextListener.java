@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2013 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -36,8 +36,6 @@ public class BonitaServletContextListener implements ServletContextListener {
     @Override
     public void contextInitialized(final ServletContextEvent sce) {
         try {
-            SpringPlatformFileSystemBeanAccessor.initializeContext(null);
-
             PlatformServiceAccessor platformAccessor = getPlatformAccessor();
             final SessionAccessor sessionAccessor = ServiceAccessorFactory.getInstance().createSessionAccessor();
             PlatformSessionService platformSessionService = platformAccessor.getPlatformSessionService();

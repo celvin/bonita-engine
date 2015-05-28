@@ -1,3 +1,16 @@
+/**
+ * Copyright (C) 2015 BonitaSoft S.A.
+ * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
+ * This library is free software; you can redistribute it and/or modify it under the terms
+ * of the GNU Lesser General Public License as published by the Free Software Foundation
+ * version 2.1 of the License.
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * You should have received a copy of the GNU Lesser General Public License along with this
+ * program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
+ * Floor, Boston, MA 02110-1301, USA.
+ **/
 package org.bonitasoft.engine.persistence;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,11 +41,11 @@ public class AbstractDBPersistenceServiceTest {
      */
     class DummyDBPersistenceService extends AbstractDBPersistenceService {
 
-        public DummyDBPersistenceService(final String name, final DBConfigurationsProvider dbConfigurationsProvider, final String statementDelimiter,
+        public DummyDBPersistenceService(final String name,
                 final String likeEscapeCharacter, final SequenceManager sequenceManager,
                 final DataSource datasource, final boolean enableWordSearch, final Set<String> wordSearchExclusionMappings, final TechnicalLoggerService logger)
                         throws ClassNotFoundException {
-            super(name, dbConfigurationsProvider, statementDelimiter, likeEscapeCharacter, sequenceManager, datasource, enableWordSearch,
+            super(name, likeEscapeCharacter, sequenceManager, datasource, enableWordSearch,
                     wordSearchExclusionMappings, logger);
         }
 
@@ -99,12 +112,6 @@ public class AbstractDBPersistenceServiceTest {
         @Override
         protected long getTenantId() throws STenantIdNotSetException {
             return 0;
-        }
-
-        @Override
-        protected void doExecuteSQL(final String sqlResource, final String statementDelimiter, final Map<String, String> replacements,
-                final boolean useDataSourceConnection) throws SPersistenceException, IOException {
-
         }
 
         @Override
@@ -265,11 +272,10 @@ public class AbstractDBPersistenceServiceTest {
     private void executeIsWordSearchEnabled(final boolean enableWordSearch, final Set<String> wordSearchExclusionMappings,
             final Class<? extends PersistentObject> entityClass, final boolean expectedResult)
                     throws ClassNotFoundException {
-        final DBConfigurationsProvider dbConfigurationsProvider = mock(DBConfigurationsProvider.class);
         final SequenceManager sequenceManager = mock(SequenceManager.class);
         final DataSource datasource = mock(DataSource.class);
         final TechnicalLoggerService logger = mock(TechnicalLoggerService.class);
-        final AbstractDBPersistenceService persistenceService = new DummyDBPersistenceService("name", dbConfigurationsProvider, ";", "#", sequenceManager,
+        final AbstractDBPersistenceService persistenceService = new DummyDBPersistenceService("name", "#", sequenceManager,
                 datasource, enableWordSearch, wordSearchExclusionMappings, logger);
 
         assertThat(persistenceService.isWordSearchEnabled(entityClass)).isEqualTo(expectedResult);

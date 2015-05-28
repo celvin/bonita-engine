@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2012-2013 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -32,7 +32,8 @@ public class JavaMethodOperationExecutorStrategy implements OperationExecutorStr
     }
 
     @Override
-    public Object computeNewValueForLeftOperand(final SOperation operation, final Object valueToSetObjectWith, final SExpressionContext expressionContext)
+    public Object computeNewValueForLeftOperand(final SOperation operation, final Object valueToSetObjectWith, final SExpressionContext expressionContext,
+            final boolean shouldPersistValue)
             throws SOperationExecutionException {
         final Object objectToInvokeJavaMethodOn;
         objectToInvokeJavaMethodOn = extractObjectToInvokeFromContext(operation, expressionContext);

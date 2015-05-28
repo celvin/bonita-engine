@@ -1,5 +1,23 @@
+/**
+ * Copyright (C) 2015 BonitaSoft S.A.
+ * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
+ * This library is free software; you can redistribute it and/or modify it under the terms
+ * of the GNU Lesser General Public License as published by the Free Software Foundation
+ * version 2.1 of the License.
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * You should have received a copy of the GNU Lesser General Public License along with this
+ * program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
+ * Floor, Boston, MA 02110-1301, USA.
+ **/
 package org.bonitasoft.engine.bpm.process.impl;
 
+import java.util.Arrays;
+
+import org.bonitasoft.engine.bpm.contract.InputDefinition;
+import org.bonitasoft.engine.bpm.contract.Type;
+import org.bonitasoft.engine.bpm.contract.impl.InputDefinitionImpl;
 import org.bonitasoft.engine.bpm.flownode.TimerType;
 import org.bonitasoft.engine.bpm.process.InvalidProcessDefinitionException;
 import org.bonitasoft.engine.expression.Expression;
@@ -13,7 +31,6 @@ import org.junit.Test;
  */
 public class ProcessDefinitionBuilderTest {
 
-    // FIXME : Split all tests after, in several unit tests
     @Test(expected = InvalidProcessDefinitionException.class)
     public void boundaryEventMustHaveOutgoingTransition() throws Exception {
         final Expression timerExpr = new ExpressionBuilder().createConstantLongExpression(100);
@@ -409,6 +426,61 @@ public class ProcessDefinitionBuilderTest {
     public void cant_create_process_definition_with_actor_initiator_without_actor() throws Exception {
         final ProcessDefinitionBuilder builder = new ProcessDefinitionBuilder().createNewInstance("Double-hyphen -- test", "any");
         builder.setActorInitiator("toto");
+        builder.done();
+    }
+
+    @Test
+    public void userTask_with_valid_contract() throws Exception {
+        final ProcessDefinitionBuilder builder = new ProcessDefinitionBuilder().createNewInstance("ProcessWithBadContract", "1.0");
+        builder.addActor("mainActor");
+
+        //given
+        builder.addUserTask("step1", "mainActor").addContract().addInput("innput", Type.TEXT, "should fail")
+                .addInput("innput", "should fail", null).addConstraint("firstConstraint", "input != null", "mandatory", "input");
+
+        //when
+        builder.done();
+
+        //then no exceptions
+    }
+
+    @Test(expected = InvalidProcessDefinitionException.class)
+    public void userTask_with_invalid_contract_should_throw_exception() throws Exception {
+        final ProcessDefinitionBuilder builder = new ProcessDefinitionBuilder().createNewInstance("ProcessWithBadContract", "1.0");
+        builder.addActor("mainActor");
+
+        //given
+        final InputDefinition badInput = new InputDefinitionImpl("bad input", Type.TEXT, "should fail");
+        final InputDefinition expenseType = new InputDefinitionImpl("expenseType", Type.TEXT, "describe expense type");
+        final InputDefinition expenseAmount = new InputDefinitionImpl("amount", Type.DECIMAL, "expense amount");
+        final InputDefinition expenseDate = new InputDefinitionImpl("date", Type.DATE, "expense date");
+        final InputDefinition complexSubIput = new InputDefinitionImpl("date", "expense date", Arrays.asList(expenseType, badInput));
+        builder.addUserTask("step1", "mainActor").addContract()
+        .addInput("expenseLine", "expense report line", Arrays.asList(expenseDate, expenseAmount,complexSubIput));
+
+        //when
+        builder.done();
+
+        //then exception
+    }
+
+    @Test(expected = InvalidProcessDefinitionException.class)
+    public void userTask_with_null_constraint_name_of_contract_should_throw_exception() throws Exception {
+        final ProcessDefinitionBuilder builder = new ProcessDefinitionBuilder().createNewInstance("ProcessWithBadContract", "1.0");
+        builder.addActor("mainActor");
+        builder.addUserTask("step1", "mainActor").addContract()
+                .addInput("input", Type.TEXT, "").addConstraint(null, "input != null", "mandatory", "input");
+
+        builder.done();
+    }
+
+    @Test(expected = InvalidProcessDefinitionException.class)
+    public void userTask_with_null_constraint_condition_of_contract_should_throw_exception() throws Exception {
+        final ProcessDefinitionBuilder builder = new ProcessDefinitionBuilder().createNewInstance("ProcessWithBadContract", "1.0");
+        builder.addActor("mainActor");
+        builder.addUserTask("step1", "mainActor").addContract()
+                .addInput("input", Type.TEXT, "").addConstraint("firstConstraint", null, "mandatory", "input");
+
         builder.done();
     }
 

@@ -1,6 +1,6 @@
 /**
- * Copyright (C) 2012-2013 BonitaSoft S.A.
- * BonitaSoft, 31 rue Gustave Eiffel - 38000 Grenoble
+ * Copyright (C) 2015 BonitaSoft S.A.
+ * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
  * version 2.1 of the License.
@@ -14,6 +14,7 @@
 package org.bonitasoft.engine.core.process.instance.model.builder;
 
 import org.bonitasoft.engine.core.process.definition.model.SFlowNodeType;
+import org.bonitasoft.engine.core.process.instance.api.states.FlowNodeState;
 import org.bonitasoft.engine.core.process.instance.model.SFlowNodeInstance;
 import org.bonitasoft.engine.core.process.instance.model.SStateCategory;
 
@@ -23,7 +24,7 @@ import org.bonitasoft.engine.core.process.instance.model.SStateCategory;
  */
 public interface SFlowNodeInstanceBuilder {
 
-    SFlowNodeInstanceBuilder setState(final int stateId, final boolean stable, final boolean terminal, String stateName);
+    SFlowNodeInstanceBuilder setState(FlowNodeState state);
 
     SFlowNodeInstanceBuilder setReachedStateDate(final long reachStateDate);
 

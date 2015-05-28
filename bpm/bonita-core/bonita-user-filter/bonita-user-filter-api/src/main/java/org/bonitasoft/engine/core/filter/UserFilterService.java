@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2012-2013 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -27,11 +27,7 @@ import org.bonitasoft.engine.expression.model.SExpression;
  */
 public interface UserFilterService {
 
-    String DEFINITION_EXT = ".def";
-
     String IMPLEMENTATION_EXT = ".impl";
-
-    String USER_FILTER_FOLDER = "userFilters";
 
     FilterResult executeFilter(long processDefinitionId, SUserFilterDefinition sUserFilterDefinition, Map<String, SExpression> inputs, ClassLoader classLoader,
             SExpressionContext expressionContext, final String actorName) throws SUserFilterExecutionException;

@@ -1,17 +1,16 @@
 /**
- * Copyright (C) 2011-2014 BonitaSoft S.A.
- * BonitaSoft, 31 rue Gustave Eiffel - 38000 Grenoble
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2.0 of the License, or
- * (at your option) any later version.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+ * Copyright (C) 2015 BonitaSoft S.A.
+ * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
+ * This library is free software; you can redistribute it and/or modify it under the terms
+ * of the GNU Lesser General Public License as published by the Free Software Foundation
+ * version 2.1 of the License.
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * You should have received a copy of the GNU Lesser General Public License along with this
+ * program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
+ * Floor, Boston, MA 02110-1301, USA.
+ **/
 package org.bonitasoft.engine.core.connector.impl;
 
 import java.io.ByteArrayInputStream;
@@ -89,11 +88,7 @@ public class ConnectorServiceImpl implements ConnectorService {
 
     private static final String IMPLEMENTATION_EXT = ".impl";
 
-    private static final String CONNECTOR_FOLDER = "connector";
-
     protected static final String CONNECTOR_CACHE_NAME = "CONNECTOR";
-
-    private static final String CLASSPATH_FOLDER = "classpath";
 
     private final Parser parser;
 
@@ -207,7 +202,7 @@ public class ConnectorServiceImpl implements ConnectorService {
             throws SConnectorException {
         final long startTime = System.currentTimeMillis();
         try {
-            expressionContext.setInputValues(new HashMap<String, Object>(result.getResult()));
+            expressionContext.putAllInputValues(result.getResult());
             operationService.execute(outputs, expressionContext.getContainerId(), expressionContext.getContainerType(), expressionContext);// data is in
             disconnect(result);
         } catch (final SOperationExecutionException e) {
@@ -376,17 +371,16 @@ public class ConnectorServiceImpl implements ConnectorService {
     protected boolean loadConnectors(final long processDefinitionId, final long tenantId) throws SConnectorException {
         boolean resolved = true;
         try {
-            final String processesFolder = getProcessFolder(tenantId);
-            final File connectorsFolder = new File(new File(processesFolder, String.valueOf(processDefinitionId)), CONNECTOR_FOLDER);
-            final File[] listFiles = connectorsFolder.listFiles();
-            if (listFiles != null && listFiles.length > 0) {
+            final Map<String, byte[]> connectorFiles = BonitaHomeServer.getInstance().getConnectorFiles(tenantId, processDefinitionId);
+
+            if (connectorFiles != null && connectorFiles.size() > 0) {
                 final Pattern pattern = Pattern.compile("^.*\\" + IMPLEMENTATION_EXT + "$");
-                for (final File file : listFiles) {
-                    final String name = file.getName();
+                for (final Map.Entry<String, byte[]> resource : connectorFiles.entrySet()) {
+                    final String name = resource.getKey();
                     if (pattern.matcher(name).matches()) {
                         SConnectorImplementationDescriptor connectorImplementation;
                         try {
-                            final Object objectFromXML = parser.getObjectFromXML(file);
+                            final Object objectFromXML = parser.getObjectFromXML(resource.getValue());
                             if (objectFromXML == null) {
                                 throw new SConnectorException("Can not parse ConnectorImplementation XML. The file name is <" + name + ">.");
                             }
@@ -406,14 +400,11 @@ public class ConnectorServiceImpl implements ConnectorService {
                 }
             }
         } catch (final BonitaHomeNotSetException e) {
-            throw new BonitaRuntimeException("Bonita home is not set !!");
+            throw new SConnectorException("Bonita home is not set !!", e);
+        } catch (IOException e) {
+            throw new SConnectorException(e);
         }
         return resolved;
-    }
-
-    private String getProcessFolder(final long tenantId) throws BonitaHomeNotSetException {
-        final String processesFolder = BonitaHomeServer.getInstance().getProcessesFolder(tenantId);
-        return processesFolder;
     }
 
     @Override
@@ -442,21 +433,15 @@ public class ConnectorServiceImpl implements ConnectorService {
 
     private void deployNewDependencies(final long processDefinitionId, final long tenantId) throws SDependencyException, IOException, BonitaHomeNotSetException {
         // deploy new ones from the filesystem (bonita-home):
-        final File processFolder = new File(new File(BonitaHomeServer.getInstance().getProcessesFolder(tenantId)), String.valueOf(processDefinitionId));
-        final File file = new File(processFolder, CLASSPATH_FOLDER);
+        final Map<String, byte[]> classpath = BonitaHomeServer.getInstance().getProcessClasspath(tenantId, processDefinitionId);
         final ArrayList<SDependency> dependencies = new ArrayList<SDependency>();
-        if (file.exists() && file.isDirectory()) {
-            final File[] listFiles = file.listFiles();
-            for (final File jarFile : listFiles) {
-                final String name = jarFile.getName();
-                final byte[] jarContent = IOUtil.getAllContentFrom(jarFile);
-                final SDependency sDependency = BuilderFactory.get(SDependencyBuilderFactory.class)
-                        .createNewInstance(name, processDefinitionId, ScopeType.PROCESS, name + ".jar", jarContent).done();
-                dependencies.add(sDependency);
-            }
-            dependencyService.updateDependenciesOfArtifact(processDefinitionId, ScopeType.PROCESS, dependencies);
+        for (final Map.Entry<String, byte[]> file : classpath.entrySet()) {
+            final String name = file.getKey();
+            final SDependency sDependency = BuilderFactory.get(SDependencyBuilderFactory.class)
+                        .createNewInstance(name, processDefinitionId, ScopeType.PROCESS, name + ".jar", file.getValue()).done();
+            dependencies.add(sDependency);
         }
-
+        dependencyService.updateDependenciesOfArtifact(processDefinitionId, ScopeType.PROCESS, dependencies);
     }
 
     protected void checkConnectorImplementationIsValid(final byte[] connectorImplementationArchive, final String connectorId, final String connectorVersion)
@@ -472,7 +457,7 @@ public class ConnectorServiceImpl implements ConnectorService {
             while (zipEntry != null) {
                 final String entryName = zipEntry.getName();
                 if (entryName.endsWith(".impl")) {
-                    final SConnectorImplementationDescriptor connectorImplementationDescriptor = getConnectorImplementationDescriptor(zipInputstream);
+                    final SConnectorImplementationDescriptor connectorImplementationDescriptor = getConnectorImplementationDescriptor(IOUtil.getBytes(zipInputstream));
                     if (!connectorImplementationDescriptor.getDefinitionId().equals(connectorId)
                             || !connectorImplementationDescriptor.getDefinitionVersion().equals(connectorVersion)) {
                         throw new SInvalidConnectorImplementationException("The connector must implement the connectorDefinition with id = <" + connectorId
@@ -500,28 +485,23 @@ public class ConnectorServiceImpl implements ConnectorService {
     }
 
     private void unzipNewImplementation(final SProcessDefinition sDefinition, final long tenantId, final byte[] connectorImplementationArchive,
-            final String connectorId, final String connectorVersion) throws SConnectorException {
+            final String connectorId, final String connectorVersion) throws SInvalidConnectorImplementationException {
         ZipInputStream zipInputstream = null;
         try {
-            final String processesFolder = getProcessFolder(tenantId);
-            final File connectorsFolder = new File(new File(processesFolder, String.valueOf(sDefinition.getId())), CONNECTOR_FOLDER);
-            if (!connectorsFolder.exists()) {
-                throw new SConnectorException("Connector folder '" + connectorsFolder.getName() + "' not found!");
-            }
-            final File processDefFolder = new File(processesFolder, String.valueOf(sDefinition.getId()));
-            final File classPathFolder = new File(processDefFolder, CLASSPATH_FOLDER);
 
             // First delete the old implementation before trying to unzip the new one:
-            deleteOldImplementation(connectorsFolder, classPathFolder, connectorId, connectorVersion);
+            deleteOldImplementation(tenantId, sDefinition.getId(), connectorId, connectorVersion);
 
             zipInputstream = new ZipInputStream(new ByteArrayInputStream(connectorImplementationArchive));
             ZipEntry zipEntry = zipInputstream.getNextEntry();
             while (zipEntry != null) {
                 String entryName = zipEntry.getName();
                 if (entryName.endsWith(".jar")) {
-                    entryName = handleClasspathEntryName(classPathFolder, entryName);
+                    final int startIndex = Math.max(0, entryName.lastIndexOf('/'));
+                    entryName = entryName.substring(startIndex);
                 } else {
-                    entryName = handleEntryName(connectorsFolder, entryName);
+                    entryName = entryName.replace('/', File.separatorChar);
+                    entryName = entryName.replace('\\', File.separatorChar);
                 }
                 final File newFile = new File(entryName);
                 // if File already exists and is any other file than .impl, then skip it, because we already deleted the old implementation jars, so better not
@@ -537,45 +517,34 @@ public class ConnectorServiceImpl implements ConnectorService {
                     zipEntry = zipInputstream.getNextEntry();
                     continue;
                 }
-                newFile.getParentFile().mkdirs();
-                IOUtil.copyFile(zipInputstream, newFile);
+                final byte[] fileContent = IOUtil.getBytes(zipInputstream);
+                if (entryName.endsWith(".jar")) {
+                    BonitaHomeServer.getInstance().storeClasspathFile(tenantId, sDefinition.getId(), entryName, fileContent);
+                } else {
+                    BonitaHomeServer.getInstance().storeConnectorFile(tenantId, sDefinition.getId(), entryName, fileContent);
+                }
 
                 zipInputstream.closeEntry();
                 zipEntry = zipInputstream.getNextEntry();
             }
         } catch (final IOException e) {
-            throw new SConnectorException(e);
+            throw new SInvalidConnectorImplementationException(e);
         } catch (final BonitaHomeNotSetException e) {
-            throw new SConnectorException(e);
+            throw new SInvalidConnectorImplementationException(e);
         } finally {
             try {
                 if (zipInputstream != null) {
                     zipInputstream.close();
                 }
             } catch (final IOException e) {
-                throw new SConnectorException(e);
+                throw new SInvalidConnectorImplementationException(e);
             }
         }
     }
 
-    private SConnectorImplementationDescriptor getConnectorImplementationDescriptor(final File file) throws SConnectorException {
+    private SConnectorImplementationDescriptor getConnectorImplementationDescriptor(final byte[] bytes) throws SInvalidConnectorImplementationException {
         try {
-            final Object objectFromXML = parser.getObjectFromXML(file);
-            final SConnectorImplementationDescriptor connectorImplementation = (SConnectorImplementationDescriptor) objectFromXML;
-            if (connectorImplementation == null) {
-                throw new SConnectorException("Can not parse ConnectorImplementation XML. The file name is " + file.getName());
-            }
-            return connectorImplementation;
-        } catch (final IOException e) {
-            throw new SConnectorException("Can not load ConnectorImplementation XML. The file name is " + file.getName(), e);
-        } catch (final SXMLParseException e) {
-            throw new SConnectorException("Can not load ConnectorImplementation XML. The file name is " + file.getName(), e);
-        }
-    }
-
-    private SConnectorImplementationDescriptor getConnectorImplementationDescriptor(final InputStream is) throws SInvalidConnectorImplementationException {
-        try {
-            final Object objectFromXML = parser.getObjectFromXML(is);
+            final Object objectFromXML = parser.getObjectFromXML(bytes);
             final SConnectorImplementationDescriptor connectorImplementation = (SConnectorImplementationDescriptor) objectFromXML;
             if (connectorImplementation == null) {
                 throw new SInvalidConnectorImplementationException("Can not parse ConnectorImplementation XML.");
@@ -588,32 +557,27 @@ public class ConnectorServiceImpl implements ConnectorService {
         }
     }
 
-    private void deleteOldImplementation(final File connectorsFolder, final File classPathFolder, final String connectorId, final String connectorVersion)
-            throws SConnectorException {
-        final File[] listFiles = connectorsFolder.listFiles();
+    private void deleteOldImplementation(final long tenantId, final long processId, final String connectorId, final String connectorVersion)
+            throws SInvalidConnectorImplementationException, BonitaHomeNotSetException, IOException {
+        final Map<String, byte[]> listFiles = BonitaHomeServer.getInstance().getConnectorFiles(tenantId, processId);
         final Pattern pattern = Pattern.compile("^.*\\" + IMPLEMENTATION_EXT + "$");
         List<String> jarFileNames = null;
         // delete .impl file for the specified connector
-        for (final File file : listFiles) {
-            final String name = file.getName();
+        for (final Entry<String, byte[]> resource : listFiles.entrySet()) {
+            final String name = resource.getKey();
             if (pattern.matcher(name).matches()) {
-                final SConnectorImplementationDescriptor connectorImplementation = getConnectorImplementationDescriptor(file);
+                final SConnectorImplementationDescriptor connectorImplementation = getConnectorImplementationDescriptor(resource.getValue());
                 if (connectorId.equals(connectorImplementation.getDefinitionId()) && connectorVersion.equals(connectorImplementation.getDefinitionVersion())) {
-                    file.delete();
+                    BonitaHomeServer.getInstance().deleteConnectorFile(tenantId, processId, name);
                     jarFileNames = connectorImplementation.getJarDependencies().getDependencies();
                     break;
                 }
             }
         }
+
         // delete the .jar files for the specified connector
         if (jarFileNames != null) {
-            for (final String jarFileName : jarFileNames) {
-                final String jarFileAbsolutePath = handleEntryName(classPathFolder, jarFileName);
-                final File jarFile = new File(jarFileAbsolutePath);
-                if (jarFile.exists()) {
-                    jarFile.delete();
-                }
-            }
+            BonitaHomeServer.getInstance().deleteClasspathFiles(tenantId, processId, jarFileNames.toArray(new String[jarFileNames.size()]));
         }
     }
 
@@ -627,17 +591,6 @@ public class ConnectorServiceImpl implements ConnectorService {
         } catch (final SCacheException e) {
             throw new SConnectorException(e);
         }
-    }
-
-    private String handleEntryName(final File connectorImplFolder, String entryName) {
-        entryName = entryName.replace('/', File.separatorChar);
-        entryName = entryName.replace('\\', File.separatorChar);
-        return connectorImplFolder.getAbsolutePath() + File.separatorChar + entryName;
-    }
-
-    private String handleClasspathEntryName(final File classpathFolder, final String entryName) {
-        final int startIndex = Math.max(0, entryName.lastIndexOf('/'));
-        return classpathFolder.getAbsolutePath() + File.separatorChar + entryName.substring(startIndex);
     }
 
     @Override

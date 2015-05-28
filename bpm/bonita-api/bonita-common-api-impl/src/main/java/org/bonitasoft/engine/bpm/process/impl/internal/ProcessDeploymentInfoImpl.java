@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2011 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -123,5 +123,23 @@ public class ProcessDeploymentInfoImpl extends NamedElementImpl implements Proce
     @Override
     public ActivationState getActivationState() {
         return activationState;
+    }
+
+    @Override
+    public String toString() {
+        return "ProcessDeploymentInfoImpl{" +
+                "version='" + version + '\'' +
+                ", displayDescription='" + displayDescription + '\'' +
+                ", deploymentDate=" + deploymentDate +
+                ", deployedBy=" + deployedBy +
+                ", configurationState=" + configurationState +
+                ", activationState=" + activationState +
+                ", processId=" + processId +
+                ", displayName='" + displayName + '\'' +
+                ", lastUpdateDate=" + lastUpdateDate +
+                ", iconPath='" + iconPath + '\'' +
+                ", description='" + description + '\'' +
+                ", namedElement='" + super.toString() + '\'' +
+                '}';
     }
 }

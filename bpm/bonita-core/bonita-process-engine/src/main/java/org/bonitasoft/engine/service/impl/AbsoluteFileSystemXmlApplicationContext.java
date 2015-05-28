@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2011 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -36,9 +36,9 @@ public class AbsoluteFileSystemXmlApplicationContext extends FileSystemXmlApplic
      * @throws BeansException
      *             if context creation failed
      */
-    public AbsoluteFileSystemXmlApplicationContext(final String[] configLocations, final boolean refresh, final ApplicationContext parent)
+    public AbsoluteFileSystemXmlApplicationContext(final String[] configLocations, final ApplicationContext parent)
             throws BeansException {
-        super(configLocations, refresh, parent);
+        super(configLocations, false, parent);
 
     }
 

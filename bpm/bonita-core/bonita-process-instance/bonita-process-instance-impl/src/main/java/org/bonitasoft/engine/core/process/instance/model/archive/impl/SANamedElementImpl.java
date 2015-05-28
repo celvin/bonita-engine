@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2011 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -14,6 +14,7 @@
 package org.bonitasoft.engine.core.process.instance.model.archive.impl;
 
 import org.bonitasoft.engine.core.process.instance.model.archive.SANamedElement;
+import org.bonitasoft.engine.persistence.SAPersistenceObjectImpl;
 
 /**
  * @author Baptiste Mesta

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2009-2014 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -21,6 +21,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -34,16 +35,22 @@ import java.util.Set;
 
 import org.bonitasoft.engine.TestWithUser;
 import org.bonitasoft.engine.api.ProcessAPI;
+import org.bonitasoft.engine.api.ProcessManagementAPI;
 import org.bonitasoft.engine.bpm.bar.BarResource;
 import org.bonitasoft.engine.bpm.bar.BusinessArchive;
 import org.bonitasoft.engine.bpm.bar.BusinessArchiveBuilder;
 import org.bonitasoft.engine.bpm.bar.ExternalResourceContribution;
 import org.bonitasoft.engine.bpm.bar.InvalidBusinessArchiveFormatException;
+import org.bonitasoft.engine.bpm.connector.ArchiveConnectorInstancesSearchDescriptor;
+import org.bonitasoft.engine.bpm.connector.ArchivedConnectorInstance;
+import org.bonitasoft.engine.bpm.connector.ConnectorEvent;
+import org.bonitasoft.engine.bpm.connector.ConnectorState;
 import org.bonitasoft.engine.bpm.data.DataInstance;
 import org.bonitasoft.engine.bpm.flownode.ActivityInstance;
 import org.bonitasoft.engine.bpm.flownode.ActivityInstanceCriterion;
 import org.bonitasoft.engine.bpm.flownode.ActivityStates;
 import org.bonitasoft.engine.bpm.flownode.ArchivedActivityInstance;
+import org.bonitasoft.engine.bpm.flownode.FlowNodeInstance;
 import org.bonitasoft.engine.bpm.flownode.FlowNodeType;
 import org.bonitasoft.engine.bpm.flownode.HumanTaskInstance;
 import org.bonitasoft.engine.bpm.flownode.TaskPriority;
@@ -65,16 +72,24 @@ import org.bonitasoft.engine.bpm.process.ProcessInstanceCriterion;
 import org.bonitasoft.engine.bpm.process.impl.AutomaticTaskDefinitionBuilder;
 import org.bonitasoft.engine.bpm.process.impl.ProcessDefinitionBuilder;
 import org.bonitasoft.engine.bpm.process.impl.UserTaskDefinitionBuilder;
+import org.bonitasoft.engine.connectors.TestConnectorThatThrowException;
 import org.bonitasoft.engine.exception.AlreadyExistsException;
+import org.bonitasoft.engine.exception.BonitaException;
 import org.bonitasoft.engine.exception.DeletionException;
 import org.bonitasoft.engine.exception.ExecutionException;
 import org.bonitasoft.engine.exception.NotFoundException;
+import org.bonitasoft.engine.exception.SearchException;
 import org.bonitasoft.engine.exception.UpdateException;
 import org.bonitasoft.engine.expression.Expression;
 import org.bonitasoft.engine.expression.ExpressionBuilder;
 import org.bonitasoft.engine.expression.ExpressionConstants;
+import org.bonitasoft.engine.expression.InvalidExpressionException;
 import org.bonitasoft.engine.identity.User;
 import org.bonitasoft.engine.operation.Operation;
+import org.bonitasoft.engine.operation.OperationBuilder;
+import org.bonitasoft.engine.search.Order;
+import org.bonitasoft.engine.search.SearchOptionsBuilder;
+import org.bonitasoft.engine.search.SearchResult;
 import org.bonitasoft.engine.test.APITestUtil;
 import org.bonitasoft.engine.test.BuildTestUtil;
 import org.bonitasoft.engine.test.StartProcessUntilStep;
@@ -99,7 +114,7 @@ public class ProcessManagementIT extends TestWithUser {
                 Arrays.asList("step1", "step2"), Arrays.asList(true, true));
         final Date before = new Date();
         Thread.sleep(10);
-        final ProcessDefinition processDefinition = getProcessAPI().deploy(
+        final ProcessDefinition processDefinition = deployProcess(
                 new BusinessArchiveBuilder().createNewBusinessArchive().setProcessDefinition(designProcessDefinition).done());
         addUserToFirstActorOfProcess(user.getId(), processDefinition);
         Thread.sleep(10);
@@ -122,7 +137,7 @@ public class ProcessManagementIT extends TestWithUser {
         final DesignProcessDefinition designProcessDefinition = BuildTestUtil.buildProcessDefinitionWithHumanAndAutomaticSteps(
                 Arrays.asList("step1", "step2"), Arrays.asList(true, true));
 
-        final ProcessDefinition processDefinition = getProcessAPI().deploy(
+        final ProcessDefinition processDefinition = deployProcess(
                 new BusinessArchiveBuilder().createNewBusinessArchive().setProcessDefinition(designProcessDefinition).done());
         addUserToFirstActorOfProcess(user.getId(), processDefinition);
 
@@ -156,7 +171,7 @@ public class ProcessManagementIT extends TestWithUser {
         final DesignProcessDefinition designProcessDefinition = BuildTestUtil.buildProcessDefinitionWithHumanAndAutomaticSteps(
                 Arrays.asList("step1", "step2"), Arrays.asList(true, true));
 
-        final ProcessDefinition processDefinition = getProcessAPI().deploy(
+        final ProcessDefinition processDefinition = deployProcess(
                 new BusinessArchiveBuilder().createNewBusinessArchive().setProcessDefinition(designProcessDefinition).done());
         try {
             getProcessAPI().disableProcess(processDefinition.getId());
@@ -205,7 +220,7 @@ public class ProcessManagementIT extends TestWithUser {
         final DesignProcessDefinition designProcessDefinition = BuildTestUtil.buildProcessDefinitionWithHumanAndAutomaticSteps(
                 Arrays.asList("step1", "step2"), Arrays.asList(true, true));
 
-        final ProcessDefinition processDefinition = getProcessAPI().deploy(
+        final ProcessDefinition processDefinition = deployProcess(
                 new BusinessArchiveBuilder().createNewBusinessArchive().setProcessDefinition(designProcessDefinition).done());
         assertNotNull(getProcessAPI().getProcessDefinition(processDefinition.getId()));
         assertNotNull(getProcessAPI().getProcessDeploymentInfo(processDefinition.getId()));
@@ -254,7 +269,7 @@ public class ProcessManagementIT extends TestWithUser {
         final List<Boolean> emptyList2 = Collections.emptyList();
         final DesignProcessDefinition processDefinition = BuildTestUtil.buildProcessDefinitionWithHumanAndAutomaticSteps(null, null, emptyList,
                 emptyList2);
-        getProcessAPI().deploy(new BusinessArchiveBuilder().createNewBusinessArchive().setProcessDefinition(processDefinition).done());
+        deployProcess(new BusinessArchiveBuilder().createNewBusinessArchive().setProcessDefinition(processDefinition).done());
     }
 
     @Test
@@ -343,7 +358,8 @@ public class ProcessManagementIT extends TestWithUser {
     }
 
     /**
-     * checks that {@link ProcessManagementAPI#getOpenedActivityInstances(long, int, int, ActivityInstanceCriterion)} returns the good list of open activities
+     * checks that {@link org.bonitasoft.engine.api.ProcessRuntimeAPI#getOpenActivityInstances(long, int, int, ActivityInstanceCriterion)} returns the good list
+     * of open activities
      * only.
      * An open activity is an activity with state NON-FINAL and STABLE.
      */
@@ -352,7 +368,7 @@ public class ProcessManagementIT extends TestWithUser {
         final DesignProcessDefinition designProcessDefinition1 = BuildTestUtil.buildProcessDefinitionWithActorAndThreeHumanStepsAndThreeTransition();
 
         final BusinessArchive businessArchive1 = new BusinessArchiveBuilder().createNewBusinessArchive().setProcessDefinition(designProcessDefinition1).done();
-        final ProcessDefinition processDefinition1 = getProcessAPI().deploy(businessArchive1);
+        final ProcessDefinition processDefinition1 = deployProcess(businessArchive1);
 
         addUserToFirstActorOfProcess(1, processDefinition1);
 
@@ -367,7 +383,7 @@ public class ProcessManagementIT extends TestWithUser {
         final DesignProcessDefinition designProcessDefinition2 = processBuilder2.addAutomaticTask("step1").addUserTask("step2", ACTOR_NAME)
                 .addUserTask("step3", ACTOR_NAME).addTransition("step1", "step2").addTransition("step1", "step3").getProcess();
         final BusinessArchive businessArchive2 = new BusinessArchiveBuilder().createNewBusinessArchive().setProcessDefinition(designProcessDefinition2).done();
-        final ProcessDefinition processDefinition2 = getProcessAPI().deploy(businessArchive2);
+        final ProcessDefinition processDefinition2 = deployProcess(businessArchive2);
 
         addUserToFirstActorOfProcess(1, processDefinition2);
 
@@ -406,7 +422,7 @@ public class ProcessManagementIT extends TestWithUser {
     public void openActivityInstancesOrderByLastUpdate() throws Exception {
         final DesignProcessDefinition designProcessDefinition = BuildTestUtil.buildProcessDefinitionWithActorAndThreeHumanStepsAndThreeTransition();
         final BusinessArchive businessArchive = new BusinessArchiveBuilder().createNewBusinessArchive().setProcessDefinition(designProcessDefinition).done();
-        final ProcessDefinition processDefinition = getProcessAPI().deploy(businessArchive);
+        final ProcessDefinition processDefinition = deployProcess(businessArchive);
         addUserToFirstActorOfProcess(1, processDefinition);
         getProcessAPI().enableProcess(processDefinition.getId());
 
@@ -432,7 +448,7 @@ public class ProcessManagementIT extends TestWithUser {
             throws Exception {
         final DesignProcessDefinition designProcessDefinition = BuildTestUtil.buildProcessDefinitionWithActorAndThreeHumanStepsAndThreeTransition();
         final BusinessArchive businessArchive = new BusinessArchiveBuilder().createNewBusinessArchive().setProcessDefinition(designProcessDefinition).done();
-        final ProcessDefinition processDefinition = getProcessAPI().deploy(businessArchive);
+        final ProcessDefinition processDefinition = deployProcess(businessArchive);
 
         addUserToFirstActorOfProcess(1, processDefinition);
 
@@ -463,7 +479,7 @@ public class ProcessManagementIT extends TestWithUser {
     public void getNumberOfOpenedActivityInstances() throws Exception {
         final DesignProcessDefinition designProcessDefinition = BuildTestUtil.buildProcessDefinitionWithActorAndThreeHumanStepsAndThreeTransition();
         final BusinessArchive businessArchive = new BusinessArchiveBuilder().createNewBusinessArchive().setProcessDefinition(designProcessDefinition).done();
-        final ProcessDefinition processDefinition = getProcessAPI().deploy(businessArchive);
+        final ProcessDefinition processDefinition = deployProcess(businessArchive);
 
         addUserToFirstActorOfProcess(1, processDefinition);
 
@@ -527,7 +543,7 @@ public class ProcessManagementIT extends TestWithUser {
         businessArchiveBuilder.addExternalResource(new BarResource("folder/image.jpg", "UNUSED".getBytes()));
 
         // deploy the process to unzip the .bar in BONITA_HOME:
-        final ProcessDefinition processDefinition = getProcessAPI().deploy(businessArchiveBuilder.done());
+        final ProcessDefinition processDefinition = deployProcess(businessArchiveBuilder.done());
         final Map<String, byte[]> resources = getProcessAPI().getProcessResources(processDefinition.getId(), ".*/.*\\.txt");
         assertEquals(2, resources.size());
         assertTrue("Searched resource not returned", resources.containsKey(ExternalResourceContribution.EXTERNAL_RESOURCE_FOLDER + "/" + dummyFile));
@@ -546,12 +562,12 @@ public class ProcessManagementIT extends TestWithUser {
         final String processName = "getLatestProcessDefinitionId";
         final DesignProcessDefinition designProcessDefinition1 = BuildTestUtil.buildProcessDefinitionWithHumanAndAutomaticSteps(processName, "1.0",
                 Arrays.asList("step1", "step2"), Arrays.asList(true, true));
-        final ProcessDefinition processDefinition1 = getProcessAPI().deploy(
+        final ProcessDefinition processDefinition1 = deployProcess(
                 new BusinessArchiveBuilder().createNewBusinessArchive().setProcessDefinition(designProcessDefinition1).done());
 
         final DesignProcessDefinition designProcessDefinition2 = BuildTestUtil.buildProcessDefinitionWithHumanAndAutomaticSteps(processName, "2.0",
                 Arrays.asList("step1", "step2"), Arrays.asList(true, true));
-        final ProcessDefinition processDefinition2 = getProcessAPI().deploy(
+        final ProcessDefinition processDefinition2 = deployProcess(
                 new BusinessArchiveBuilder().createNewBusinessArchive().setProcessDefinition(designProcessDefinition2).done());
 
         // test and do assert
@@ -632,7 +648,7 @@ public class ProcessManagementIT extends TestWithUser {
     public void getProcessDefinitionIdByNameAndVersion() throws Exception {
         final DesignProcessDefinition designProcessDefinition = BuildTestUtil.buildProcessDefinitionWithHumanAndAutomaticSteps(
                 Arrays.asList("step1", "step2"), Arrays.asList(true, true));
-        final ProcessDefinition processDefinition = getProcessAPI().deploy(
+        final ProcessDefinition processDefinition = deployProcess(
                 new BusinessArchiveBuilder().createNewBusinessArchive().setProcessDefinition(designProcessDefinition).done());
         // do test and assert
         final long processDefId = getProcessAPI().getProcessDefinitionId(APITestUtil.PROCESS_NAME, APITestUtil.PROCESS_VERSION);
@@ -645,7 +661,7 @@ public class ProcessManagementIT extends TestWithUser {
     public void getProcessDefinitionIdByNameAndVersionWithExcepton() throws Exception {
         final DesignProcessDefinition designProcessDefinition = BuildTestUtil.buildProcessDefinitionWithHumanAndAutomaticSteps(
                 Arrays.asList("step1", "step2"), Arrays.asList(true, true));
-        final ProcessDefinition processDefinition = getProcessAPI().deploy(
+        final ProcessDefinition processDefinition = deployProcess(
                 new BusinessArchiveBuilder().createNewBusinessArchive().setProcessDefinition(designProcessDefinition).done());
         // do test and assert
         try {
@@ -852,7 +868,7 @@ public class ProcessManagementIT extends TestWithUser {
         final DesignProcessDefinition designProcessDefinition = new ProcessDefinitionBuilder().createNewInstance(PROCESS_NAME, PROCESS_VERSION)
                 .addDisplayName(processDisplayName).addDisplayDescription(processDisplayDescription).addDescription(processDescription)
                 .addUserTask("task1", "actor").getProcess();
-        final ProcessDefinition processDefinition = getProcessAPI().deploy(
+        final ProcessDefinition processDefinition = deployProcess(
                 new BusinessArchiveBuilder().createNewBusinessArchive().setProcessDefinition(designProcessDefinition).done());
         final long processId = processDefinition.getId();
         // before update, display name should be the same as process name
@@ -891,7 +907,7 @@ public class ProcessManagementIT extends TestWithUser {
         final DesignProcessDefinition designProcessDefinition = new ProcessDefinitionBuilder().createNewInstance(PROCESS_NAME, PROCESS_VERSION)
                 .addDisplayName(processDisplayName).addDisplayDescription(processDisplayDescription).addDescription(processDescription)
                 .addUserTask("task1", "actor").getProcess();
-        final ProcessDefinition processDefinition = getProcessAPI().deploy(
+        final ProcessDefinition processDefinition = deployProcess(
                 new BusinessArchiveBuilder().createNewBusinessArchive().setProcessDefinition(designProcessDefinition).done());
         final long processId = processDefinition.getId();
         // before update, display name should be the same as process name
@@ -918,7 +934,7 @@ public class ProcessManagementIT extends TestWithUser {
         // create process definition;
         final DesignProcessDefinition designProcessDefinition = BuildTestUtil.buildProcessDefinitionWithHumanAndAutomaticSteps(
                 Arrays.asList("step1", "step2"), Arrays.asList(true, true));
-        final ProcessDefinition processDefinition = getProcessAPI().deploy(
+        final ProcessDefinition processDefinition = deployProcess(
                 new BusinessArchiveBuilder().createNewBusinessArchive().setProcessDefinition(designProcessDefinition).done());
         final long processId = processDefinition.getId();
         // update with wrong processId
@@ -937,7 +953,7 @@ public class ProcessManagementIT extends TestWithUser {
         // create process definition;
         final DesignProcessDefinition designProcessDefinition = BuildTestUtil.buildProcessDefinitionWithHumanAndAutomaticSteps(
                 Arrays.asList("step1", "step2"), Arrays.asList(true, true));
-        final ProcessDefinition processDefinition = getProcessAPI().deploy(
+        final ProcessDefinition processDefinition = deployProcess(
                 new BusinessArchiveBuilder().createNewBusinessArchive().setProcessDefinition(designProcessDefinition).done());
         final long processId = processDefinition.getId();
         // update and do assert
@@ -1343,6 +1359,182 @@ public class ProcessManagementIT extends TestWithUser {
         disableAndDeleteProcess(processDefinition);
     }
 
+    /**
+     * Scenario in the same task:
+     * 1 -> connector on_enter fails
+     * 2 -> fix issue + retryTask
+     * 3 -> operation fails
+     * 4 -> fix issue + retryTask
+     * 5 -> connector on_finish fails
+     * 6 -> fix issue + retryTask
+     * 7 -> transition fails
+     * 8 -> fix issue + retryTask
+     * 9 -> task is finally completed
+     */
+    @Cover(classes = { ProcessManagementAPI.class }, concept = BPMNConcept.ACTIVITIES, jira = "BS-12685", keywords = { "retry task", "failed connector",
+            "failed operations" })
+    @Test
+    public void retryTask_should_retry_failed_connectors_and_operations() throws Exception {
+        //given
+        String watchingOnEnterVar = "watchingOnEnterVar";
+        String watchingOnFinishVar = "watchingOnFinishVar";
+        String watchingOperationsVar = "watchingOperationsVar";
+        String watchingTransitionVar = "watchingTransitionVar";
+        String countVar = "count";
+
+        String firstStepName = "auto";
+        String secondStepName = "auto1";
+        final ProcessDefinition processDefinition = deployProcessWithConnectorsAndOperationsThrowingException(watchingOnEnterVar, watchingOnFinishVar,
+                watchingOperationsVar, watchingTransitionVar, countVar, firstStepName, secondStepName);
+        final ProcessInstance processInstance = getProcessAPI().startProcess(processDefinition.getId());
+        //will fail on connector on enter
+        FlowNodeInstance flowNodeInstance = waitForFlowNodeInFailedState(processInstance, firstStepName);
+
+        //when
+        //set variable to a value different of 1: operation will execute with success
+        getProcessAPI().updateProcessDataInstance(watchingOnEnterVar, processInstance.getId(), "none");
+        getProcessAPI().retryTask(flowNodeInstance.getId());
+
+        //then will fail on operation
+        waitForFlowNodeInFailedState(processInstance, firstStepName);
+
+        //when
+        getProcessAPI().updateProcessDataInstance(watchingOperationsVar, processInstance.getId(), 1);
+        getProcessAPI().retryTask(flowNodeInstance.getId());
+
+        //then will fail on connector on finish
+        waitForFlowNodeInFailedState(processInstance, firstStepName);
+
+        //when
+        getProcessAPI().updateProcessDataInstance(watchingOnFinishVar, processInstance.getId(), "none");
+        getProcessAPI().retryTask(flowNodeInstance.getId());
+
+        //then will fail due to exception on transition
+        waitForFlowNodeInFailedState(processInstance, firstStepName);
+
+        //when
+        getProcessAPI().updateProcessDataInstance(watchingTransitionVar, processInstance.getId(), 1);
+        System.out.println("------------------- retrying after expression -------------");
+        getProcessAPI().retryTask(flowNodeInstance.getId());
+
+        //finally completed
+        waitForActivityInCompletedState(processInstance, firstStepName, true);
+        waitForActivityInCompletedState(processInstance, secondStepName, true);
+        waitForProcessToFinish(processInstance);
+
+        //check connectors
+        List<ArchivedConnectorInstance> connectorInstances = getArchivedConnectorInstances(flowNodeInstance);
+        assertThat(connectorInstances).extracting("state").containsExactly(ConnectorState.DONE, ConnectorState.DONE);
+        assertThat(connectorInstances).extracting("name").containsExactly("throwsExceptionOnEnter", "throwsExceptionOnFinish");
+
+        //check data instance
+        DataInstance count = getProcessAPI().getArchivedActivityDataInstance(countVar, flowNodeInstance.getId());
+        assertThat(count.getValue()).isEqualTo(1);
+
+        //clean
+        disableAndDeleteProcess(processDefinition);
+    }
+
+    private ProcessDefinition deployProcessWithConnectorsAndOperationsThrowingException(final String watchingOnEnterVar, final String watchingOnFinishVar,
+            final String watchingOperationsVar, final String watchingTransitionVar, final String countVar, final String firstStepName,
+            final String secondStepName) throws BonitaException, IOException {
+        final ProcessDefinitionBuilder processBuilder = new ProcessDefinitionBuilder().createNewInstance(PROCESS_NAME, PROCESS_VERSION);
+        //global data
+        processBuilder.addShortTextData(watchingOnEnterVar, new ExpressionBuilder().createConstantStringExpression(TestConnectorThatThrowException.NORMAL));
+        processBuilder.addShortTextData(watchingOnFinishVar, new ExpressionBuilder().createConstantStringExpression("normal"));
+        processBuilder.addIntegerData(watchingOperationsVar, new ExpressionBuilder().createConstantIntegerExpression(0));
+        processBuilder.addIntegerData(countVar, new ExpressionBuilder().createConstantIntegerExpression(0));
+        processBuilder.addIntegerData(watchingTransitionVar, new ExpressionBuilder().createConstantIntegerExpression(0));
+        AutomaticTaskDefinitionBuilder taskBuilder = processBuilder.addAutomaticTask(firstStepName);
+        //local data
+        taskBuilder.addShortTextData("localData", new ExpressionBuilder().createConstantStringExpression("default"));
+
+        addConnectors(watchingOnEnterVar, watchingOnFinishVar, taskBuilder);
+        addOperation(watchingOperationsVar, countVar, taskBuilder);
+
+        processBuilder.addAutomaticTask(secondStepName);
+        addTransition(firstStepName, secondStepName, watchingTransitionVar, processBuilder);
+        return deployAndEnableProcessWithConnector(processBuilder, "TestConnectorThatThrowException.impl", TestConnectorThatThrowException.class,
+                "TestConnectorThatThrowException.jar");
+    }
+
+    private void addTransition(final String firstStepName, final String secondStepName, final String watchingTransitionVar,
+            final ProcessDefinitionBuilder processBuilder) throws InvalidExpressionException {
+        Expression transitionCondition = new ExpressionBuilder().createGroovyScriptExpression("throwExceptionIfZero", "if (" + watchingTransitionVar
+                + " == 0) {\nthrow new RuntimeException(\" was zero\");\n} \nreturn true;", Boolean.class.getName(),
+                new ExpressionBuilder().createDataExpression(watchingTransitionVar, Integer.class.getName()));
+        processBuilder.addTransition(firstStepName, secondStepName, transitionCondition);
+    }
+
+    private void addOperation(final String watchingOperationsVar, final String countVar, final AutomaticTaskDefinitionBuilder taskBuilder)
+            throws InvalidExpressionException {
+        List<Expression> dependencies = Arrays.asList(new ExpressionBuilder().createDataExpression(watchingOperationsVar, Integer.class.getName()),
+                new ExpressionBuilder().createDataExpression(countVar, Integer.class.getName()));
+        Expression leftOperationExpr = new ExpressionBuilder().createGroovyScriptExpression("throwExceptionIfZero", "if (" + watchingOperationsVar
+                + "== 0) {\nthrow new RuntimeException(\" was zero\");\n} \nreturn " + countVar + " + 1;", Integer.class.getName(), dependencies);
+        taskBuilder.addOperation(new OperationBuilder().createSetDataOperation(countVar, leftOperationExpr));
+    }
+
+    private void addConnectors(final String watchingOnEnterVar, final String watchingOnFinishVar, final AutomaticTaskDefinitionBuilder taskBuilder)
+            throws InvalidExpressionException {
+        //connector on enter
+        taskBuilder.addConnector("throwsExceptionOnEnter", "testConnectorThatThrowException", "1.0", ConnectorEvent.ON_ENTER)
+                .addInput("kind", new ExpressionBuilder().createDataExpression(watchingOnEnterVar, String.class.getName()));
+        //connector on finish
+        taskBuilder.addConnector("throwsExceptionOnFinish", "testConnectorThatThrowException", "1.0", ConnectorEvent.ON_FINISH)
+                .addInput("kind", new ExpressionBuilder().createDataExpression(watchingOnFinishVar, String.class.getName()));
+    }
+
+    @Cover(classes = { ProcessManagementAPI.class }, concept = BPMNConcept.ACTIVITIES, jira = "BS-12685", keywords = "retry task, failed connector")
+    @Test
+    public void can_retryTask_twice() throws Exception {
+        //given
+        Expression dataExpression = new ExpressionBuilder().createDataExpression("watchingVar", String.class.getName());
+
+        final ProcessDefinitionBuilder processBuilder = new ProcessDefinitionBuilder().createNewInstance(PROCESS_NAME, PROCESS_VERSION);
+        processBuilder.addShortTextData("watchingVar", new ExpressionBuilder().createConstantStringExpression("normal"));
+        processBuilder.addAutomaticTask("auto").addConnector("testConnectorThatThrowException",
+                "testConnectorThatThrowException", "1.0", ConnectorEvent.ON_ENTER)
+                .addInput("kind", dataExpression);
+        final ProcessDefinition processDefinition = deployAndEnableProcessWithConnector(processBuilder, "TestConnectorThatThrowException.impl",
+                TestConnectorThatThrowException.class, "TestConnectorThatThrowException.jar");
+
+        final ProcessInstance processInstance = getProcessAPI().startProcess(processDefinition.getId());
+        //first fail
+        FlowNodeInstance flowNodeInstance = waitForFlowNodeInFailedState(processInstance, "auto");
+
+        //when
+        getProcessAPI().retryTask(flowNodeInstance.getId());
+
+        //then fail again
+        waitForFlowNodeInFailedState(processInstance, "auto");
+
+        //when
+        //set variable to a value different of 1: operation will execute with success
+        getProcessAPI().updateProcessDataInstance("watchingVar", processInstance.getId(), "none");
+        getProcessAPI().retryTask(flowNodeInstance.getId());
+
+        //then success
+        waitForActivityInCompletedState(processInstance, "auto", true);
+        waitForProcessToFinish(processInstance);
+
+        List<ArchivedConnectorInstance> connectorInstances = getArchivedConnectorInstances(flowNodeInstance);
+        assertThat(connectorInstances).hasSize(1);
+        assertThat(connectorInstances.get(0).getState()).isEqualTo(ConnectorState.DONE);
+
+        //clean
+        disableAndDeleteProcess(processDefinition);
+    }
+
+    private List<ArchivedConnectorInstance> getArchivedConnectorInstances(final FlowNodeInstance flowNodeInstance) throws SearchException {
+        SearchOptionsBuilder builder = new SearchOptionsBuilder(0, 100);
+        builder.filter(ArchiveConnectorInstancesSearchDescriptor.CONTAINER_ID, flowNodeInstance.getId());
+        builder.filter(ArchiveConnectorInstancesSearchDescriptor.CONTAINER_TYPE, "flowNode");
+        builder.sort(ArchiveConnectorInstancesSearchDescriptor.NAME, Order.ASC);
+        SearchResult<ArchivedConnectorInstance> searchResult = getProcessAPI().searchArchivedConnectorInstances(builder.done());
+        return searchResult.getResult();
+    }
+
     @Test(expected = NotFoundException.class)
     public void getArchiveCommentNotFound() throws Exception {
         getProcessAPI().getArchivedComment(123456789L);
@@ -1471,8 +1663,7 @@ public class ProcessManagementIT extends TestWithUser {
         disableAndDeleteProcess(processDefinition);
     }
 
-    private List<Long> createProcessDefinitionWithTwoHumanStepsAndDeployBusinessArchive(final int nbProcess) throws InvalidProcessDefinitionException,
-            ProcessDeployException, InvalidBusinessArchiveFormatException, AlreadyExistsException {
+    private List<Long> createProcessDefinitionWithTwoHumanStepsAndDeployBusinessArchive(final int nbProcess) throws BonitaException {
         final List<Long> ids = new ArrayList<Long>();
         for (int i = 0; i < nbProcess; i++) {
             String processName = PROCESS_NAME;
@@ -1482,7 +1673,7 @@ public class ProcessManagementIT extends TestWithUser {
             final DesignProcessDefinition processDefinition = BuildTestUtil.buildProcessDefinitionWithHumanAndAutomaticSteps(processName + i,
                     PROCESS_VERSION
                             + i, Arrays.asList("step1", "step2"), Arrays.asList(true, true));
-            ids.add(getProcessAPI().deploy(new BusinessArchiveBuilder().createNewBusinessArchive().setProcessDefinition(processDefinition).done()).getId());
+            ids.add(deployProcess(new BusinessArchiveBuilder().createNewBusinessArchive().setProcessDefinition(processDefinition).done()).getId());
         }
         return ids;
     }

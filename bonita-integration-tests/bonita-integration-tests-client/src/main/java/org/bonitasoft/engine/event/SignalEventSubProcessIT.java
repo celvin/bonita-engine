@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2012-2013 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -88,7 +88,7 @@ public class SignalEventSubProcessIT extends AbstractWaitingEventIT {
         // then
         checkNumberOfWaitingEvents(SUB_PROCESS_START_NAME, 0);
         activities = getProcessAPI().getActivities(processInstance.getId(), 0, 10);
-        assertThat(activities).as("should have 2 avtivities").hasSize(2);
+        assertThat(activities).as("should have 2 activities: sub-process flow node and user task").hasSize(2);
         assertEquals(SUB_PROCESS_NAME, activities.get(0).getName());
         assertEquals(SUB_PROCESS_USER_TASK_NAME, activities.get(1).getName());
 

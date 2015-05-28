@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2011-2012 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -23,6 +23,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
 import org.bonitasoft.engine.commons.NullCheckingUtil;
@@ -48,6 +49,10 @@ public class BonitaClassLoader extends MonoParentJarFileClassLoader {
 
     private boolean isActive = true;
 
+    private final long creationTime;
+
+    private final String uuid;
+
     /**
      * Logger
      */
@@ -55,9 +60,11 @@ public class BonitaClassLoader extends MonoParentJarFileClassLoader {
 
     BonitaClassLoader(final Map<String, byte[]> resources, final String type, final long id, final URI temporaryDirectoryUri, final ClassLoader parent) {
         super(type + "__" + id, new URL[] {}, parent);
+        this.creationTime = System.currentTimeMillis();
         NullCheckingUtil.checkArgsNotNull(resources, type, id, temporaryDirectoryUri, parent);
         this.type = type;
         this.id = id;
+        this.uuid = UUID.randomUUID().toString();
 
         nonJarResources = new HashMap<String, byte[]>();
         urls = new HashSet<URL>();
@@ -170,6 +177,6 @@ public class BonitaClassLoader extends MonoParentJarFileClassLoader {
 
     @Override
     public String toString() {
-        return super.toString() + ", type=" + type + ", id=" + id + ", isActive: " + isActive + ", parent= " + getParent();
+        return super.toString() + ", uuid=" + uuid + ", creationTime=" + creationTime + ", type=" + type + ", id=" + id + ", isActive: " + isActive + ", parent= " + getParent();
     }
 }

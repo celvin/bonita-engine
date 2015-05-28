@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2011-2013 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -25,7 +25,6 @@ import java.sql.Statement;
 import java.util.*;
 import java.util.Map.Entry;
 
-import org.apache.commons.lang3.text.WordUtils;
 import org.bonitasoft.engine.commons.ClassReflector;
 import org.bonitasoft.engine.commons.EnumToObjectConvertible;
 import org.bonitasoft.engine.commons.io.IOUtil;
@@ -85,7 +84,7 @@ public abstract class AbstractHibernatePersistenceService extends AbstractDBPers
     protected AbstractHibernatePersistenceService(final SessionFactory sessionFactory, final List<Class<? extends PersistentObject>> classMapping,
             final Map<String, String> classAliasMappings, final boolean enableWordSearch,
             final Set<String> wordSearchExclusionMappings, final TechnicalLoggerService logger) throws ClassNotFoundException {
-        super("TEST", ";", "#", enableWordSearch, wordSearchExclusionMappings, logger);
+        super("TEST", "#", enableWordSearch, wordSearchExclusionMappings, logger);
         this.sessionFactory = sessionFactory;
         this.classAliasMappings = classAliasMappings;
         this.classMapping = classMapping;
@@ -103,8 +102,6 @@ public abstract class AbstractHibernatePersistenceService extends AbstractDBPers
     /**
      * @param name
      * @param hbmConfigurationProvider
-     * @param tenantConfigurationsProvider
-     * @param statementDelimiter
      * @param likeEscapeCharacter
      * @param logger
      * @param sequenceManager
@@ -115,10 +112,10 @@ public abstract class AbstractHibernatePersistenceService extends AbstractDBPers
      * @throws ClassNotFoundException
      */
     public AbstractHibernatePersistenceService(final String name, final HibernateConfigurationProvider hbmConfigurationProvider,
-            final Properties extraHibernateProperties, final DBConfigurationsProvider tenantConfigurationsProvider, final String statementDelimiter,
+            final Properties extraHibernateProperties,
             final String likeEscapeCharacter, final TechnicalLoggerService logger, final SequenceManager sequenceManager, final DataSource datasource,
             final boolean enableWordSearch, final Set<String> wordSearchExclusionMappings) throws SPersistenceException, ClassNotFoundException {
-        super(name, tenantConfigurationsProvider, statementDelimiter, likeEscapeCharacter, sequenceManager, datasource, enableWordSearch,
+        super(name, likeEscapeCharacter, sequenceManager, datasource, enableWordSearch,
                 wordSearchExclusionMappings, logger);
         orderByCheckingMode = getOrderByCheckingMode();
         Configuration configuration;
@@ -340,12 +337,11 @@ public abstract class AbstractHibernatePersistenceService extends AbstractDBPers
         }
     }
 
-    private void setField(final PersistentObject entity, final String fieldName, final Object parameterValue) throws SPersistenceException {
+    void setField(final PersistentObject entity, final String fieldName, final Object parameterValue) throws SPersistenceException {
         Long id = null;
         try {
             id = entity.getId();
-            final String setterName = "set" + WordUtils.capitalize(fieldName);
-            ClassReflector.invokeMethodByName(entity, setterName, parameterValue);
+            ClassReflector.setField(entity, fieldName, parameterValue);
         } catch (final Exception e) {
             throw new SPersistenceException("Problem while updating entity: " + entity + " with id: " + id, e);
         }
@@ -385,6 +381,11 @@ public abstract class AbstractHibernatePersistenceService extends AbstractDBPers
         } catch (final SPersistenceException e) {
             throw new SBonitaReadException(e, selectDescriptor);
         }
+    }
+
+    @Override
+    protected void setId(PersistentObject entity) throws SPersistenceException {
+        super.setId(entity);
     }
 
     @SuppressWarnings("unchecked")
@@ -770,46 +771,6 @@ public abstract class AbstractHibernatePersistenceService extends AbstractDBPers
             } else {
                 query.setParameter(entry.getKey(), value);
             }
-        }
-    }
-
-    @Override
-    protected void doExecuteSQL(final String sqlResource, final String statementDelimiter, final Map<String, String> replacements,
-            final boolean useDataSourceConnection) throws SPersistenceException, IOException {
-        final URL url = this.getClass().getResource(sqlResource);
-        if (url == null) {
-            throw new IOException("SQL file not found, path=" + sqlResource);
-        }
-        final String fileContent = new String(IOUtil.getAllContentFrom(url));
-
-        if (logger.isLoggable(getClass(), TechnicalLogSeverity.DEBUG)) {
-            logger.log(getClass(), TechnicalLogSeverity.DEBUG, "Processing SQL resource : " + sqlResource);
-        }
-        final String regex = statementDelimiter.concat("\r?\n");
-        final List<String> commands = new ArrayList<String>();
-        final String[] tmp = fileContent.split(regex);
-        for (final String command : tmp) {
-            final String filledCommand = fillTemplate(replacements, command);
-            if (!filledCommand.isEmpty()) {
-                commands.add(filledCommand);
-            }
-        }
-        if (commands.isEmpty()) {
-            return;
-        }
-        final int lastIndex = commands.size() - 1;
-        String lastCommand = commands.get(lastIndex);
-        final int index = lastCommand.lastIndexOf(statementDelimiter);
-        if (index > 0) {
-            lastCommand = lastCommand.substring(0, index);
-            commands.remove(lastIndex);
-            commands.add(lastCommand);
-        }
-
-        if (useDataSourceConnection) {
-            doExecuteSQLThroughJDBC(commands);
-        } else {
-            doExecuteSQLThroughHibernate(sqlResource, commands);
         }
     }
 

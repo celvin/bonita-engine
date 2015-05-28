@@ -1,3 +1,29 @@
+CREATE TABLE contract_data (
+  tenantid BIGINT NOT NULL,
+  id BIGINT NOT NULL,
+  kind VARCHAR(20) NOT NULL,
+  scopeId BIGINT NOT NULL,
+  name VARCHAR(50) NOT NULL,
+  val LONGBLOB
+) ENGINE = INNODB;
+ALTER TABLE contract_data ADD CONSTRAINT pk_contract_data PRIMARY KEY (tenantid, id, scopeId);
+ALTER TABLE contract_data ADD CONSTRAINT uc_cd_scope_name UNIQUE (kind, scopeId, name, tenantid);
+CREATE INDEX idx_cd_scope_name ON contract_data (kind, scopeId, name, tenantid);
+
+CREATE TABLE arch_contract_data (
+  tenantid BIGINT NOT NULL,
+  id BIGINT NOT NULL,
+  kind VARCHAR(20) NOT NULL,
+  scopeId BIGINT NOT NULL,
+  name VARCHAR(50) NOT NULL,
+  val LONGBLOB,
+  archiveDate BIGINT NOT NULL,
+  sourceObjectId BIGINT NOT NULL
+) ENGINE = INNODB;
+ALTER TABLE arch_contract_data ADD CONSTRAINT pk_arch_contract_data PRIMARY KEY (tenantid, id, scopeId);
+ALTER TABLE arch_contract_data ADD CONSTRAINT uc_acd_scope_name UNIQUE (kind, scopeId, name, tenantid);
+CREATE INDEX idx_acd_scope_name ON arch_contract_data (kind, scopeId, name, tenantid);
+
 CREATE TABLE actor (
   tenantid BIGINT NOT NULL,
   id BIGINT NOT NULL,
@@ -846,9 +872,14 @@ CREATE TABLE page (
   lastUpdatedBy BIGINT NOT NULL,
   contentName VARCHAR(50) NOT NULL,
   content LONGBLOB,
-  UNIQUE (tenantId, name),
-  PRIMARY KEY (tenantId, id)
+  contentType VARCHAR(50) NOT NULL,
+  processDefinitionId BIGINT
 ) ENGINE = INNODB;
+
+ALTER TABLE page ADD CONSTRAINT pk_page PRIMARY KEY (tenantid, id);
+ALTER TABLE page ADD CONSTRAINT uk_page UNIQUE (tenantid, name, processDefinitionId);
+
+
 CREATE TABLE sequence (
   tenantid BIGINT NOT NULL,
   id BIGINT NOT NULL,
@@ -976,3 +1007,32 @@ CREATE TABLE theme (
   CONSTRAINT UK_Theme UNIQUE (tenantId, isDefault, type),
   PRIMARY KEY (tenantId, id)
 ) ENGINE = INNODB;
+
+CREATE TABLE form_mapping (
+  tenantId BIGINT NOT NULL,
+  id BIGINT NOT NULL,
+  process BIGINT NOT NULL,
+  type INT NOT NULL,
+  task VARCHAR(255),
+  page_mapping_tenant_id BIGINT,
+  page_mapping_id BIGINT,
+  lastUpdateDate BIGINT,
+  lastUpdatedBy BIGINT,
+  PRIMARY KEY (tenantId, id)
+) ENGINE = INNODB;
+
+CREATE TABLE page_mapping (
+  tenantId BIGINT NOT NULL,
+  id BIGINT NOT NULL,
+  key_ VARCHAR(255) NOT NULL,
+  pageId BIGINT NULL,
+  url VARCHAR(1024) NULL,
+  urladapter VARCHAR(255) NULL,
+  page_authoriz_rules TEXT NULL,
+  lastUpdateDate BIGINT NULL,
+  lastUpdatedBy BIGINT NULL,
+  PRIMARY KEY (tenantId, id),
+  UNIQUE (tenantId, key_)
+) ENGINE = INNODB;
+
+ALTER TABLE form_mapping ADD CONSTRAINT fk_form_mapping_key FOREIGN KEY (page_mapping_tenant_id, page_mapping_id) REFERENCES page_mapping(tenantId, id);

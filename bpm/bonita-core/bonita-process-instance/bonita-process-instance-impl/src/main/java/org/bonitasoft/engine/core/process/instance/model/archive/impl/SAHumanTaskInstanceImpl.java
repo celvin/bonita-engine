@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2012 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -28,6 +28,8 @@ public abstract class SAHumanTaskInstanceImpl extends SAActivityInstanceImpl imp
 
     private long assigneeId;
 
+    private long claimedDate;
+
     private long expectedEndDate;
 
     private STaskPriority priority;
@@ -41,6 +43,7 @@ public abstract class SAHumanTaskInstanceImpl extends SAActivityInstanceImpl imp
         assigneeId = sHumanTaskInstance.getAssigneeId();
         priority = sHumanTaskInstance.getPriority();
         expectedEndDate = sHumanTaskInstance.getExpectedEndDate();
+        claimedDate = sHumanTaskInstance.getClaimedDate();
     }
 
     @Override
@@ -59,6 +62,15 @@ public abstract class SAHumanTaskInstanceImpl extends SAActivityInstanceImpl imp
 
     public void setAssigneeId(final long assigneeId) {
         this.assigneeId = assigneeId;
+    }
+
+    @Override
+    public long getClaimedDate() {
+        return claimedDate;
+    }
+
+    public void setClaimedDate(long claimedDate) {
+        this.claimedDate = claimedDate;
     }
 
     @Override

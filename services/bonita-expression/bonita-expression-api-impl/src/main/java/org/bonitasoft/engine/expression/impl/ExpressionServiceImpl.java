@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2011, 2014 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -53,7 +53,7 @@ public class ExpressionServiceImpl implements ExpressionService {
             final boolean checkExpressionReturnType, final TimeTracker timeTracker) {
         super();
         final List<ExpressionExecutorStrategy> expressionExecutors = expressionExecutorStrategyProvider.getExpressionExecutors();
-        expressionExecutorsMap = new HashMap<ExpressionKind, ExpressionExecutorStrategy>(expressionExecutors.size());
+        expressionExecutorsMap = new HashMap<>(expressionExecutors.size());
         this.checkExpressionReturnType = checkExpressionReturnType;
         for (final ExpressionExecutorStrategy expressionExecutorStrategy : expressionExecutors) {
             expressionExecutorsMap.put(expressionExecutorStrategy.getExpressionKind(), expressionExecutorStrategy);

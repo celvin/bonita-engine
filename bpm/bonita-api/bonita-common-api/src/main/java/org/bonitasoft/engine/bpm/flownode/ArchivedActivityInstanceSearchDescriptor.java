@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2012 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -44,5 +44,7 @@ public final class ArchivedActivityInstanceSearchDescriptor {
     public static final String REACHED_STATE_DATE = "reachedStateDate";
 
     public static final String SOURCE_OBJECT_ID = "sourceObjectId";
+
+    public static final String ARCHIVE_DATE = "archiveDate";
 
 }

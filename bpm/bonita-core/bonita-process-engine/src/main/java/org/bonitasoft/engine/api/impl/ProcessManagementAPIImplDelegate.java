@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -10,31 +10,44 @@
  * You should have received a copy of the GNU Lesser General Public License along with this
  * program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301, USA.
- **/
+ */
 package org.bonitasoft.engine.api.impl;
 
-import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import org.bonitasoft.engine.api.impl.transaction.process.DeleteProcess;
 import org.bonitasoft.engine.api.impl.transaction.process.DisableProcess;
+import org.bonitasoft.engine.api.impl.transaction.process.GetProcessDefinition;
+import org.bonitasoft.engine.bpm.parameter.ParameterCriterion;
+import org.bonitasoft.engine.bpm.parameter.ParameterInstance;
+import org.bonitasoft.engine.bpm.parameter.impl.ParameterImpl;
 import org.bonitasoft.engine.bpm.process.ActivationState;
 import org.bonitasoft.engine.bpm.process.ProcessDefinitionNotFoundException;
 import org.bonitasoft.engine.commons.exceptions.SBonitaException;
+import org.bonitasoft.engine.commons.transaction.TransactionContentWithResult;
 import org.bonitasoft.engine.core.process.definition.ProcessDefinitionService;
 import org.bonitasoft.engine.core.process.definition.exception.SProcessDefinitionNotFoundException;
 import org.bonitasoft.engine.core.process.definition.exception.SProcessDefinitionReadException;
+import org.bonitasoft.engine.core.process.definition.model.SParameterDefinition;
+import org.bonitasoft.engine.core.process.definition.model.SProcessDefinition;
 import org.bonitasoft.engine.core.process.definition.model.SProcessDefinitionDeployInfo;
 import org.bonitasoft.engine.core.process.instance.api.ProcessInstanceService;
 import org.bonitasoft.engine.core.process.instance.api.event.EventInstanceService;
 import org.bonitasoft.engine.dependency.model.ScopeType;
 import org.bonitasoft.engine.exception.BonitaHomeNotSetException;
+import org.bonitasoft.engine.exception.NotFoundException;
 import org.bonitasoft.engine.exception.RetrieveException;
 import org.bonitasoft.engine.exception.UpdateException;
 import org.bonitasoft.engine.home.BonitaHomeServer;
-import org.bonitasoft.engine.io.IOUtil;
 import org.bonitasoft.engine.log.technical.TechnicalLogSeverity;
 import org.bonitasoft.engine.log.technical.TechnicalLoggerService;
+import org.bonitasoft.engine.parameter.OrderBy;
+import org.bonitasoft.engine.parameter.ParameterService;
+import org.bonitasoft.engine.parameter.SParameter;
+import org.bonitasoft.engine.parameter.SParameterProcessNotFoundException;
 import org.bonitasoft.engine.persistence.SBonitaReadException;
 import org.bonitasoft.engine.scheduler.SchedulerService;
 import org.bonitasoft.engine.service.PlatformServiceAccessor;
@@ -47,21 +60,37 @@ import org.bonitasoft.engine.sessionaccessor.SessionAccessor;
  * @author Matthieu Chaffotte
  */
 // Uncomment the "implements" when this delegate implements all the methods.
-public class ProcessManagementAPIImplDelegate /* implements ProcessManagementAPI */{
+public class ProcessManagementAPIImplDelegate /* implements ProcessManagementAPI */ {
+
+    private static PlatformServiceAccessor getPlatformServiceAccessor() {
+        try {
+            return ServiceAccessorFactory.getInstance().createPlatformServiceAccessor();
+        } catch (final Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static SProcessDefinition getServerProcessDefinition(final long processDefinitionId, final ProcessDefinitionService processDefinitionService)
+            throws SProcessDefinitionNotFoundException, SProcessDefinitionReadException {
+        final TransactionContentWithResult<SProcessDefinition> transactionContentWithResult = new GetProcessDefinition(processDefinitionId,
+                processDefinitionService);
+        try {
+            transactionContentWithResult.execute();
+            return transactionContentWithResult.getResult();
+        } catch (final SProcessDefinitionNotFoundException e) {
+            throw e;
+        } catch (final SProcessDefinitionReadException e) {
+            throw e;
+        } catch (final SBonitaException e) {
+            throw new SProcessDefinitionNotFoundException(e, processDefinitionId);
+        }
+    }
 
     protected TenantServiceAccessor getTenantAccessor() {
         try {
             final SessionAccessor sessionAccessor = ServiceAccessorFactory.getInstance().createSessionAccessor();
             final long tenantId = sessionAccessor.getTenantId();
             return TenantServiceSingleton.getInstance(tenantId);
-        } catch (final Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static PlatformServiceAccessor getPlatformServiceAccessor() {
-        try {
-            return ServiceAccessorFactory.getInstance().createPlatformServiceAccessor();
         } catch (final Exception e) {
             throw new RuntimeException(e);
         }
@@ -74,30 +103,11 @@ public class ProcessManagementAPIImplDelegate /* implements ProcessManagementAPI
         final DeleteProcess deleteProcess = instantiateDeleteProcessTransactionContent(processDefinitionId);
         deleteProcess.execute();
 
-        final String processesFolder = BonitaHomeServer.getInstance().getProcessesFolder(tenantAccessor.getTenantId());
-        final File file = new File(processesFolder);
-        if (!file.exists()) {
-            file.mkdir();
-        }
+        BonitaHomeServer.getInstance().deleteProcess(tenantAccessor.getTenantId(), processDefinitionId);
 
-        final File processFolder = new File(file, String.valueOf(processDefinitionId));
-        IOUtil.deleteDir(processFolder);
         if (logger.isLoggable(getClass(), TechnicalLogSeverity.INFO)) {
             logger.log(this.getClass(), TechnicalLogSeverity.INFO, "The user <" + SessionInfos.getUserNameFromSession() + "> has deleted process with id = <"
                     + processDefinitionId + ">");
-        }
-    }
-
-    @Deprecated
-    public void deleteProcess(final long processDefinitionId) throws SBonitaException, BonitaHomeNotSetException {
-        final TenantServiceAccessor tenantAccessor = getTenantAccessor();
-        final DeleteProcess deleteProcess = new DeleteProcess(getTenantAccessor(), processDefinitionId);
-        deleteProcess.execute();
-
-        final String processesFolder = BonitaHomeServer.getInstance().getProcessesFolder(tenantAccessor.getTenantId());
-        final File file = new File(processesFolder);
-        if (!file.exists()) {
-            file.mkdir();
         }
     }
 
@@ -137,6 +147,74 @@ public class ProcessManagementAPIImplDelegate /* implements ProcessManagementAPI
             throw new RetrieveException(spdre);
         } catch (final SBonitaReadException sbre) {
             throw new RetrieveException(sbre);
+        }
+    }
+
+    public List<ParameterInstance> getParameterInstances(final long processDefinitionId, final int startIndex, final int maxResults,
+            final ParameterCriterion sort) {
+        final TenantServiceAccessor tenantAccessor = getTenantAccessor();
+        final ParameterService parameterService = tenantAccessor.getParameterService();
+        final ProcessDefinitionService processDefinitionService = tenantAccessor.getProcessDefinitionService();
+        try {
+            OrderBy order = null;
+            switch (sort) {
+                case NAME_DESC:
+                    order = OrderBy.NAME_DESC;
+                    break;
+                default:
+                    order = OrderBy.NAME_ASC;
+                    break;
+            }
+
+            final SProcessDefinition sProcessDefinition = getServerProcessDefinition(processDefinitionId, processDefinitionService);
+            if (sProcessDefinition.getParameters().isEmpty()) {
+                return Collections.emptyList();
+            }
+            final List<SParameter> parameters = parameterService.get(processDefinitionId, startIndex, maxResults, order);
+            final List<ParameterInstance> paramterInstances = new ArrayList<ParameterInstance>();
+            for (int i = 0; i < parameters.size(); i++) {
+                final SParameter parameter = parameters.get(i);
+                final String name = parameter.getName();
+                final String value = parameter.getValue();
+                final SParameterDefinition parameterDefinition = sProcessDefinition.getParameter(name);
+                final String description = parameterDefinition.getDescription();
+                final String type = parameterDefinition.getType();
+                paramterInstances.add(new ParameterImpl(name, description, value, type));
+            }
+            return paramterInstances;
+        } catch (final SBonitaException e) {
+            throw new RetrieveException(e);
+        }
+    }
+
+    public int getNumberOfParameterInstances(final long processDefinitionId) {
+        final TenantServiceAccessor tenantAccessor = getTenantAccessor();
+        final ProcessDefinitionService processDefinitionService = tenantAccessor.getProcessDefinitionService();
+        try {
+            final SProcessDefinition sProcessDefinition = getServerProcessDefinition(processDefinitionId, processDefinitionService);
+            return sProcessDefinition.getParameters().size();
+        } catch (final SBonitaException e) {
+            throw new RetrieveException(e);
+        }
+    }
+
+    public ParameterInstance getParameterInstance(final long processDefinitionId, final String parameterName) throws NotFoundException {
+        final TenantServiceAccessor tenantAccessor = getTenantAccessor();
+        final ParameterService parameterService = tenantAccessor.getParameterService();
+        final ProcessDefinitionService processDefinitionService = tenantAccessor.getProcessDefinitionService();
+        try {
+            final SProcessDefinition sProcessDefinition = getServerProcessDefinition(processDefinitionId, processDefinitionService);
+            final SParameter parameter = parameterService.get(processDefinitionId, parameterName);
+            final String name = parameter.getName();
+            final String value = parameter.getValue();
+            final SParameterDefinition parameterDefinition = sProcessDefinition.getParameter(name);
+            final String description = parameterDefinition.getDescription();
+            final String type = parameterDefinition.getType();
+            return new ParameterImpl(name, description, value, type);
+        } catch (final SParameterProcessNotFoundException e) {
+            throw new NotFoundException("the parameter with name " + parameterName + " and process with id " + processDefinitionId + " was not found.");
+        } catch (final SBonitaException e) {
+            throw new RetrieveException(e);
         }
     }
 

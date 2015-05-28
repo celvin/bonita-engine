@@ -1,3 +1,16 @@
+/**
+ * Copyright (C) 2015 BonitaSoft S.A.
+ * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
+ * This library is free software; you can redistribute it and/or modify it under the terms
+ * of the GNU Lesser General Public License as published by the Free Software Foundation
+ * version 2.1 of the License.
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * You should have received a copy of the GNU Lesser General Public License along with this
+ * program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
+ * Floor, Boston, MA 02110-1301, USA.
+ **/
 package org.bonitasoft.engine.search;
 
 import static org.bonitasoft.engine.matchers.BonitaMatcher.match;
@@ -653,6 +666,7 @@ public class SearchActivityInstanceIT extends TestWithUser {
 
         searchOptionsBuilder = new SearchOptionsBuilder(0, 20);
         searchOptionsBuilder.filter(ArchivedActivityInstanceSearchDescriptor.PROCESS_DEFINITION_ID, processDefinition.getId());
+        searchOptionsBuilder.sort(ArchivedActivityInstanceSearchDescriptor.ARCHIVE_DATE, Order.DESC);
         archivedActivityInstancesSearch = getProcessAPI().searchArchivedActivities(searchOptionsBuilder.done());
         assertEquals(8, archivedActivityInstancesSearch.getCount());
         for (final ArchivedActivityInstance activity : archivedActivityInstancesSearch.getResult()) {

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2011-2013 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -28,76 +28,6 @@ import org.bonitasoft.engine.persistence.ReadPersistenceService;
  * @author Matthieu Chaffotte
  */
 public interface PersistenceService extends ReadPersistenceService {
-
-    /**
-     * Create structure, execute SQL create tenant tables.
-     *
-     * @throws SPersistenceException
-     * @throws IOException
-     * @throws SRetryableException
-     * @since 6.0
-     */
-    void createStructure() throws SPersistenceException, IOException;
-
-    /**
-     * Called after the create structure to execute script after the tables are created
-     * e.g. to add indexes and constraints
-     *
-     * @throws SPersistenceException
-     * @throws IOException
-     * @throws SRetryableException
-     * @since 6.0
-     */
-    void postCreateStructure() throws SPersistenceException, IOException;
-
-    /**
-     * Called before the drop structure to execute script before the tables are deleted
-     * e.g. to add indexes and constraints
-     *
-     * @throws SPersistenceException
-     * @throws IOException
-     * @throws SRetryableException
-     * @since 6.0
-     */
-    void preDropStructure() throws SPersistenceException, IOException;
-
-    /**
-     * Clean structure, execute SQL clean tables.
-     *
-     * @throws SPersistenceException
-     * @throws IOException
-     * @throws SRetryableException
-     * @since 6.0
-     */
-    void cleanStructure() throws SPersistenceException, IOException;
-
-    /**
-     * Delete structure, execute SQL drop tenant tables.
-     *
-     * @throws SPersistenceException
-     * @throws IOException
-     * @throws SRetryableException
-     * @since 6.0
-     */
-    void deleteStructure() throws SPersistenceException, IOException;
-
-    /**
-     * Initialize structure, execute SQL init tenant tables.
-     *
-     * @throws SPersistenceException
-     * @throws IOException
-     * @throws SRetryableException
-     * @since 6.0
-     */
-    void initializeStructure() throws SPersistenceException, IOException;
-
-    /**
-     * @param replacements
-     * @throws SPersistenceException
-     * @throws IOException
-     * @throws SRetryableException
-     */
-    void initializeStructure(final Map<String, String> replacements) throws SPersistenceException, IOException;
 
     // on save, the service MUST generate a unique ID and set it in id attribute if this attribute is equals to -1
     // else keep the already set id

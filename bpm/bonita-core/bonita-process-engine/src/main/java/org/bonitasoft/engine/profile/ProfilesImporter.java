@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -51,7 +51,6 @@ import org.bonitasoft.engine.profile.impl.ExportedProfileEntry;
 import org.bonitasoft.engine.profile.impl.ExportedProfileMapping;
 import org.bonitasoft.engine.profile.model.SProfile;
 import org.bonitasoft.engine.profile.model.SProfileEntry;
-import org.bonitasoft.engine.service.TenantServiceAccessor;
 import org.bonitasoft.engine.xml.Parser;
 import org.bonitasoft.engine.xml.SValidationException;
 import org.bonitasoft.engine.xml.SXMLParseException;
@@ -298,7 +297,7 @@ public class ProfilesImporter {
         }
     }
 
-    public static File getFileContainingMD5(TenantServiceAccessor tenantServiceAccessor) throws BonitaHomeNotSetException {
-        return new File(BonitaHomeServer.getInstance().getTenantWorkFolder(tenantServiceAccessor.getTenantId()), "profiles.md5");
+    public static File getFileContainingMD5(long tenantId) throws BonitaHomeNotSetException, IOException {
+        return BonitaHomeServer.getInstance().getTenantWorkFile(tenantId, "profiles.md5");
     }
 }

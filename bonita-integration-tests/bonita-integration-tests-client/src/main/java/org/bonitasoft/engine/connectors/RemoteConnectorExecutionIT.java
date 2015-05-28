@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2013 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -66,6 +66,7 @@ import org.bonitasoft.engine.bpm.process.impl.SubProcessDefinitionBuilder;
 import org.bonitasoft.engine.bpm.process.impl.UserTaskDefinitionBuilder;
 import org.bonitasoft.engine.connector.Connector;
 import org.bonitasoft.engine.exception.BonitaException;
+import org.bonitasoft.engine.exception.RetrieveException;
 import org.bonitasoft.engine.expression.Expression;
 import org.bonitasoft.engine.expression.ExpressionBuilder;
 import org.bonitasoft.engine.expression.ExpressionConstants;
@@ -86,10 +87,15 @@ import org.bonitasoft.engine.test.TestStates;
 import org.bonitasoft.engine.test.annotation.Cover;
 import org.bonitasoft.engine.test.annotation.Cover.BPMNConcept;
 import org.junit.Ignore;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 
 @SuppressWarnings("javadoc")
 public class RemoteConnectorExecutionIT extends ConnectorExecutionIT {
+
+    @Rule
+    public ExpectedException expectedException = ExpectedException.none();
 
     private static final String CONNECTOR_OUTPUT_NAME = "output1";
 
@@ -228,7 +234,7 @@ public class RemoteConnectorExecutionIT extends ConnectorExecutionIT {
         // taskBuilder.addLongData(localDataName, new ExpressionBuilder().createConstantLongExpression(1L));
         // taskBuilder
         // .addConnector("connector", CONNECTOR_WITH_OUTPUT_ID, "1.0", activationEvent)
-        // .addInput(CONNECTOR_INPUT_NAME, new ExpressionBuilder().createDataExpression(localDataName, Long.class.getName()))
+        // .addSimpleInput(CONNECTOR_INPUT_NAME, new ExpressionBuilder().createDataExpression(localDataName, Long.class.getName()))
         // .addOutput(
         // new LeftOperandBuilder().createDataLeftOperand(globalDataName),
         // OperatorType.ASSIGNMENT, "=", "",
@@ -398,6 +404,7 @@ public class RemoteConnectorExecutionIT extends ConnectorExecutionIT {
 
     @Test
     public void getNumberofConnectorImplementationsWhenProcessDoesNotExists() {
+        expectedException.expect(RetrieveException.class);
         assertEquals(0, getProcessAPI().getNumberOfConnectorImplementations(123L));
     }
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2013 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -68,7 +68,7 @@ public class SessionInfos {
     private static SessionService getSessionService() {
         try {
             final PlatformServiceAccessor platformServiceAccessor = ServiceAccessorFactory.getInstance().createPlatformServiceAccessor();
-            return platformServiceAccessor.getSessionService();
+            return platformServiceAccessor.getTenantServiceAccessor(getSessionAccessor().getTenantId()).getSessionService();
         } catch (final Exception e) {
             throw new BonitaRuntimeException(e);
         }

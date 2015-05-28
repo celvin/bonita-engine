@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2011-2013 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -10,9 +10,7 @@
  * You should have received a copy of the GNU Lesser General Public License along with this
  * program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301, USA.
- **
- * @since 6.0
- */
+ **/
 package org.bonitasoft.engine.api;
 
 import java.io.Serializable;
@@ -26,6 +24,8 @@ import org.bonitasoft.engine.bpm.connector.ArchivedConnectorInstance;
 import org.bonitasoft.engine.bpm.connector.ConnectorExecutionException;
 import org.bonitasoft.engine.bpm.connector.ConnectorInstance;
 import org.bonitasoft.engine.bpm.connector.ConnectorNotFoundException;
+import org.bonitasoft.engine.bpm.contract.ContractDefinition;
+import org.bonitasoft.engine.bpm.contract.ContractViolationException;
 import org.bonitasoft.engine.bpm.data.ArchivedDataInstance;
 import org.bonitasoft.engine.bpm.data.ArchivedDataNotFoundException;
 import org.bonitasoft.engine.bpm.data.DataInstance;
@@ -48,6 +48,7 @@ import org.bonitasoft.engine.bpm.flownode.SendEventException;
 import org.bonitasoft.engine.bpm.flownode.TaskPriority;
 import org.bonitasoft.engine.bpm.flownode.TimerEventTriggerInstance;
 import org.bonitasoft.engine.bpm.flownode.TimerEventTriggerInstanceNotFoundException;
+import org.bonitasoft.engine.bpm.flownode.UserTaskNotFoundException;
 import org.bonitasoft.engine.bpm.process.ArchivedProcessInstance;
 import org.bonitasoft.engine.bpm.process.ArchivedProcessInstanceNotFoundException;
 import org.bonitasoft.engine.bpm.process.ProcessActivationException;
@@ -58,12 +59,11 @@ import org.bonitasoft.engine.bpm.process.ProcessInstance;
 import org.bonitasoft.engine.bpm.process.ProcessInstanceCriterion;
 import org.bonitasoft.engine.bpm.process.ProcessInstanceNotFoundException;
 import org.bonitasoft.engine.exception.BonitaException;
+import org.bonitasoft.engine.exception.ContractDataNotFoundException;
 import org.bonitasoft.engine.exception.CreationException;
 import org.bonitasoft.engine.exception.DeletionException;
 import org.bonitasoft.engine.exception.ExecutionException;
 import org.bonitasoft.engine.exception.NotFoundException;
-import org.bonitasoft.engine.exception.ProcessInstanceHierarchicalDeletionException;
-import org.bonitasoft.engine.exception.RetrieveException;
 import org.bonitasoft.engine.exception.SearchException;
 import org.bonitasoft.engine.exception.UpdateException;
 import org.bonitasoft.engine.expression.Expression;
@@ -128,6 +128,22 @@ public interface ProcessRuntimeAPI {
      * @since 6.4.0
      */
     SearchResult<ProcessInstance> searchFailedProcessInstances(SearchOptions searchOptions) throws SearchException;
+
+    /**
+     * List all process instances with at least one failed task or the {@link org.bonitasoft.engine.bpm.process.ProcessInstanceState#ERROR} state that
+     * are supervised by the given user.
+     * If the specified userId does not correspond to a user, an empty SearchResult is returned.
+     *
+     * @param userId
+     *        The identifier of the user.
+     * @param searchOptions
+     *        The search criterion. See {@link org.bonitasoft.engine.bpm.process.ProcessInstanceSearchDescriptor} for valid fields for searching and sorting.
+     * @return The list of failed process instances supervised by the specified user.
+     * @throws SearchException
+     *         If an exception occurs when getting the list of process instances.
+     * @since 7.0
+     */
+    SearchResult<ProcessInstance> searchFailedProcessInstancesSupervisedBy(long userId, SearchOptions searchOptions) throws SearchException;
 
     /**
      * List all open process instances supervised by a user.
@@ -497,6 +513,55 @@ public interface ProcessRuntimeAPI {
      */
     ProcessInstance startProcess(final long userId, final long processDefinitionId, final Map<String, Serializable> initialVariables)
             throws ProcessDefinitionNotFoundException, ProcessActivationException, ProcessExecutionException;
+
+    /**
+     * Start an instance of the process with the specified process definition id, and provides inputs to fullfill Process Contract.
+     * See {@link org.bonitasoft.engine.bpm.contract.ContractDefinition} for details on contracts.
+     *
+     * @param processDefinitionId
+     *        The identifier of the process definition for which an instance will be started.
+     * @param instantiationInputs
+     *        The couples of input name/value that allows to start a process with an instantiation contract.
+     * @return An instance of the process.
+     * @throws org.bonitasoft.engine.session.InvalidSessionException
+     *         If the session is invalid, e.g. the session has expired.
+     * @throws ProcessDefinitionNotFoundException
+     *         If no matching process definition is found.
+     * @throws ProcessActivationException
+     *         If an exception occurs during activation.
+     * @throws ProcessExecutionException
+     *         If a problem occurs when starting the process.
+     * @throws ContractViolationException
+     *         If inputs don't fit with task contract
+     * @since 7.0.0
+     */
+    ProcessInstance startProcessWithInputs(final long processDefinitionId, final Map<String, Serializable> instantiationInputs)
+            throws ProcessDefinitionNotFoundException, ProcessActivationException, ProcessExecutionException, ContractViolationException;
+
+    /**
+     * Start an instance of the process with the specified process definition id on behalf of a given user, and provides inputs to fullfill Process Contract.
+     * See {@link org.bonitasoft.engine.bpm.contract.ContractDefinition} for details on contracts.
+     *
+     * @param userId The identifier of the user in the name of whom the process is started.
+     * @param processDefinitionId
+     *        The identifier of the process definition for which an instance will be started.
+     * @param instantiationInputs
+     *        The couples of input name/value that allows to start a process with an instantiation contract.
+     * @return An instance of the process.
+     * @throws org.bonitasoft.engine.session.InvalidSessionException
+     *         If the session is invalid, e.g. the session has expired.
+     * @throws ProcessDefinitionNotFoundException
+     *         If no matching process definition is found.
+     * @throws ProcessActivationException
+     *         If an exception occurs during activation.
+     * @throws ProcessExecutionException
+     *         If a problem occurs when starting the process.
+     * @throws ContractViolationException
+     *         If inputs don't fit with process contract
+     * @since 7.0.0
+     */
+    ProcessInstance startProcessWithInputs(final long userId, final long processDefinitionId, final Map<String, Serializable> instantiationInputs)
+            throws ProcessDefinitionNotFoundException, ProcessActivationException, ProcessExecutionException, ContractViolationException;
 
     /**
      * Executes a flow node that is in a stable state.
@@ -1209,7 +1274,8 @@ public interface ProcessRuntimeAPI {
      * Search the archived human tasks for tasks that match the search options.
      *
      * @param searchOptions
-     *        The search conditions and the options for sorting and paging the results. See {@link org.bonitasoft.engine.bpm.flownode.HumanTaskInstanceSearchDescriptor} for valid
+     *        The search conditions and the options for sorting and paging the results. See
+     *        {@link org.bonitasoft.engine.bpm.flownode.HumanTaskInstanceSearchDescriptor} for valid
      *        fields
      *        for searching and sorting.
      * @return The archived human tasks that match the search conditions.
@@ -1345,18 +1411,23 @@ public interface ProcessRuntimeAPI {
     void cancelProcessInstance(long processInstanceId) throws ProcessInstanceNotFoundException, UpdateException;
 
     /**
-     * Reset the state of a failed activity instance to its previous state and then execute it.
-     * The activity must be in state FAILED.
+     * Reset the state of a failed {@link org.bonitasoft.engine.bpm.flownode.FlowNodeInstance} to its previous state and then execute it. Pre-condition: the
+     * {@code FlowNodeInstance} must be in state FAILED. If this condition is not respected, a ActivityExecutionException is thrown.
+     * <p>If the {@code FlowNodeInstance} contains failed {@link org.bonitasoft.engine.bpm.connector.ConnectorInstance}s, they will be re-executed. In the case
+     * where the connector execution fails again, the {@code FlowNodeInstance} will remain in failed state. There is not counter on the number of
+     * re-executions</p>
      *
      * @param activityInstanceId
-     *        The identifier of the activity instance.
+     *        The identifier of the {@code FlowNodeInstance} to be re-retried.
      * @throws org.bonitasoft.engine.session.InvalidSessionException
-     *         If the session is invalid, e.g. the session has expired.
+     *         when session is invalid, e.g. the session has expired.
      * @throws ActivityInstanceNotFoundException
-     *         If there is no activity instance with the specified identifier.
+     *         when no {@code FlowNodeInstance} is found with the specified identifier.
      * @throws ActivityExecutionException
-     *         If an error occurs either while resetting the state of while executing the activity instance.
+     *         occurs if the current Flownode is not in FAILED state, or while resetting the state, or while executing the {@code FlowNodeInstance}.
      * @since 6.0
+     * @see org.bonitasoft.engine.bpm.flownode.FlowNodeInstance
+     * @see org.bonitasoft.engine.bpm.connector.ConnectorInstance
      */
     void retryTask(long activityInstanceId) throws ActivityInstanceNotFoundException, ActivityExecutionException;
 
@@ -1798,7 +1869,7 @@ public interface ProcessRuntimeAPI {
 
     /**
      * Check whether a specific user is involved in a given human task instance.<br/>
-     * User A is involved with a  human task  instance if any of the following is true:
+     * User A is involved with a human task instance if any of the following is true:
      * <ul>
      * <li>the human task instance is assigned to user A</li>
      * <li>the human task instance is pending for user A</li>
@@ -2364,7 +2435,7 @@ public interface ProcessRuntimeAPI {
     /**
      * Retrieve, for a given process instance, the current counters on flownodes. Please note: this method does not count the flownodes of sub-process instances
      * of the given process instance.
-     * 
+     *
      * @param processInstanceId ID of the process instance of which to retrieve the current indicators.
      * @return A map of counters: the key is the name of the flownode, as defined at design-time. the value is the current counters for this flownode, that is,
      *         a map of &lt;state name, number of current flownode in that state&gt;
@@ -2402,4 +2473,134 @@ public interface ProcessRuntimeAPI {
     Date updateExecutionDateOfTimerEventTriggerInstance(long timerEventTriggerInstanceId, Date executionDate)
             throws TimerEventTriggerInstanceNotFoundException, UpdateException;
 
+    /**
+     * Gets the contract of the user task.
+     *
+     * @param userTaskId the identifier of the user task.
+     * @return the contract of the user task
+     * @throws UserTaskNotFoundException
+     *         if identifier does not refer to a real user task.
+     */
+    ContractDefinition getUserTaskContract(long userTaskId) throws UserTaskNotFoundException;
+
+    /**
+     * Gets the process instantiation contract for a given process definition.
+     *
+     * @param processDefinitionId the identifier of the process definition.
+     * @return the contract of the given process
+     * @throws ProcessDefinitionNotFoundException
+     *         if identifier does not refer to an existing process definition.
+     */
+    ContractDefinition getProcessContract(long processDefinitionId) throws ProcessDefinitionNotFoundException;
+
+    /**
+     * Executes a user task that is in a stable state.
+     * Will move the activity to the next stable state and then continue the execution of the process.
+     *
+     * @param userTaskInstanceId
+     *        The identifier of the user task to execute.
+     * @param inputs
+     *        the inputs used for user task execution
+     * @throws UserTaskNotFoundException
+     *         If user task to execute is not found
+     * @throws ContractViolationException
+     *         If inputs don't fit with task contract
+     * @throws FlowNodeExecutionException
+     *         If an execution exception occurs
+     * @since 7.0
+     */
+    void executeUserTask(long userTaskInstanceId, Map<String, Serializable> inputs) throws UserTaskNotFoundException, ContractViolationException,
+            FlowNodeExecutionException;
+
+    /**
+     * Executes a user task that is in a stable state on behalf of a given user
+     * Will make the task go in the next stable state and then continue the execution of the process
+     * If userId equals 0, the logged-in user is declared as the executer of the task.
+     * The user, who executed the task on behalf of a given user, is declared as a executer delegate.
+     *
+     * @param userId
+     *        The identifier of the user for which you want to execute the flow node
+     * @param userTaskInstanceId
+     *        The identifier of the user task to execute
+     * @param inputs
+     *        the input used for user task execution
+     * @throws UserTaskNotFoundException
+     *         If user task to execute is not found
+     * @throws ContractViolationException
+     *         If inputs don't fit with task contract
+     * @throws FlowNodeExecutionException
+     *         If an execution exception occurs
+     * @since 7.0
+     */
+    void executeUserTask(long userId, long userTaskInstanceId, Map<String, Serializable> inputs) throws UserTaskNotFoundException, ContractViolationException,
+            FlowNodeExecutionException;
+
+    /**
+     * Gets the value of the variable of the user task contract.
+     *
+     * @param userTaskInstanceId
+     *        The identifier of the user task
+     * @param name
+     *        The name of the variable
+     * @return The identifier of the user task
+     * @throws ContractDataNotFoundException if no data found for the given user task instance and name.
+     */
+    Serializable getUserTaskContractVariableValue(long userTaskInstanceId, String name) throws ContractDataNotFoundException;
+
+    /**
+     * Gets the value of a process instantiation input, during the phase of initializing. For instance, if a connector on_enter fails, this method can be called
+     * to check the current value.
+     *
+     * @param processInstanceId The identifier of the process instance
+     * @param name The name of the process input to retrieve
+     * @return The identifier of the user task
+     * @throws ContractDataNotFoundException if no data found for the given process instance and name.
+     */
+    Serializable getProcessInputValueDuringInitialization(long processInstanceId, String name) throws ContractDataNotFoundException;
+
+    /**
+     * Gets the value of a process instantiation input, after initialization has finished. Requires Archiving feature to be enabled (default behaviour).
+     *
+     * @param processInstanceId The identifier of the process instance
+     * @param name The name of the process input to retrieve
+     * @return The identifier of the user task
+     * @throws ContractDataNotFoundException if identifier does not refer to an existing process instance.
+     */
+    Serializable getProcessInputValueAfterInitialization(long processInstanceId, String name) throws ContractDataNotFoundException;
+
+    /**
+     * return the context defined in the process definition for this user task instance
+     *
+     * @param userTaskInstanceId the id of the user task instance
+     * @return a map containing the evaluated context
+     * @throws UserTaskNotFoundException if <code>userTaskInstanceId</code> does not reference any existing task.
+     */
+    Map<String, Serializable> getUserTaskExecutionContext(long userTaskInstanceId) throws UserTaskNotFoundException, ExpressionEvaluationException;
+
+    /**
+     * return the context defined in the process definition for this user task instance
+     *
+     * @param archivedUserTaskInstanceId the id of the archived version of the user task instance
+     * @return a map containing the evaluated context
+     * @throws UserTaskNotFoundException if <code>archivedUserTaskInstanceId</code> does not reference any existing archived task.
+     */
+    Map<String, Serializable> getArchivedUserTaskExecutionContext(long archivedUserTaskInstanceId) throws UserTaskNotFoundException, ExpressionEvaluationException;
+
+    /**
+     * return the context defined in the process definition for this process instance
+     *
+     * @param processInstanceId the id of the process instance
+     * @return a map containing the evaluated context
+     * @throws ProcessInstanceNotFoundException if <code>processInstanceId</code> does not reference any existing process.
+     */
+    Map<String, Serializable> getProcessInstanceExecutionContext(long processInstanceId) throws ProcessInstanceNotFoundException, ExpressionEvaluationException;
+
+    /**
+     * return the context defined in the process definition for this process instance
+     *
+     * @param archivedProcessInstanceId the id of the archived version of a process instance
+     * @return a map containing the evaluated context
+     * @throws ProcessInstanceNotFoundException if <code>archivedProcessInstanceId</code> does not reference any existing process.
+     */
+    Map<String, Serializable> getArchivedProcessInstanceExecutionContext(long archivedProcessInstanceId) throws ProcessInstanceNotFoundException, ExpressionEvaluationException;
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2011, 2014 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -10,7 +10,7 @@
  * You should have received a copy of the GNU Lesser General Public License along with this
  * program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301, USA.
- **/
+ */
 package org.bonitasoft.engine.bpm.bar.xml;
 
 import java.util.HashMap;
@@ -23,6 +23,11 @@ import org.bonitasoft.engine.bpm.actor.ActorDefinition;
 import org.bonitasoft.engine.bpm.businessdata.BusinessDataDefinition;
 import org.bonitasoft.engine.bpm.connector.ConnectorDefinition;
 import org.bonitasoft.engine.bpm.connector.FailAction;
+import org.bonitasoft.engine.bpm.context.ContextEntry;
+import org.bonitasoft.engine.bpm.contract.ConstraintDefinition;
+import org.bonitasoft.engine.bpm.contract.ContractDefinition;
+import org.bonitasoft.engine.bpm.contract.InputDefinition;
+import org.bonitasoft.engine.bpm.contract.Type;
 import org.bonitasoft.engine.bpm.data.DataDefinition;
 import org.bonitasoft.engine.bpm.data.TextDataDefinition;
 import org.bonitasoft.engine.bpm.data.XMLDataDefinition;
@@ -344,6 +349,36 @@ public class XMLProcessDefinition {
 
     public static final String TRIGGERED_BY_EVENT = "triggeredByEvent";
 
+    public static final String CONTRACT_NODE = "contract";
+
+    private static final String CONTRACT_INPUTS_NODE = "inputDefinitions";
+
+    public static final String CONTRACT_INPUT_NODE = "inputDefinition";
+
+    public static final String TYPE = "type";
+
+    public static final String CONSTRAINT_TYPE = "type";
+
+    public static final String MULTIPLE = "multiple";
+
+    public static final String CONTRACT_CONSTRAINTS_NODE = "constraintDefinitions";
+
+    public static final String CONTRACT_CONSTRAINT_NODE = "constraintDefinition";
+
+    public static final String CONSTRAINT_EXPRESSION = "conditionalExpression";
+
+    public static final String CONSTRAINT_EXPLANATION = "explanation";
+
+    public static final String INPUT_NAMES = "inputDefinitionNames";
+
+    public static final String INPUT_NAME = "inputDefinitionName";
+
+    public static final String CONTEXT_NODE = "context";
+
+    public static final String CONTEXT_ENTRY_NODE = "contextEntry";
+
+    public static final String CONTEXT_ENTRY_KEY = "key";
+
     public Map<Object, String> objectToId = new HashMap<Object, String>();
 
     public static final class BEntry<K, V> implements Map.Entry<K, V> {
@@ -426,6 +461,11 @@ public class XMLProcessDefinition {
             rootNode.addChild(initiatorNode);
             fillInitiatorActorNode(initiatorNode, actorInitiator);
         }
+        final ContractDefinition contract = processDefinition.getContract();
+        if (contract != null) {
+            rootNode.addChild(createContractNode(contract));
+        }
+        rootNode.addChild(createContextNode(processDefinition.getContext()));
         return rootNode;
     }
 
@@ -500,6 +540,12 @@ public class XMLProcessDefinition {
                     fillUserFilterNode(userFilterNode, humanTaskDefinition.getUserFilter());
                     activityNode.addChild(userFilterNode);
                 }
+                if (humanTaskDefinition instanceof UserTaskDefinition) {
+                    if (((UserTaskDefinition) humanTaskDefinition).getContract() != null) {
+                        activityNode.addChild(createContractNode(((UserTaskDefinition) humanTaskDefinition).getContract()));
+                    }
+                    activityNode.addChild(createContextNode(((UserTaskDefinition) humanTaskDefinition).getContext()));
+                }
             } else if (activity instanceof CallActivityDefinition) {
                 fillCallActivity((CallActivityDefinition) activity, activityNode);
             } else if (activity instanceof SubProcessDefinition) {
@@ -522,6 +568,67 @@ public class XMLProcessDefinition {
         createAndfillIntermediateCatchEvents(containerDefinition, flowNodes);
         createAndFillIntermediateThrowEvents(containerDefinition, flowNodes);
         createAndFillEndEvents(containerDefinition, flowNodes);
+    }
+
+    private XMLNode createContractNode(final ContractDefinition contract) {
+        final XMLNode contractNode = new XMLNode(CONTRACT_NODE);
+        final XMLNode inputsNode = new XMLNode(CONTRACT_INPUTS_NODE);
+        if (!contract.getInputs().isEmpty()) {
+            for (final InputDefinition input : contract.getInputs()) {
+                inputsNode.addChild(createInputNode(input));
+            }
+        }
+        if (!inputsNode.getChildNodes().isEmpty()) {
+            contractNode.addChild(inputsNode);
+        }
+        final List<ConstraintDefinition> constraints = contract.getConstraints();
+        if (!constraints.isEmpty()) {
+            final XMLNode rulesNode = new XMLNode(CONTRACT_CONSTRAINTS_NODE);
+            contractNode.addChild(rulesNode);
+            for (final ConstraintDefinition constraintDefinition : constraints) {
+                rulesNode.addChild(createConstraintNode(constraintDefinition));
+            }
+        }
+        return contractNode;
+    }
+
+    private XMLNode createContextNode(final List<ContextEntry> context) {
+        final XMLNode contextNode = new XMLNode(CONTEXT_NODE);
+        for (final ContextEntry contextEntry : context) {
+            final XMLNode node = new XMLNode(CONTEXT_ENTRY_NODE);
+            node.addAttribute(CONTEXT_ENTRY_KEY, contextEntry.getKey());
+            addExpressionNode(node, EXPRESSION_NODE, contextEntry.getExpression());
+            contextNode.addChild(node);
+        }
+        return contextNode;
+    }
+
+    private XMLNode createConstraintNode(final ConstraintDefinition constraintDefinition) {
+        final XMLNode xmlNode = new XMLNode(CONTRACT_CONSTRAINT_NODE);
+        xmlNode.addAttribute(NAME, constraintDefinition.getName());
+        xmlNode.addChild(CONSTRAINT_EXPRESSION, constraintDefinition.getExpression());
+        xmlNode.addChild(CONSTRAINT_EXPLANATION, constraintDefinition.getExplanation());
+        final XMLNode namesNode = new XMLNode(INPUT_NAMES);
+        xmlNode.addChild(namesNode);
+        for (final String inputName : constraintDefinition.getInputNames()) {
+            namesNode.addChild(INPUT_NAME, inputName);
+        }
+        return xmlNode;
+    }
+
+    private XMLNode createInputNode(final InputDefinition input) {
+        final XMLNode inputNode = new XMLNode(CONTRACT_INPUT_NODE);
+        inputNode.addAttribute(NAME, input.getName());
+        inputNode.addAttribute(MULTIPLE, String.valueOf(input.isMultiple()));
+        inputNode.addAttribute(DESCRIPTION, input.getDescription());
+        final Type type = input.getType();
+        if (type != null) {
+            inputNode.addAttribute(TYPE, type.toString());
+        }
+        for (final InputDefinition inputDefinition : input.getInputs()) {
+            inputNode.addChild(createInputNode(inputDefinition));
+        }
+        return inputNode;
     }
 
     private void addBusinessDataDefinitionNodes(final List<BusinessDataDefinition> businessDataDefinitions, final XMLNode containerNode) {
@@ -1042,6 +1149,7 @@ public class XMLProcessDefinition {
         expressionNode.addAttribute(NAME, expression.getName());
         expressionNode.addAttribute(EXPRESSION_RETURN_TYPE, expression.getReturnType());
         expressionNode.addAttribute(EXPRESSION_INTERPRETER, expression.getInterpreter());
+        expressionNode.addAttribute(ID, String.valueOf(expression.getId()));
         expressionNode.addChild(EXPRESSION_CONTENT, expression.getContent());
         for (final Expression dependency : expression.getDependencies()) {
             final XMLNode dependencyExpression = new XMLNode(EXPRESSION_NODE);

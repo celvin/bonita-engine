@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2011-2014 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -27,7 +27,7 @@ import org.bonitasoft.engine.expression.model.SExpression;
  * Allow to evaluate one kind of expression
  * the kind of expression that this evaluator is responsible for is define by the {@link #getExpressionKind()} Client implements this interface in order to add
  * a new kind of expression
- * 
+ *
  * @author Zhao Na
  * @author Baptiste Mesta
  * @author Matthieu Chaffotte
@@ -73,9 +73,13 @@ public interface ExpressionExecutorStrategy {
 
     String TYPE_BUSINESS_DATA = "TYPE_BUSINESS_DATA";
 
+    String TYPE_BUSINESS_DATA_REFERENCE = "TYPE_BUSINESS_DATA_REFERENCE";
+
     String TYPE_BUSINESS_OBJECT_DAO = "TYPE_BUSINESS_OBJECT_DAO";
 
     String TYPE_QUERY_BUSINESS_DATA = "TYPE_QUERY_BUSINESS_DATA";
+
+    String TYPE_CONTRACT_INPUT = "TYPE_CONTRACT_INPUT";
 
     ExpressionKind KIND_CONSTANT = new ExpressionKind(TYPE_CONSTANT);
 
@@ -105,15 +109,22 @@ public interface ExpressionExecutorStrategy {
 
     ExpressionKind KIND_BUSINESS_DATA = new ExpressionKind(TYPE_BUSINESS_DATA);
 
+    ExpressionKind KIND_BUSINESS_DATA_REFERENCE = new ExpressionKind(TYPE_BUSINESS_DATA_REFERENCE);
+
     ExpressionKind KIND_BUSINESS_OBJECT_DAO = new ExpressionKind(TYPE_BUSINESS_OBJECT_DAO);
 
     ExpressionKind KIND_QUERY_BUSINESS_DATA = new ExpressionKind(TYPE_QUERY_BUSINESS_DATA);
+
+    ExpressionKind KIND_CONTRACT_INPUT = new ExpressionKind(TYPE_CONTRACT_INPUT);
 
     /**
      * This list must contain only types with no dependencies
      */
     List<ExpressionKind> NO_DEPENDENCY_EXPRESSION_EVALUATION_ORDER = Arrays.asList(KIND_ENGINE_CONSTANT, KIND_VARIABLE, KIND_CONSTANT, KIND_INPUT,
-            KIND_PARAMETER, KIND_DOCUMENT, KIND_BUSINESS_DATA, KIND_BUSINESS_OBJECT_DAO/* , KIND_PATTERN, KIND_READ_ONLY_SCRIPT_GROOVY, KIND_LIST */);
+            KIND_PARAMETER, KIND_DOCUMENT, KIND_BUSINESS_DATA, KIND_BUSINESS_OBJECT_DAO, KIND_CONTRACT_INPUT /*
+             * , KIND_PATTERN, KIND_READ_ONLY_SCRIPT_GROOVY,
+             * KIND_LIST
+             */);
 
     /**
      * @param expression
@@ -122,7 +133,7 @@ public interface ExpressionExecutorStrategy {
      *            map containing the result of the evaluation of dependencies
      *            and also informations about the context of evaluation given by {@link #CONTAINER_ID_KEY} and {@link #CONTAINER_TYPE_KEY}
      * @return
-     *         an {@link ExpressionResult} having the result of the evaluation of the expression and the return type
+     *         the result of the evaluation of the expression of appropriate type
      * @throws SExpressionEvaluationException
      * @throws SExpressionDependencyMissingException
      */
@@ -131,7 +142,7 @@ public interface ExpressionExecutorStrategy {
 
     /**
      * Validate the expression, an exception is thrown it is invalid
-     * 
+     *
      * @param expression
      *            the expression to validate
      * @throws SInvalidExpressionException

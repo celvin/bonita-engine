@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2011-2013 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -10,17 +10,23 @@
  * You should have received a copy of the GNU Lesser General Public License along with this
  * program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301, USA.
- **/
+ */
 package org.bonitasoft.engine.core.process.definition.model.impl;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import org.bonitasoft.engine.bpm.actor.ActorDefinition;
+import org.bonitasoft.engine.bpm.context.ContextEntry;
+import org.bonitasoft.engine.bpm.contract.ContractDefinition;
 import org.bonitasoft.engine.bpm.parameter.ParameterDefinition;
 import org.bonitasoft.engine.bpm.process.DesignProcessDefinition;
 import org.bonitasoft.engine.core.process.definition.model.SActorDefinition;
+import org.bonitasoft.engine.core.process.definition.model.SContextEntry;
+import org.bonitasoft.engine.core.process.definition.model.SContractDefinition;
 import org.bonitasoft.engine.core.process.definition.model.SFlowElementContainerDefinition;
 import org.bonitasoft.engine.core.process.definition.model.SParameterDefinition;
 import org.bonitasoft.engine.core.process.definition.model.SProcessDefinition;
@@ -39,42 +45,29 @@ public class SProcessDefinitionImpl extends SNamedElementImpl implements SProces
     private static final long serialVersionUID = -8961400385282752731L;
 
     private final String version;
-
-    private String description;
-
     private final Set<SParameterDefinition> parameters;
-
     private final Set<SActorDefinition> actors;
-
+    private final List<SContextEntry> context = new ArrayList<>();
+    private String description;
     private SActorDefinition sActorInitiator;
-
     private SFlowElementContainerDefinition container;
-
     private String stringIndexLabel1;
-
     private String stringIndexLabel2;
-
     private String stringIndexLabel3;
-
     private String stringIndexLabel4;
-
     private String stringIndexLabel5;
-
     private SExpression stringIndexValue1;
-
     private SExpression stringIndexValue2;
-
     private SExpression stringIndexValue3;
-
     private SExpression stringIndexValue4;
-
     private SExpression stringIndexValue5;
+    private SContractDefinition contract;
 
     public SProcessDefinitionImpl(final DesignProcessDefinition processDefinition) {
         super(processDefinition.getName());
         description = processDefinition.getDescription();
         version = processDefinition.getVersion();
-        actors = new HashSet<SActorDefinition>();
+        actors = new HashSet<>();
         stringIndexLabel1 = processDefinition.getStringIndexLabel(1);
         stringIndexLabel2 = processDefinition.getStringIndexLabel(2);
         stringIndexLabel3 = processDefinition.getStringIndexLabel(3);
@@ -89,7 +82,7 @@ public class SProcessDefinitionImpl extends SNamedElementImpl implements SProces
             actors.add(new SActorDefinitionImpl(actor));
         }
 
-        parameters = new HashSet<SParameterDefinition>();
+        parameters = new HashSet<>();
         for (final ParameterDefinition parameterDefinition : processDefinition.getParameters()) {
             parameters.add(new SParameterDefinitionImpl(parameterDefinition));
         }
@@ -98,8 +91,15 @@ public class SProcessDefinitionImpl extends SNamedElementImpl implements SProces
         if (actorInitiator != null) {
             sActorInitiator = new SActorDefinitionImpl(actorInitiator);
         }
-
+        final ContractDefinition contract = processDefinition.getContract();
+        if (contract != null) {
+            setContract(new SContractDefinitionImpl(contract));
+        }
+        for (ContextEntry contextEntry : processDefinition.getContext()) {
+            context.add(new SContextEntryImpl(contextEntry.getKey(), ServerModelConvertor.convertExpression(contextEntry.getExpression())));
+        }
         container = new SFlowElementContainerDefinitionImpl(this, processDefinition.getProcessContainer());
+
     }
 
     public SProcessDefinitionImpl(final String name, final String version) {
@@ -107,6 +107,7 @@ public class SProcessDefinitionImpl extends SNamedElementImpl implements SProces
         this.version = version;
         actors = new HashSet<SActorDefinition>();
         parameters = new HashSet<SParameterDefinition>();
+        container = new SFlowElementContainerDefinitionImpl();
     }
 
     @Override
@@ -239,5 +240,21 @@ public class SProcessDefinitionImpl extends SNamedElementImpl implements SProces
     public boolean hasConnectors() {
         return getProcessContainer().getConnectors().size() > 0;
     }
+
+    @Override
+    public SContractDefinition getContract() {
+        return contract;
+    }
+
+
+    public void setContract(SContractDefinition contract) {
+        this.contract = contract;
+    }
+
+    @Override
+    public List<SContextEntry> getContext() {
+        return context;
+    }
+
 
 }

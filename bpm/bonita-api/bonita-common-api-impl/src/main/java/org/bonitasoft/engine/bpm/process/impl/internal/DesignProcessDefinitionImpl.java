@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2011-2013 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -24,6 +24,8 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.apache.commons.lang3.builder.ToStringStyle;
 import org.bonitasoft.engine.bpm.actor.ActorDefinition;
+import org.bonitasoft.engine.bpm.context.ContextEntry;
+import org.bonitasoft.engine.bpm.contract.ContractDefinition;
 import org.bonitasoft.engine.bpm.flownode.impl.FlowElementContainerDefinition;
 import org.bonitasoft.engine.bpm.parameter.ParameterDefinition;
 import org.bonitasoft.engine.bpm.process.DesignProcessDefinition;
@@ -71,6 +73,10 @@ public class DesignProcessDefinitionImpl extends ProcessDefinitionImpl implement
     private Expression stringIndexValue4;
 
     private Expression stringIndexValue5;
+
+    private ContractDefinition contract;
+
+    private List<ContextEntry> context = new ArrayList<>();
 
     public DesignProcessDefinitionImpl(final String name, final String version) {
         super(name, version);
@@ -220,12 +226,13 @@ public class DesignProcessDefinitionImpl extends ProcessDefinitionImpl implement
         }
     }
 
+
     @Override
     public int hashCode() {
         return new HashCodeBuilder().append(displayName).append(displayDescription).append(parameters).append(actors).append(actorInitiator)
                 .append(flowElementContainer).append(stringIndexLabel1).append(stringIndexLabel2).append(stringIndexLabel3).append(stringIndexLabel4)
                 .append(stringIndexLabel5).append(stringIndexValue1).append(stringIndexValue2).append(stringIndexValue3).append(stringIndexValue4)
-                .append(stringIndexValue5).build();
+                .append(stringIndexValue5).append(contract).build();
     }
 
     @Override
@@ -247,8 +254,7 @@ public class DesignProcessDefinitionImpl extends ProcessDefinitionImpl implement
                 .append(stringIndexLabel4, other.stringIndexLabel4).append(stringIndexLabel5, other.stringIndexLabel5)
                 .append(stringIndexValue1, other.stringIndexValue1).append(stringIndexValue2, other.stringIndexValue2)
                 .append(stringIndexValue3, other.stringIndexValue3).append(stringIndexValue4, other.stringIndexValue4)
-                .append(stringIndexValue5, other.stringIndexValue5).build();
-
+                .append(stringIndexValue5, other.stringIndexValue5).append(contract, other.contract).build();
     }
 
     @Override
@@ -256,7 +262,24 @@ public class DesignProcessDefinitionImpl extends ProcessDefinitionImpl implement
         return new ToStringBuilder(this, ToStringStyle.SHORT_PREFIX_STYLE).append(getName()).append(getVersion()).append(displayName)
                 .append(displayDescription).append(parameters).append(actors).append(actorInitiator).append(flowElementContainer).append(stringIndexLabel1)
                 .append(stringIndexLabel2).append(stringIndexLabel3).append(stringIndexLabel4).append(stringIndexLabel5).append(stringIndexValue1)
-                .append(stringIndexValue2).append(stringIndexValue3).append(stringIndexValue4).append(stringIndexValue5).build();
+                .append(stringIndexValue2).append(stringIndexValue3).append(stringIndexValue4).append(stringIndexValue5).append(contract).build();
     }
 
+    @Override
+    public ContractDefinition getContract() {
+        return contract;
+    }
+
+    public void setContract(ContractDefinition contract) {
+        this.contract = contract;
+    }
+
+    @Override
+    public List<ContextEntry> getContext() {
+        return context;
+    }
+
+    public void addContextEntry(ContextEntry contextEntry) {
+        context.add(contextEntry);
+    }
 }

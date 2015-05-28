@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2012-2013 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -20,7 +20,10 @@ import java.util.Map;
 import java.util.Set;
 
 import org.bonitasoft.engine.bpm.actor.impl.ActorDefinitionImpl;
+import org.bonitasoft.engine.bpm.context.ContextEntry;
+import org.bonitasoft.engine.bpm.contract.ContractDefinition;
 import org.bonitasoft.engine.bpm.flownode.impl.FlowElementContainerDefinition;
+import org.bonitasoft.engine.bpm.flownode.impl.internal.UserTaskDefinitionImpl;
 import org.bonitasoft.engine.bpm.parameter.ParameterDefinition;
 import org.bonitasoft.engine.bpm.process.DesignProcessDefinition;
 import org.bonitasoft.engine.bpm.process.impl.internal.DesignProcessDefinitionImpl;
@@ -49,6 +52,8 @@ public class ProcessDefinitionBinding extends NamedElementBinding {
     private FlowElementContainerDefinition processContainer;
 
     private final List<StringIndex> stringIndexes = new ArrayList<StringIndex>(5);
+    private ContractDefinition contract;
+    private List<ContextEntry> context;
 
     @Override
     public void setAttributes(final Map<String, String> attributes) {
@@ -63,6 +68,7 @@ public class ProcessDefinitionBinding extends NamedElementBinding {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void setChildObject(final String name, final Object value) {
         if (XMLProcessDefinition.ACTOR_NODE.equals(name)) {
             actors.add((ActorDefinitionImpl) value);
@@ -74,6 +80,10 @@ public class ProcessDefinitionBinding extends NamedElementBinding {
             processContainer = (FlowElementContainerDefinition) value;
         } else if (XMLProcessDefinition.STRING_INDEX.equals(name)) {
             stringIndexes.add((StringIndex) value);
+        } else if (XMLProcessDefinition.CONTRACT_NODE.equals(name)) {
+            contract = (ContractDefinition) value;
+        }else if (XMLProcessDefinition.CONTEXT_NODE.equals(name)) {
+            context = (List<ContextEntry>) value;
         }
     }
 
@@ -99,6 +109,12 @@ public class ProcessDefinitionBinding extends NamedElementBinding {
             }
             if (processContainer != null) {
                 processDefinitionImpl.setProcessContainer(processContainer);
+            }
+            if (contract != null) {
+                processDefinitionImpl.setContract(contract);
+            }
+            if(context!= null){
+                processDefinitionImpl.getContext().addAll(context);
             }
         }
         return processDefinitionImpl;

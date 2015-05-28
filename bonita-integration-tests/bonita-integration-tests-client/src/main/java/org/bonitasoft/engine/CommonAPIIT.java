@@ -1,3 +1,16 @@
+/**
+ * Copyright (C) 2015 BonitaSoft S.A.
+ * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
+ * This library is free software; you can redistribute it and/or modify it under the terms
+ * of the GNU Lesser General Public License as published by the Free Software Foundation
+ * version 2.1 of the License.
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * You should have received a copy of the GNU Lesser General Public License along with this
+ * program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
+ * Floor, Boston, MA 02110-1301, USA.
+ **/
 package org.bonitasoft.engine;
 
 import static org.junit.Assert.assertNotNull;
@@ -22,18 +35,13 @@ import org.bonitasoft.engine.filter.user.TestFilterWithAutoAssign;
 import org.bonitasoft.engine.identity.User;
 import org.bonitasoft.engine.io.IOUtil;
 import org.bonitasoft.engine.test.APITestUtil;
-import org.bonitasoft.engine.test.runner.BonitaSuiteRunner.Initializer;
-import org.bonitasoft.engine.test.runner.BonitaTestRunner;
 import org.junit.Rule;
 import org.junit.rules.TestRule;
 import org.junit.rules.TestWatcher;
 import org.junit.runner.Description;
-import org.junit.runner.RunWith;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@RunWith(BonitaTestRunner.class)
-@Initializer(TestsInitializer.class)
 public abstract class CommonAPIIT extends APITestUtil {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CommonAPIIT.class);
@@ -43,7 +51,7 @@ public abstract class CommonAPIIT extends APITestUtil {
 
         @Override
         public void starting(final Description d) {
-            LOGGER.info("Starting test: " + d.getClassName() + "." + d.getMethodName());
+            LOGGER.warn("Starting test: " + d.getClassName() + "." + d.getMethodName());
         }
 
         @Override
@@ -54,7 +62,7 @@ public abstract class CommonAPIIT extends APITestUtil {
             } catch (final Exception be) {
                 LOGGER.error("Unable to clean db", be);
             } finally {
-                LOGGER.info("-----------------------------------------------------------------------------------------------");
+                LOGGER.warn("-----------------------------------------------------------------------------------------------");
             }
         }
 
@@ -67,12 +75,12 @@ public abstract class CommonAPIIT extends APITestUtil {
                 } catch (final BonitaException e) {
                     throw new BonitaRuntimeException(e);
                 }
-                LOGGER.info("Succeeded test: " + d.getClassName() + "." + d.getMethodName());
+                LOGGER.warn("Succeeded test: " + d.getClassName() + "." + d.getMethodName());
                 if (!clean.isEmpty()) {
                     throw new BonitaRuntimeException(clean.toString());
                 }
             } finally {
-                LOGGER.info("-----------------------------------------------------------------------------------------------");
+                LOGGER.warn("-----------------------------------------------------------------------------------------------");
             }
         }
     };
@@ -111,11 +119,7 @@ public abstract class CommonAPIIT extends APITestUtil {
     }
 
     public BarResource getResource(final String path, final String name) throws IOException {
-        final InputStream stream = BPMRemoteTests.class.getResourceAsStream(path);
-        assertNotNull(stream);
-        final byte[] byteArray = IOUtils.toByteArray(stream);
-        stream.close();
-        return new BarResource(name, byteArray);
+        return getBarResource(path, name, CommonAPIIT.class);
     }
 
     public void addResource(final List<BarResource> resources, final String path, final String name) throws IOException {
@@ -168,4 +172,8 @@ public abstract class CommonAPIIT extends APITestUtil {
         }
     }
 
+    @Override
+    public BarResource getBarResource(String path, String name, Class<?> clazz) throws IOException {
+        return super.getBarResource(path, name, clazz);
+    }
 }

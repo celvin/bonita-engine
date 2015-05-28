@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2011-2012 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -30,6 +30,9 @@ import org.bonitasoft.engine.core.process.definition.model.bindings.SCatchSignal
 import org.bonitasoft.engine.core.process.definition.model.bindings.SConditionalExpressionBinding;
 import org.bonitasoft.engine.core.process.definition.model.bindings.SConnectorDefinitionBinding;
 import org.bonitasoft.engine.core.process.definition.model.bindings.SConnectorDefinitionInputBinding;
+import org.bonitasoft.engine.core.process.definition.model.bindings.SContextDefinitionBinding;
+import org.bonitasoft.engine.core.process.definition.model.bindings.SContextEntryBinding;
+import org.bonitasoft.engine.core.process.definition.model.bindings.SContractDefinitionBinding;
 import org.bonitasoft.engine.core.process.definition.model.bindings.SCorrelationBinding;
 import org.bonitasoft.engine.core.process.definition.model.bindings.SCorrelationKeyBinding;
 import org.bonitasoft.engine.core.process.definition.model.bindings.SCorrelationValueBinding;
@@ -48,6 +51,7 @@ import org.bonitasoft.engine.core.process.definition.model.bindings.SExpressionB
 import org.bonitasoft.engine.core.process.definition.model.bindings.SFlowElementBinding;
 import org.bonitasoft.engine.core.process.definition.model.bindings.SGatewayDefinitionBinding;
 import org.bonitasoft.engine.core.process.definition.model.bindings.SIncomingTransitionRefBinding;
+import org.bonitasoft.engine.core.process.definition.model.bindings.SInputDefinitionBinding;
 import org.bonitasoft.engine.core.process.definition.model.bindings.SIntermediateCatchEventDefinitionBinding;
 import org.bonitasoft.engine.core.process.definition.model.bindings.SIntermediateThrowEventDefinitionBinding;
 import org.bonitasoft.engine.core.process.definition.model.bindings.SLeftOperandBinding;
@@ -63,6 +67,7 @@ import org.bonitasoft.engine.core.process.definition.model.bindings.SParameterDe
 import org.bonitasoft.engine.core.process.definition.model.bindings.SProcessDefinitionBinding;
 import org.bonitasoft.engine.core.process.definition.model.bindings.SReceiveTaskDefinitionBinding;
 import org.bonitasoft.engine.core.process.definition.model.bindings.SRightOperandBinding;
+import org.bonitasoft.engine.core.process.definition.model.bindings.SConstraintDefinitionBinding;
 import org.bonitasoft.engine.core.process.definition.model.bindings.SSendTaskDefinitionBinding;
 import org.bonitasoft.engine.core.process.definition.model.bindings.SStandardLoopCharacteristicsBinding;
 import org.bonitasoft.engine.core.process.definition.model.bindings.SStartEventDefinitionBinding;
@@ -92,7 +97,7 @@ public class SProcessElementBindingsFactory implements ElementBindingsFactory {
     private final List<ElementBinding> bindings;
 
     public SProcessElementBindingsFactory() {
-        bindings = new ArrayList<ElementBinding>();
+        bindings = new ArrayList<>();
         bindings.add(new SProcessDefinitionBinding());
         bindings.add(new SGatewayDefinitionBinding());
         bindings.add(new SActorDefinitionBinding());
@@ -158,6 +163,11 @@ public class SProcessElementBindingsFactory implements ElementBindingsFactory {
         bindings.add(new SFlowElementBinding());
         bindings.add(new SSubProcessDefinitionBinding());
         bindings.add(new SStringIndexBinding());
+        bindings.add(new SContractDefinitionBinding());
+        bindings.add(new SInputDefinitionBinding());
+        bindings.add(new SConstraintDefinitionBinding());
+        bindings.add(new SContextDefinitionBinding());
+        bindings.add(new SContextEntryBinding());
     }
 
     @Override
@@ -362,9 +372,22 @@ public class SProcessElementBindingsFactory implements ElementBindingsFactory {
         if (SFlowElementBinding.class.equals(binderClass)) {
             return new SFlowElementBinding();
         }
-        if (SFlowElementBinding.class.equals(binderClass)) {
-            return new SFlowElementBinding();
+        if (SContractDefinitionBinding.class.equals(binderClass)) {
+            return new SContractDefinitionBinding();
+        }
+        if (SInputDefinitionBinding.class.equals(binderClass)) {
+            return new SInputDefinitionBinding();
+        }
+        if (SConstraintDefinitionBinding.class.equals(binderClass)) {
+            return new SConstraintDefinitionBinding();
+        }
+        if (SContextDefinitionBinding.class.equals(binderClass)) {
+            return new SContextDefinitionBinding();
+        }
+        if (SContextEntryBinding.class.equals(binderClass)) {
+            return new SContextEntryBinding();
         }
         return null;
     }
+
 }

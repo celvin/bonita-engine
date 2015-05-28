@@ -1,22 +1,23 @@
 /**
- * Copyright (C) 2014 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2.0 of the License, or
- * (at your option) any later version.
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- * You should have received a copy of the GNU General Public License
- * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ * This library is free software; you can redistribute it and/or modify it under the terms
+ * of the GNU Lesser General Public License as published by the Free Software Foundation
+ * version 2.1 of the License.
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * You should have received a copy of the GNU Lesser General Public License along with this
+ * program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
+ * Floor, Boston, MA 02110-1301, USA.
  */
 package org.bonitasoft.engine.operation;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.bonitasoft.engine.bpm.contract.FileInputValue;
 import org.bonitasoft.engine.bpm.document.DocumentValue;
 import org.bonitasoft.engine.commons.exceptions.SBonitaException;
 import org.bonitasoft.engine.core.document.api.DocumentService;
@@ -43,15 +44,15 @@ public class DocumentListLeftOperandHandler extends AbstractDocumentLeftOperandH
     final DocumentService documentService;
 
     public DocumentListLeftOperandHandler(final DocumentService documentService, final ActivityInstanceService activityInstanceService,
-            final SessionAccessor sessionAccessor, final SessionService sessionService, final ProcessDefinitionService processDefinitionService,
-            final ProcessInstanceService processInstanceService) {
+                                          final SessionAccessor sessionAccessor, final SessionService sessionService, final ProcessDefinitionService processDefinitionService,
+                                          final ProcessInstanceService processInstanceService) {
         super(activityInstanceService, sessionAccessor, sessionService);
         this.documentService = documentService;
         documentHelper = new DocumentHelper(documentService, processDefinitionService, processInstanceService);
     }
 
     public DocumentListLeftOperandHandler(final ActivityInstanceService activityInstanceService, final SessionAccessor sessionAccessor,
-            final SessionService sessionService, final DocumentService documentService, final DocumentHelper documentHelper) {
+                                          final SessionService sessionService, final DocumentService documentService, final DocumentHelper documentHelper) {
         super(activityInstanceService, sessionAccessor, sessionService);
         this.documentHelper = documentHelper;
         this.documentService = documentService;
@@ -77,12 +78,21 @@ public class DocumentListLeftOperandHandler extends AbstractDocumentLeftOperandH
         if (!(newValue instanceof List)) {
             throw new SOperationExecutionException("Document operation only accepts an expression returning a list of DocumentValue");
         }
+        List<DocumentValue> newList = new ArrayList<>(((List) newValue).size());
         for (final Object item : (List<?>) newValue) {
-            if (!(item instanceof DocumentValue)) {
-                throw new SOperationExecutionException("Document operation only accepts an expression returning a list of DocumentValue");
+            if (item instanceof FileInputValue) {
+                newList.add(toDocumentValue((FileInputValue) item));
+                continue;
             }
+            if (item instanceof DocumentValue) {
+                newList.add((DocumentValue) item);
+                continue;
+
+            }
+            throw new SOperationExecutionException("Document operation only accepts an expression returning a list of DocumentValue");
+
         }
-        return (List<DocumentValue>) newValue;
+        return newList;
     }
 
     @Override

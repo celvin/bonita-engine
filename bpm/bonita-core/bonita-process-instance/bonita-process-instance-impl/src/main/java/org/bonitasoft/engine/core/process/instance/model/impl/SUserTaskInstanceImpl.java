@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2011 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -29,9 +29,9 @@ public class SUserTaskInstanceImpl extends SHumanTaskInstanceImpl implements SUs
     public SUserTaskInstanceImpl() {
     }
 
-    public SUserTaskInstanceImpl(final String name, final long flowNodeDefinitionId, final long rootContainerId, final long parenteContainerId,
+    public SUserTaskInstanceImpl(final String name, final long flowNodeDefinitionId, final long rootContainerId, final long parentContainerId,
             final long actorId, final STaskPriority priority, final long logicalGroup1, final long logicalGroup2) {
-        super(name, flowNodeDefinitionId, rootContainerId, parenteContainerId, actorId, priority, logicalGroup1, logicalGroup2);
+        super(name, flowNodeDefinitionId, rootContainerId, parentContainerId, actorId, priority, logicalGroup1, logicalGroup2);
     }
 
     @Override

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2011-2012, 2014 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -13,6 +13,7 @@
  **/
 package org.bonitasoft.engine.xml.parse;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
@@ -82,6 +83,10 @@ public class SAXParser implements Parser {
         }
     }
 
+    @Override
+    public Object getObjectFromXML(final byte[] bytes) throws SXMLParseException, IOException {
+        return getObjectFromXML(new ByteArrayInputStream(bytes));
+    }
     @Override
     public Object getObjectFromXML(final InputStream xmlStream) throws SXMLParseException, IOException {
         final InputStreamReader xmlInputStreamReader = new InputStreamReader(xmlStream, Charset.forName(UTF_8));

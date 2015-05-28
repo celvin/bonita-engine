@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.bonitasoft.engine.test</groupId>
 		<artifactId>bonita-integration-tests-as</artifactId>
-		<version>6.5.1-SNAPSHOT</version>
+		<version>7.0.0-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>bonita-deploy-ear3</artifactId>
@@ -67,6 +67,10 @@
 						<jarModule>
 							<groupId>org.bonitasoft.engine</groupId>
 							<artifactId>bonita-server</artifactId>
+						</jarModule>
+						<jarModule>
+							<groupId>org.bonitasoft.engine</groupId>
+							<artifactId>bonita-client</artifactId>
 						</jarModule>
 						<jarModule>
                             <groupId>org.slf4j</groupId>

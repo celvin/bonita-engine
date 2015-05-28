@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2011-2013 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -13,6 +13,7 @@
  **/
 package org.bonitasoft.engine.api;
 
+import java.io.IOException;
 import java.lang.reflect.Proxy;
 import java.util.Map;
 
@@ -40,19 +41,36 @@ import org.bonitasoft.engine.util.APITypeManager;
 public final class TenantAPIAccessor {
 
     private static ServerAPI getServerAPI() throws BonitaHomeNotSetException, ServerAPIException, UnknownAPITypeException {
-        final ApiAccessType apiType = APITypeManager.getAPIType();
+        final ApiAccessType apiType;
+        try {
+            apiType = APITypeManager.getAPIType();
+        } catch (IOException e) {
+            throw new ServerAPIException(e);
+        }
         Map<String, String> parameters = null;
         switch (apiType) {
             case LOCAL:
                 return LocalServerAPIFactory.getServerAPI();
             case EJB3:
-                parameters = APITypeManager.getAPITypeParameters();
+                try {
+                    parameters = APITypeManager.getAPITypeParameters();
+                } catch (IOException e) {
+                    throw new ServerAPIException(e);
+                }
                 return new EJB3ServerAPI(parameters);
             case HTTP:
-                parameters = APITypeManager.getAPITypeParameters();
+                try {
+                    parameters = APITypeManager.getAPITypeParameters();
+                } catch (IOException e) {
+                    throw new ServerAPIException(e);
+                }
                 return new HTTPServerAPI(parameters);
             case TCP:
-                parameters = APITypeManager.getAPITypeParameters();
+                try {
+                    parameters = APITypeManager.getAPITypeParameters();
+                } catch (IOException e) {
+                    throw new ServerAPIException(e);
+                }
                 return new TCPServerAPI(parameters);
             default:
                 throw new UnknownAPITypeException("Unsupported API Type: " + apiType);
@@ -107,6 +125,28 @@ public final class TenantAPIAccessor {
 
     public static PermissionAPI getPermissionAPI(final APISession session) throws BonitaHomeNotSetException, ServerAPIException, UnknownAPITypeException {
         return getAPI(PermissionAPI.class, session);
+    }
+
+    public static PageAPI getCustomPageAPI(final APISession session) throws BonitaHomeNotSetException, ServerAPIException, UnknownAPITypeException {
+        return getAPI(PageAPI.class, session);
+    }
+
+    public static ApplicationAPI getLivingApplicationAPI(final APISession session) throws BonitaHomeNotSetException, ServerAPIException, UnknownAPITypeException {
+        return getAPI(ApplicationAPI.class, session);
+    }
+
+    public static ProcessConfigurationAPI getProcessConfigurationAPI(APISession session) throws BonitaHomeNotSetException, ServerAPIException, UnknownAPITypeException {
+        return getAPI(ProcessConfigurationAPI.class, session);
+    }
+
+    public static TenantAdministrationAPI getTenantAdministrationAPI(final APISession session) throws BonitaHomeNotSetException, ServerAPIException,
+            UnknownAPITypeException {
+        return getAPI(TenantAdministrationAPI.class, session);
+    }
+
+    public static BusinessDataAPI getBusinessDataAPI(APISession session) throws BonitaHomeNotSetException, ServerAPIException,
+            UnknownAPITypeException {
+        return getAPI(BusinessDataAPI.class, session);
     }
 
 }

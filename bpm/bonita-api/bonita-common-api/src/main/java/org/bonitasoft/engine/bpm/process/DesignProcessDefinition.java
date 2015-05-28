@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2011-2014 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.Set;
 
 import org.bonitasoft.engine.bpm.actor.ActorDefinition;
+import org.bonitasoft.engine.bpm.context.ContextEntry;
+import org.bonitasoft.engine.bpm.contract.ContractDefinition;
 import org.bonitasoft.engine.bpm.flownode.impl.FlowElementContainerDefinition;
 import org.bonitasoft.engine.bpm.parameter.ParameterDefinition;
 import org.bonitasoft.engine.expression.Expression;
@@ -141,4 +143,14 @@ public interface DesignProcessDefinition extends ProcessDefinition {
      */
     Expression getStringIndexValue(int index);
 
+    /**
+     * Contract that must be respected when starting an instance of this process
+     * 
+     * @return
+     *         the process instantiation contract
+     */
+    ContractDefinition getContract();
+
+
+    List<ContextEntry> getContext();
 }

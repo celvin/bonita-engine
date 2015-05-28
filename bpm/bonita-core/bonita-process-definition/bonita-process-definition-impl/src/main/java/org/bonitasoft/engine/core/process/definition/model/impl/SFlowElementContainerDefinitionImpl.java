@@ -1,6 +1,6 @@
 /**
- * Copyright (C) 2012, 2014 BonitaSoft S.A.
- * BonitaSoft, 31 rue Gustave Eiffel - 38000 Grenoble
+ * Copyright (C) 2015 BonitaSoft S.A.
+ * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
  * version 2.1 of the License.
@@ -25,6 +25,7 @@ import java.util.Set;
 import org.bonitasoft.engine.bpm.businessdata.BusinessDataDefinition;
 import org.bonitasoft.engine.bpm.connector.ConnectorDefinition;
 import org.bonitasoft.engine.bpm.connector.ConnectorEvent;
+import org.bonitasoft.engine.bpm.contract.ContractDefinition;
 import org.bonitasoft.engine.bpm.data.DataDefinition;
 import org.bonitasoft.engine.bpm.document.DocumentDefinition;
 import org.bonitasoft.engine.bpm.document.DocumentListDefinition;
@@ -36,6 +37,7 @@ import org.bonitasoft.engine.bpm.flownode.IntermediateCatchEventDefinition;
 import org.bonitasoft.engine.bpm.flownode.IntermediateThrowEventDefinition;
 import org.bonitasoft.engine.bpm.flownode.StartEventDefinition;
 import org.bonitasoft.engine.bpm.flownode.TransitionDefinition;
+import org.bonitasoft.engine.bpm.flownode.UserTaskDefinition;
 import org.bonitasoft.engine.bpm.flownode.impl.FlowElementContainerDefinition;
 import org.bonitasoft.engine.bpm.flownode.impl.internal.AutomaticTaskDefinitionImpl;
 import org.bonitasoft.engine.bpm.flownode.impl.internal.HumanTaskDefinitionImpl;
@@ -235,7 +237,7 @@ public class SFlowElementContainerDefinitionImpl extends SBaseElementImpl implem
                 activity = new SAutomaticTaskDefinitionImpl(activityDefinition, transitionsMap);
             } else if (activityDefinition instanceof HumanTaskDefinitionImpl) {
                 if (activityDefinition instanceof UserTaskDefinitionImpl) {
-                    activity = new SUserTaskDefinitionImpl((UserTaskDefinitionImpl) activityDefinition, transitionsMap);
+                    activity = new SUserTaskDefinitionImpl((UserTaskDefinition) activityDefinition, transitionsMap);
                 } else {
                     activity = new SManualTaskDefinitionImpl((ManualTaskDefinitionImpl) activityDefinition, transitionsMap);
                 }

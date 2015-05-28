@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2011 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -40,10 +40,10 @@ public class PlatformHibernatePersistenceService extends AbstractHibernatePersis
     }
 
     public PlatformHibernatePersistenceService(final String name, final HibernateConfigurationProvider hbmConfigurationProvider,
-            final Properties extraHibernateProperties, final DBConfigurationsProvider dbConfigurationsProvider, final String statementDelimiter,
+            final Properties extraHibernateProperties,
             final String likeEscapeCharacter, final TechnicalLoggerService logger, final SequenceManager sequenceManager, final DataSource datasource,
             final boolean enableWordSearch, final Set<String> wordSearchExclusionMappings) throws SPersistenceException, ClassNotFoundException {
-        super(name, hbmConfigurationProvider, extraHibernateProperties, dbConfigurationsProvider, statementDelimiter, likeEscapeCharacter, logger,
+        super(name, hbmConfigurationProvider, extraHibernateProperties, likeEscapeCharacter, logger,
                 sequenceManager, datasource, enableWordSearch, wordSearchExclusionMappings);
     }
 

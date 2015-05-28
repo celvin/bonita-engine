@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2012, 2014 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -23,7 +23,7 @@ public class ExpressionEvaluationException extends BonitaException {
 
     private static final long serialVersionUID = 7295745453567432910L;
 
-    private final String expressionName;
+    private String expressionName;
 
     /**
      * @param cause
@@ -33,6 +33,10 @@ public class ExpressionEvaluationException extends BonitaException {
     public ExpressionEvaluationException(final Throwable cause, final String expressionName) {
         super(cause);
         this.expressionName = expressionName;
+    }
+
+    public ExpressionEvaluationException(Throwable cause) {
+        super(cause);
     }
 
     /**

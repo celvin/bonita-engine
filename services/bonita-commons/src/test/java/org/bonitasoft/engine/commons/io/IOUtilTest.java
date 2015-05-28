@@ -1,3 +1,16 @@
+/**
+ * Copyright (C) 2015 BonitaSoft S.A.
+ * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
+ * This library is free software; you can redistribute it and/or modify it under the terms
+ * of the GNU Lesser General Public License as published by the Free Software Foundation
+ * version 2.1 of the License.
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * You should have received a copy of the GNU Lesser General Public License along with this
+ * program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
+ * Floor, Boston, MA 02110-1301, USA.
+ **/
 package org.bonitasoft.engine.commons.io;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -5,20 +18,28 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
+import org.junit.Assert;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 import org.w3c.dom.Document;
 
 public class IOUtilTest {
+
+    @Rule
+    public TemporaryFolder tempFolderRule = new TemporaryFolder();
 
     @Test
     public void getClassNameList() throws Exception {
@@ -93,5 +114,26 @@ public class IOUtilTest {
         final byte[] entryContent = IOUtil.getAllContentFrom(new File(IOUtilTest.class.getResource("persistence.xml").getFile()));
         final String entryName = "META-INF/persistence.xml";
         IOUtil.addJarEntry(jarContent, entryName, entryContent);
+    }
+
+    @Test
+    public void testUpdatePropertyValue() throws IOException {
+        final Properties properties = new Properties();
+        properties.put("key1", "value1");
+        properties.put("key2", "value2");
+        properties.put("key3", "value3");
+
+
+        final File file = tempFolderRule.newFile("testPropertiesFile");
+        PropertiesManager.saveProperties(properties, file);
+        final String updatedValue2 = "@\\[||sfgf23465";
+        final Map<String, String> pairs = new HashMap<>();
+        pairs.put("key2", updatedValue2);
+        IOUtil.updatePropertyValue(file, pairs);
+
+
+        final Properties updatedProperties = PropertiesManager.getProperties(file);
+        Assert.assertEquals(updatedValue2, updatedProperties.get("key2"));
+
     }
 }

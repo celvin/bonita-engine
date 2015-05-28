@@ -1,3 +1,16 @@
+/**
+ * Copyright (C) 2015 BonitaSoft S.A.
+ * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
+ * This library is free software; you can redistribute it and/or modify it under the terms
+ * of the GNU Lesser General Public License as published by the Free Software Foundation
+ * version 2.1 of the License.
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * You should have received a copy of the GNU Lesser General Public License along with this
+ * program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
+ * Floor, Boston, MA 02110-1301, USA.
+ **/
 package org.bonitasoft.engine.commons;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -60,7 +73,7 @@ public class ClassReflectorTest {
         final Collection<Method> accessibleGetters = ClassReflector.getAccessibleGetters(pojo.getClass());
 
         // isChoice, getDate, getClass, getLongs, getBigChoice, getBigChoices
-        assertThat(accessibleGetters).hasSize(6);
+        assertThat(accessibleGetters).hasSize(7);
     }
 
     @Test
@@ -237,7 +250,7 @@ public class ClassReflectorTest {
         final Method[] declaredSetters = ClassReflector.getDeclaredSetters(pojo.getClass());
 
         // setDate,setChoice,setLongs,setBigChoice,setBigChoices
-        assertThat(declaredSetters).hasSize(5);
+        assertThat(declaredSetters).hasSize(6);
 
         for (final Method method : declaredSetters) {
             assertThat(ClassReflector.isAGetterMethod(method)).isFalse();
@@ -252,7 +265,7 @@ public class ClassReflectorTest {
         final Method[] declaredSetters = ClassReflector.getDeclaredGetters(pojo.getClass());
 
         // isChoice, getDate, getLongs, getBigChoice, getBigChoices
-        assertThat(declaredSetters).hasSize(5);
+        assertThat(declaredSetters).hasSize(6);
 
         for (final Method method : declaredSetters) {
             assertThat(ClassReflector.isAGetterMethod(method)).isTrue();
@@ -267,6 +280,21 @@ public class ClassReflectorTest {
         assertThat(ClassReflector.getFieldName("getDate")).isEqualTo("date");
         assertThat(ClassReflector.getFieldName("get")).isEqualTo("");
 
+    }
+
+    @Test
+    public void testSetField_on_sub_object() throws Exception {
+        Date date = new Date();
+        pojo.setChild(new Pojo());
+        ClassReflector.setField(pojo, "child.date", date);
+        assertThat(pojo.getChild().getDate()).isEqualTo(date);
+    }
+
+    @Test
+    public void testSetField_on_object() throws Exception {
+        Pojo parameterValue = new Pojo();
+        ClassReflector.setField(pojo, "child", parameterValue);
+        assertThat(pojo.getChild()).isEqualTo(parameterValue);
     }
 
 }

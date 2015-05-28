@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2013 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -17,6 +17,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.InputStream;
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +31,9 @@ import org.bonitasoft.engine.search.Order;
 import org.bonitasoft.engine.search.SearchOptions;
 import org.bonitasoft.engine.search.SearchOptionsBuilder;
 import org.bonitasoft.engine.search.SearchResult;
+import org.bonitasoft.engine.test.APITestUtil;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
 
 /**
@@ -39,6 +42,8 @@ import org.junit.Before;
 public abstract class AbstractCommandProfileIT extends TestWithTechnicalUser {
 
     protected static final String IMPORT_PROFILES_CMD = "importProfilesCommand";
+
+    protected static final String EXPORT_DEFAULT_PROFILES_CMD = "exportDefaultProfilesCommand";
 
     protected static final long ADMIN_PROFILE_ENTRY_COUNT = 24;
 
@@ -85,6 +90,17 @@ public abstract class AbstractCommandProfileIT extends TestWithTechnicalUser {
         importParameters.put("xmlContent", xmlContent);
         getCommandAPI().execute(IMPORT_PROFILES_CMD, importParameters);
         super.after();
+    }
+
+    @AfterClass
+    public static void restorDefaultProfiles() throws Exception {
+        final APITestUtil testUtil = new APITestUtil();
+        testUtil.loginOnDefaultTenantWithDefaultTechnicalUser();
+        final byte[] xmlContent = (byte[]) testUtil.getCommandAPI().execute(EXPORT_DEFAULT_PROFILES_CMD, Collections.<String, Serializable>emptyMap());
+        final Map<String, Serializable> importParameters = new HashMap<String, Serializable>(1);
+        importParameters.put("xmlContent", xmlContent);
+        testUtil.getCommandAPI().execute(IMPORT_PROFILES_CMD, importParameters);
+        testUtil.logoutOnTenant();
     }
 
 }

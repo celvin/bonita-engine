@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2011 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -25,8 +25,6 @@ public interface HibernateResourcesConfigurationProvider {
     void setHbmResources(final List<HibernateResourcesProvider> resources);
 
     Set<String> getResources();
-
-    Map<String, String> getCacheConcurrencyStrategies();
 
     Map<String, String> getClassAliasMappings();
 

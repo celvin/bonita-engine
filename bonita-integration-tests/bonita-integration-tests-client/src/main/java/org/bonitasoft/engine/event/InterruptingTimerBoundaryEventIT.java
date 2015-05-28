@@ -1,3 +1,16 @@
+/**
+ * Copyright (C) 2015 BonitaSoft S.A.
+ * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
+ * This library is free software; you can redistribute it and/or modify it under the terms
+ * of the GNU Lesser General Public License as published by the Free Software Foundation
+ * version 2.1 of the License.
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * You should have received a copy of the GNU Lesser General Public License along with this
+ * program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
+ * Floor, Boston, MA 02110-1301, USA.
+ **/
 package org.bonitasoft.engine.event;
 
 import static org.junit.Assert.assertEquals;
@@ -183,25 +196,6 @@ public class InterruptingTimerBoundaryEventIT extends AbstractEventIT {
         waitForUserTaskAndExecuteIt(processInstance, "exceptionStep", user);
         waitForFlowNodeInState(processInstance, "step1", TestStates.ABORTED, true);
         waitForProcessToFinish(processInstance);
-
-        disableAndDeleteProcess(processDefinition);
-    }
-
-    @Cover(classes = { ProcessAPI.class }, concept = BPMNConcept.EVENTS, keywords = { "Timer boundary event" }, jira = "BS-9355")
-    @Test
-    public void timerBoundaryEventNotTriggeredOnParallelMultiInstance() throws Exception {
-        final long timerDuration = 2500;
-        final int loopCardinality = 2;
-        final boolean isSequential = false;
-        final ProcessDefinition processDefinition = deployAndEnableProcessMultiInstanceWithBoundaryEvent(timerDuration, true, "step1", loopCardinality,
-                isSequential, "step2", "exceptionStep");
-
-        final ProcessInstance processInstance = getProcessAPI().startProcess(processDefinition.getId());
-        waitForUserTasksAndExecuteIt("step1", processInstance, loopCardinality);
-        waitForUserTaskAndExecuteIt(processInstance, "step2", user);
-        waitForProcessToFinish(processInstance);
-
-        checkFlowNodeWasntExecuted(processInstance.getId(), "exceptionStep");
 
         disableAndDeleteProcess(processDefinition);
     }

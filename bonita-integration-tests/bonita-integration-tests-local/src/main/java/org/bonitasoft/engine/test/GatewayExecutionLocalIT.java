@@ -1,3 +1,16 @@
+/**
+ * Copyright (C) 2015 BonitaSoft S.A.
+ * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
+ * This library is free software; you can redistribute it and/or modify it under the terms
+ * of the GNU Lesser General Public License as published by the Free Software Foundation
+ * version 2.1 of the License.
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * You should have received a copy of the GNU Lesser General Public License along with this
+ * program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
+ * Floor, Boston, MA 02110-1301, USA.
+ **/
 package org.bonitasoft.engine.test;
 
 import static org.junit.Assert.assertEquals;
@@ -6,6 +19,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 
+import org.bonitasoft.engine.LocalServerTestsInitializer;
 import org.bonitasoft.engine.TestWithUser;
 import org.bonitasoft.engine.api.ProcessAPI;
 import org.bonitasoft.engine.bpm.flownode.FlowNodeInstance;
@@ -20,17 +34,18 @@ import org.bonitasoft.engine.expression.Expression;
 import org.bonitasoft.engine.expression.ExpressionBuilder;
 import org.bonitasoft.engine.test.annotation.Cover;
 import org.bonitasoft.engine.test.annotation.Cover.BPMNConcept;
+import org.bonitasoft.engine.test.runner.BonitaSuiteRunner;
+import org.bonitasoft.engine.test.runner.BonitaTestRunner;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
+@RunWith(BonitaTestRunner.class)
+@BonitaSuiteRunner.Initializer(LocalServerTestsInitializer.class)
 public class GatewayExecutionLocalIT extends TestWithUser {
 
     @Cover(classes = { ProcessAPI.class }, concept = BPMNConcept.GATEWAY, keywords = { "Log", "Gateway", "Failed", "Exception" }, jira = "ENGINE-1451")
     @Test
     public void exclusiveGatewayFailed() throws Exception {
-        final PrintStream stdout = System.out;
-        final ByteArrayOutputStream myOut = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(myOut));
-        try {
             final Expression scriptExpression = new ExpressionBuilder()
                     .createGroovyScriptExpression("mycondition", "fzdfsdfsdfsdfsdf", Boolean.class.getName());
             final DesignProcessDefinition designProcessDefinition = new ProcessDefinitionBuilder()
@@ -48,14 +63,6 @@ public class GatewayExecutionLocalIT extends TestWithUser {
             final FlowNodeInstance failFlowNodeInstance = waitForFlowNodeInFailedState(processInstance);
             assertEquals("gateway1", failFlowNodeInstance.getName());
             disableAndDeleteProcess(processDefinition);
-        } finally {
-            System.setOut(stdout);
-        }
-        final String logs = myOut.toString();
-        System.out.println(logs);
-        assertTrue(
-                "Should have written in logs : SExpressionEvaluationException",
-                logs.contains("Expression mycondition with content = <fzdfsdfsdfsdfsdf> depends on fzdfsdfsdfsdfsdf is neither defined in the script nor in dependencies."));
     }
 
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2011-2014 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -13,9 +13,11 @@
  **/
 package org.bonitasoft.engine.bpm.process.impl;
 
+import org.bonitasoft.engine.bpm.context.ContextEntryImpl;
 import org.bonitasoft.engine.bpm.flownode.impl.internal.FlowElementContainerDefinitionImpl;
 import org.bonitasoft.engine.bpm.flownode.impl.internal.HumanTaskDefinitionImpl;
 import org.bonitasoft.engine.bpm.flownode.impl.internal.UserTaskDefinitionImpl;
+import org.bonitasoft.engine.expression.Expression;
 
 /**
  * @author Baptiste Mesta
@@ -62,6 +64,15 @@ public class UserTaskDefinitionBuilder extends ActivityDefinitionBuilder {
      */
     public UserTaskDefinitionBuilder addPriority(final String priority) {
         ((UserTaskDefinitionImpl) getActivity()).setPriority(priority);
+        return this;
+    }
+
+    public ContractDefinitionBuilder addContract() {
+        return new ContractDefinitionBuilder(getProcessBuilder(), getContainer(), (UserTaskDefinitionImpl) getActivity());
+    }
+
+    public UserTaskDefinitionBuilder addContextEntry(String key, Expression expression) {
+        ((UserTaskDefinitionImpl) getActivity()).addContextEntry(new ContextEntryImpl(key, expression));
         return this;
     }
 

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2013 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -14,6 +14,7 @@
 package org.bonitasoft.engine.bpm.document;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Class that holds a content + mime type and a name OR the url if it's an external document.
@@ -227,5 +228,38 @@ public class DocumentValue implements Serializable {
     public DocumentValue setIndex(final int index) {
         this.index = index;
         return this;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        DocumentValue that = (DocumentValue) o;
+        return Objects.equals(hasContent, that.hasContent) &&
+                Objects.equals(hasChanged, that.hasChanged) &&
+                Objects.equals(index, that.index) &&
+                Objects.equals(content, that.content) &&
+                Objects.equals(mimeType, that.mimeType) &&
+                Objects.equals(fileName, that.fileName) &&
+                Objects.equals(url, that.url) &&
+                Objects.equals(documentId, that.documentId);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(content, mimeType, fileName, url, hasContent, documentId, hasChanged, index);
+    }
+
+    @Override
+    public String toString() {
+        return "DocumentValue{" +
+                "mimeType='" + mimeType + '\'' +
+                ", fileName='" + fileName + '\'' +
+                ", url='" + url + '\'' +
+                ", hasContent=" + hasContent +
+                ", documentId=" + documentId +
+                ", hasChanged=" + hasChanged +
+                ", index=" + index +
+                '}';
     }
 }

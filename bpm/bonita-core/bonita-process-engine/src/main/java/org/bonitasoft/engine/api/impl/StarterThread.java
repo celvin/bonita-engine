@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2014 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -10,9 +10,7 @@
  * You should have received a copy of the GNU Lesser General Public License along with this
  * program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301, USA.
- **
- * @since 6.2
- */
+ **/
 package org.bonitasoft.engine.api.impl;
 
 import java.util.List;
@@ -35,7 +33,6 @@ import org.bonitasoft.engine.sessionaccessor.SessionAccessor;
 public class StarterThread extends Thread {
 
     private final PlatformServiceAccessor platformAccessor;
-    private final SessionService sessionService;
     private final NodeConfiguration platformConfiguration;
     private final List<STenant> tenants;
     private final SessionAccessor sessionAccessor;
@@ -43,19 +40,17 @@ public class StarterThread extends Thread {
 
     /**
      * @param platformAccessor
-     * @param sessionService
      * @param platformConfiguration
      * @param tenants
      * @param sessionAccessor
      * @param technicalLoggerService
      * @param platformAPIImpl TODO
      */
-    public StarterThread(final PlatformServiceAccessor platformAccessor, final SessionService sessionService,
+    public StarterThread(final PlatformServiceAccessor platformAccessor,
             final NodeConfiguration platformConfiguration,
             final List<STenant> tenants, final SessionAccessor sessionAccessor, final TechnicalLoggerService technicalLoggerService) {
         super("Starter Thread");
         this.platformAccessor = platformAccessor;
-        this.sessionService = sessionService;
         this.platformConfiguration = platformConfiguration;
         this.tenants = tenants;
         this.sessionAccessor = sessionAccessor;
@@ -72,6 +67,7 @@ public class StarterThread extends Thread {
                 if (!tenant.isPaused()) {
                     final long tenantId = tenant.getId();
                     long sessionId = -1;
+                    final SessionService sessionService = platformAccessor.getTenantServiceAccessor(tenantId).getSessionService();
                     try {
                         sessionId = createSessionAndMakeItActive(platformAccessor, sessionAccessor, tenantId);
                         final TenantServiceAccessor tenantServiceAccessor = platformAccessor.getTenantServiceAccessor(tenantId);
@@ -94,7 +90,7 @@ public class StarterThread extends Thread {
 
     private long createSessionAndMakeItActive(final PlatformServiceAccessor platformAccessor, final SessionAccessor sessionAccessor, final long tenantId)
             throws SBonitaException {
-        final SessionService sessionService = platformAccessor.getSessionService();
+        final SessionService sessionService = platformAccessor.getTenantServiceAccessor(tenantId).getSessionService();
 
         final long sessionId = sessionService.createSession(tenantId, SessionService.SYSTEM).getId();
         sessionAccessor.setSessionInfo(sessionId, tenantId);

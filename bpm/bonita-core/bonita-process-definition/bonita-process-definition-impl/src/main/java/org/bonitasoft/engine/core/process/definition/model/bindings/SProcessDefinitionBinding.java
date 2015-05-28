@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2012 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -20,6 +20,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.bonitasoft.engine.core.process.definition.model.SActorDefinition;
+import org.bonitasoft.engine.core.process.definition.model.SContextEntry;
+import org.bonitasoft.engine.core.process.definition.model.SContractDefinition;
 import org.bonitasoft.engine.core.process.definition.model.SParameterDefinition;
 import org.bonitasoft.engine.core.process.definition.model.impl.SFlowElementContainerDefinitionImpl;
 import org.bonitasoft.engine.core.process.definition.model.impl.SProcessDefinitionImpl;
@@ -41,6 +43,8 @@ public class SProcessDefinitionBinding extends SNamedElementBinding {
     private SFlowElementContainerDefinitionImpl processContainer;
 
     private final List<SStringIndex> stringIndexes = new ArrayList<SStringIndex>(5);
+    private SContractDefinition contract;
+    private List<SContextEntry> context;
 
     @Override
     public void setAttributes(final Map<String, String> attributes) {
@@ -53,6 +57,7 @@ public class SProcessDefinitionBinding extends SNamedElementBinding {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void setChildObject(final String name, final Object value) {
         if (XMLSProcessDefinition.ACTOR_NODE.equals(name)) {
             actors.add((SActorDefinition) value);
@@ -64,6 +69,10 @@ public class SProcessDefinitionBinding extends SNamedElementBinding {
             processContainer = (SFlowElementContainerDefinitionImpl) value;
         } else if (XMLSProcessDefinition.STRING_INDEX.equals(name)) {
             stringIndexes.add((SStringIndex) value);
+        } else if (XMLSProcessDefinition.CONTRACT_NODE.equals(name)) {
+            contract = (SContractDefinition) value;
+        }else if (XMLSProcessDefinition.CONTEXT_NODE.equals(name)) {
+            context = (List<SContextEntry>) value;
         }
     }
 
@@ -87,6 +96,15 @@ public class SProcessDefinitionBinding extends SNamedElementBinding {
         if (processContainer != null) {
             processDefinitionImpl.setProcessContainer(processContainer);
             processContainer.setElementContainer(processDefinitionImpl);
+        }
+        if (contract != null) {
+            processDefinitionImpl.setContract(contract);
+        }
+        if (contract != null) {
+            processDefinitionImpl.setContract(contract);
+        }
+        if (context != null) {
+            processDefinitionImpl.getContext().addAll(context);
         }
         return processDefinitionImpl;
     }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2011-2013 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -65,11 +65,11 @@ public class HibernateConfigurationProviderImpl implements HibernateConfiguratio
 
             PersistentClass persistentClass = configuration.getClassMapping(mappedClassName);
             if (persistentClass == null) {
-                // try to keep only the simpleName f the class which is sometimes used as "entity-name" in th emapping file
+                // try to keep only the simpleName if the class which is sometimes used as "entity-name" in the mapping file
                 final String classSimpleName = mappedClassName.substring(mappedClassName.lastIndexOf('.') + 1);
                 persistentClass = configuration.getClassMapping(classSimpleName);
                 if (persistentClass == null) {
-                    throw new SPersistenceException("Unable to locate a class mapping for class: " + mappedClassName + ", found mappings are: " + sb.toString());
+                    throw new SPersistenceException("Unable to locate an hibernate mapping file for class: " + mappedClassName + ", found mappings are: " + sb.toString());
                 }
             }
             final Class<? extends PersistentObject> mappedClass = persistentClass.getMappedClass();
@@ -78,18 +78,11 @@ public class HibernateConfigurationProviderImpl implements HibernateConfiguratio
         this.mappingExclusions = mappingExclusions;
     }
 
-    private Configuration buildConfiguration(final Properties properties, final HibernateResourcesConfigurationProvider hibernateResourcesConfigurationProvider) {
+    protected Configuration buildConfiguration(final Properties properties, final HibernateResourcesConfigurationProvider hibernateResourcesConfigurationProvider) {
         final Configuration configuration = new Configuration();
         configuration.addProperties(properties);
         for (final String resource : hibernateResourcesConfigurationProvider.getResources()) {
             configuration.addResource(resource);
-        }
-
-        final Map<String, String> cacheConcurrencyStrategies = hibernateResourcesConfigurationProvider.getCacheConcurrencyStrategies();
-        if (cacheConcurrencyStrategies != null) {
-            for (final Map.Entry<String, String> cacheConcurrencyStrategy : cacheConcurrencyStrategies.entrySet()) {
-                configuration.setCacheConcurrencyStrategy(cacheConcurrencyStrategy.getKey(), cacheConcurrencyStrategy.getValue());
-            }
         }
         configuration.buildMappings();
         return configuration;

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2011-2014 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -35,6 +35,8 @@ public interface Parser {
     Object getObjectFromXML(String pathname) throws SXMLParseException, IOException;
 
     Object getObjectFromXML(File xmlFile) throws SXMLParseException, IOException;
+
+    Object getObjectFromXML(byte[] bytes) throws SXMLParseException, IOException;
 
     Object getObjectFromXML(InputStream xmlStream) throws SXMLParseException, IOException;
 

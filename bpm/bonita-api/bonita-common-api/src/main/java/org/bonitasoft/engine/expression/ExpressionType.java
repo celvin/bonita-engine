@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2011, 2014 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -16,7 +16,7 @@ package org.bonitasoft.engine.expression;
 /**
  * Default expression type supported in the engine
  * Other type of expression can be added by adding a new expression executor strategy having an unique kind
- * 
+ *
  * @author Zhao na
  * @author Baptiste Mesta
  * @author Elias Ricken de Medeiros
@@ -45,7 +45,6 @@ public enum ExpressionType {
     TYPE_DOCUMENT,
 
     /**
-     *
      * expressions that return a list of document
      *
      * @since 6.4.0
@@ -64,11 +63,15 @@ public enum ExpressionType {
 
     TYPE_BUSINESS_DATA,
 
+    TYPE_BUSINESS_DATA_REFERENCE,
+
     /**
      * Expression of type Business object DAO, that instantiates a business object Server DAO class, used to execute server queries.
      */
     TYPE_BUSINESS_OBJECT_DAO,
 
-    TYPE_QUERY_BUSINESS_DATA
+    TYPE_QUERY_BUSINESS_DATA,
+
+    TYPE_CONTRACT_INPUT
 
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2012-2013 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -27,7 +27,6 @@ import org.bonitasoft.engine.api.impl.transaction.actor.GetActor;
 import org.bonitasoft.engine.api.impl.transaction.connector.CreateConnectorInstances;
 import org.bonitasoft.engine.api.impl.transaction.event.CreateEventInstance;
 import org.bonitasoft.engine.api.impl.transaction.flownode.CreateGatewayInstance;
-import org.bonitasoft.engine.archive.ArchiveService;
 import org.bonitasoft.engine.builder.BuilderFactory;
 import org.bonitasoft.engine.commons.exceptions.SBonitaException;
 import org.bonitasoft.engine.core.connector.ConnectorInstanceService;
@@ -38,6 +37,7 @@ import org.bonitasoft.engine.core.operation.model.SLeftOperand;
 import org.bonitasoft.engine.core.operation.model.SOperation;
 import org.bonitasoft.engine.core.operation.model.SOperatorType;
 import org.bonitasoft.engine.core.process.definition.model.SActivityDefinition;
+import org.bonitasoft.engine.core.process.definition.model.SBusinessDataDefinition;
 import org.bonitasoft.engine.core.process.definition.model.SCallActivityDefinition;
 import org.bonitasoft.engine.core.process.definition.model.SConnectorDefinition;
 import org.bonitasoft.engine.core.process.definition.model.SFlowElementContainerDefinition;
@@ -57,11 +57,14 @@ import org.bonitasoft.engine.core.process.definition.model.event.SIntermediateTh
 import org.bonitasoft.engine.core.process.definition.model.event.SStartEventDefinition;
 import org.bonitasoft.engine.core.process.instance.api.ActivityInstanceService;
 import org.bonitasoft.engine.core.process.instance.api.GatewayInstanceService;
+import org.bonitasoft.engine.core.process.instance.api.RefBusinessDataService;
 import org.bonitasoft.engine.core.process.instance.api.event.EventInstanceService;
 import org.bonitasoft.engine.core.process.instance.api.exceptions.SActivityReadException;
 import org.bonitasoft.engine.core.process.instance.api.exceptions.SActivityStateExecutionException;
 import org.bonitasoft.engine.core.process.instance.api.exceptions.SFlowNodeNotFoundException;
 import org.bonitasoft.engine.core.process.instance.api.exceptions.SFlowNodeReadException;
+import org.bonitasoft.engine.core.process.instance.api.exceptions.business.data.SRefBusinessDataInstanceCreationException;
+import org.bonitasoft.engine.core.process.instance.api.exceptions.business.data.SRefBusinessDataInstanceNotFoundException;
 import org.bonitasoft.engine.core.process.instance.model.SActivityInstance;
 import org.bonitasoft.engine.core.process.instance.model.SConnectorInstance;
 import org.bonitasoft.engine.core.process.instance.model.SFlowElementsContainerType;
@@ -95,6 +98,7 @@ import org.bonitasoft.engine.core.process.instance.model.builder.SSendTaskInstan
 import org.bonitasoft.engine.core.process.instance.model.builder.SSubProcessActivityInstanceBuilder;
 import org.bonitasoft.engine.core.process.instance.model.builder.SSubProcessActivityInstanceBuilderFactory;
 import org.bonitasoft.engine.core.process.instance.model.builder.SUserTaskInstanceBuilderFactory;
+import org.bonitasoft.engine.core.process.instance.model.builder.business.data.SRefBusinessDataInstanceBuilderFactory;
 import org.bonitasoft.engine.core.process.instance.model.builder.event.SBoundaryEventInstanceBuilder;
 import org.bonitasoft.engine.core.process.instance.model.builder.event.SBoundaryEventInstanceBuilderFactory;
 import org.bonitasoft.engine.core.process.instance.model.builder.event.SEndEventInstanceBuilder;
@@ -105,6 +109,8 @@ import org.bonitasoft.engine.core.process.instance.model.builder.event.SIntermed
 import org.bonitasoft.engine.core.process.instance.model.builder.event.SIntermediateThrowEventInstanceBuilderFactory;
 import org.bonitasoft.engine.core.process.instance.model.builder.event.SStartEventInstanceBuilder;
 import org.bonitasoft.engine.core.process.instance.model.builder.event.SStartEventInstanceBuilderFactory;
+import org.bonitasoft.engine.core.process.instance.model.business.data.SMultiRefBusinessDataInstance;
+import org.bonitasoft.engine.core.process.instance.model.business.data.SRefBusinessDataInstance;
 import org.bonitasoft.engine.core.process.instance.model.event.SEventInstance;
 import org.bonitasoft.engine.data.definition.model.SDataDefinition;
 import org.bonitasoft.engine.data.instance.api.DataInstanceContainer;
@@ -115,6 +121,7 @@ import org.bonitasoft.engine.data.instance.exception.SDataInstanceReadException;
 import org.bonitasoft.engine.data.instance.model.SDataInstance;
 import org.bonitasoft.engine.data.instance.model.builder.SDataInstanceBuilderFactory;
 import org.bonitasoft.engine.data.instance.model.exceptions.SDataInstanceNotWellFormedException;
+import org.bonitasoft.engine.execution.state.FlowNodeStateManager;
 import org.bonitasoft.engine.expression.exception.SExpressionDependencyMissingException;
 import org.bonitasoft.engine.expression.exception.SExpressionEvaluationException;
 import org.bonitasoft.engine.expression.exception.SExpressionException;
@@ -125,6 +132,7 @@ import org.bonitasoft.engine.log.LogMessageBuilder;
 import org.bonitasoft.engine.log.technical.TechnicalLogSeverity;
 import org.bonitasoft.engine.log.technical.TechnicalLoggerService;
 import org.bonitasoft.engine.persistence.PersistentObject;
+import org.bonitasoft.engine.persistence.SBonitaReadException;
 
 /**
  * @author Baptiste Mesta
@@ -143,28 +151,26 @@ public class BPMInstancesCreator {
 
     private final ConnectorInstanceService connectorInstanceService;
 
-    private Map<SFlowNodeType, Integer> firstStateIds;
-
-    private Map<SFlowNodeType, String> firstStateNames;
-
     private final ExpressionResolverService expressionResolverService;
 
     private final DataInstanceService dataInstanceService;
 
     private final TransientDataService transientDataService;
 
-    private final ArchiveService archiveService;
-
     private final TechnicalLoggerService logger;
 
     private final ParentContainerResolver parentContainerResolver;
+
+    private final RefBusinessDataService refBusinessDataService;
+
+    private FlowNodeStateManager stateManager;
 
     public BPMInstancesCreator(final ActivityInstanceService activityInstanceService,
             final ActorMappingService actorMappingService, final GatewayInstanceService gatewayInstanceService,
             final EventInstanceService eventInstanceService, final ConnectorInstanceService connectorInstanceService,
             final ExpressionResolverService expressionResolverService,
             final DataInstanceService dataInstanceService, final TechnicalLoggerService logger, final TransientDataService transientDataService,
-            final ArchiveService archiveService, final ParentContainerResolver parentContainerResolver) {
+            final ParentContainerResolver parentContainerResolver, RefBusinessDataService refBusinessDataService) {
         super();
         this.activityInstanceService = activityInstanceService;
         this.actorMappingService = actorMappingService;
@@ -175,8 +181,12 @@ public class BPMInstancesCreator {
         this.dataInstanceService = dataInstanceService;
         this.logger = logger;
         this.transientDataService = transientDataService;
-        this.archiveService = archiveService;
         this.parentContainerResolver = parentContainerResolver;
+        this.refBusinessDataService = refBusinessDataService;
+    }
+
+    public void setStateManager(final FlowNodeStateManager stateManager) {
+        this.stateManager = stateManager;
     }
 
     public List<SFlowNodeInstance> createFlowNodeInstances(final Long processDefinitionId, final long rootContainerId, final long parentContainerId,
@@ -224,7 +234,7 @@ public class BPMInstancesCreator {
                     builder = createMultiInstanceActivityInstance(processDefinitionId, rootContainerId, parentContainerId, rootProcessInstanceId,
                             parentProcessInstanceId, activityDefinition, (SMultiInstanceLoopCharacteristics) loopCharacteristics);
                 }
-                builder.setState(firstStateIds.get(builder.getFlowNodeType()), false, false, firstStateNames.get(builder.getFlowNodeType()));
+                builder.setState(stateManager.getFirstState(builder.getFlowNodeType()));
                 builder.setStateCategory(stateCategory);
                 return builder.done();
             }
@@ -288,7 +298,7 @@ public class BPMInstancesCreator {
                 throw new SActivityReadException("Activity type not found : " + sFlowNodeDefinition.getType());
         }
         builder.setLoopCounter(loopCounter);
-        builder.setState(firstStateIds.get(builder.getFlowNodeType()), false, false, firstStateNames.get(builder.getFlowNodeType()));
+        builder.setState(stateManager.getFirstState(builder.getFlowNodeType()));
         builder.setStateCategory(stateCategory);
         return builder.done();
     }
@@ -371,7 +381,7 @@ public class BPMInstancesCreator {
         builder.setDisplayDescription(description);
         builder.setDisplayName(displayName);
         builder.setPriority(priority);
-        builder.setState(firstStateIds.get(builder.getFlowNodeType()), false, false, firstStateNames.get(builder.getFlowNodeType()));
+        builder.setState(stateManager.getFirstState(builder.getFlowNodeType()));
         return builder.done();
     }
 
@@ -545,14 +555,6 @@ public class BPMInstancesCreator {
         }
         final CreateConnectorInstances transaction = new CreateConnectorInstances(connectorInstances, connectorInstanceService);
         transaction.execute();
-    }
-
-    public void setFirstStateIds(final Map<SFlowNodeType, Integer> firstStateIds) {
-        this.firstStateIds = firstStateIds;
-    }
-
-    public void setFirstStateNames(final Map<SFlowNodeType, String> firstStateNames) {
-        this.firstStateNames = firstStateNames;
     }
 
     public void createDataInstances(final SProcessInstance processInstance, final SFlowElementContainerDefinition processContainer,
@@ -764,12 +766,47 @@ public class BPMInstancesCreator {
             final SExpressionContext expressionContext) throws SDataInstanceException, SExpressionException {
         final SLoopCharacteristics loopCharacteristics = activityDefinition.getLoopCharacteristics();
         final SMultiInstanceLoopCharacteristics miLoop = (SMultiInstanceLoopCharacteristics) loopCharacteristics;
+        createBusinessDataInstancesForMultiInstance(activityDefinition, flowNodeInstance, miLoop);
         createDataInstances(activityDefinition.getSDataDefinitions(), flowNodeInstance.getId(), DataInstanceContainer.ACTIVITY_INSTANCE, expressionContext,
                 miLoop.getLoopDataInputRef(), flowNodeInstance.getLoopCounter(), miLoop.getDataInputItemRef(), flowNodeInstance.getParentContainerId());
     }
 
     public TechnicalLoggerService getLogger() {
         return logger;
+    }
+
+    private void createBusinessDataInstancesForMultiInstance(SActivityDefinition activityDefinition, SFlowNodeInstance flowNodeInstance,
+            SMultiInstanceLoopCharacteristics miLoop) throws SDataInstanceException {
+        final SBusinessDataDefinition outputBusinessData = activityDefinition.getBusinessDataDefinition(miLoop.getDataOutputItemRef());
+        final SRefBusinessDataInstanceBuilderFactory instanceFactory = BuilderFactory.get(SRefBusinessDataInstanceBuilderFactory.class);
+        if (outputBusinessData != null) {
+            final SRefBusinessDataInstance outputRefInstance = instanceFactory.createNewInstanceForFlowNode(outputBusinessData.getName(),
+                    flowNodeInstance.getId(), null, outputBusinessData.getClassName()).done();
+            addRefBusinessData(outputRefInstance);
+        }
+        final SBusinessDataDefinition inputBusinessData = activityDefinition.getBusinessDataDefinition(miLoop.getDataInputItemRef());
+        if (inputBusinessData != null) {
+            try {
+                final SMultiRefBusinessDataInstance loopDataRefInstance = (SMultiRefBusinessDataInstance) refBusinessDataService.getRefBusinessDataInstance(
+                        miLoop.getLoopDataInputRef(), flowNodeInstance.getParentProcessInstanceId());
+                final List<Long> dataIds = loopDataRefInstance.getDataIds();
+                final SRefBusinessDataInstance inputRefInstance = instanceFactory.createNewInstanceForFlowNode(inputBusinessData.getName(),
+                        flowNodeInstance.getId(), dataIds.get(flowNodeInstance.getLoopCounter()), inputBusinessData.getClassName()).done();
+                addRefBusinessData(inputRefInstance);
+            } catch (final SRefBusinessDataInstanceNotFoundException srbdinfe) {
+                throw new SDataInstanceException(srbdinfe);
+            } catch (final SBonitaReadException sbe) {
+                throw new SDataInstanceException(sbe);
+            }
+        }
+    }
+
+    private void addRefBusinessData(final SRefBusinessDataInstance instance) throws SDataInstanceException {
+        try {
+            refBusinessDataService.addRefBusinessDataInstance(instance);
+        } catch (final SRefBusinessDataInstanceCreationException sbrdice) {
+            throw new SDataInstanceException(sbrdice);
+        }
     }
 
 }

@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2011-2013 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -16,6 +16,7 @@ package org.bonitasoft.engine.execution.state;
 import java.util.Set;
 
 import org.bonitasoft.engine.bpm.flownode.FlowNodeType;
+import org.bonitasoft.engine.core.process.definition.model.SFlowNodeType;
 import org.bonitasoft.engine.core.process.definition.model.SProcessDefinition;
 import org.bonitasoft.engine.core.process.instance.api.exceptions.SActivityExecutionException;
 import org.bonitasoft.engine.core.process.instance.api.states.FlowNodeState;
@@ -44,4 +45,7 @@ public interface FlowNodeStateManager {
     void setProcessExecutor(ProcessExecutor processExecutor);
 
     StateBehaviors getStateBehaviors();
+
+    public FlowNodeState getFirstState(SFlowNodeType nodeType);
+
 }

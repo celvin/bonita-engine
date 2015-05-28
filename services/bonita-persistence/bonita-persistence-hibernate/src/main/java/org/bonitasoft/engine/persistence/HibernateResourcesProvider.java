@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2011, 2014 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -26,8 +26,6 @@ public class HibernateResourcesProvider {
 
     private Set<String> resources = new HashSet<String>();
 
-    private Map<String, Long> sequencesMappings = new HashMap<String, Long>();
-
     private Map<? extends String, ? extends String> classAliasMappings = new HashMap<String, String>();
 
     public void setResources(final Set<String> resources) {
@@ -40,14 +38,6 @@ public class HibernateResourcesProvider {
 
     public Set<String> getResources() {
         return resources;
-    }
-
-    public Map<String, Long> getSequencesMappings() {
-        return sequencesMappings;
-    }
-
-    public void setSequencesMappings(final Map<String, Long> sequencesMappings) {
-        this.sequencesMappings = sequencesMappings;
     }
 
     public Map<? extends String, ? extends String> getClassAliasMappings() {

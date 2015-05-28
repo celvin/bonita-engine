@@ -1,3 +1,16 @@
+/**
+ * Copyright (C) 2015 BonitaSoft S.A.
+ * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
+ * This library is free software; you can redistribute it and/or modify it under the terms
+ * of the GNU Lesser General Public License as published by the Free Software Foundation
+ * version 2.1 of the License.
+ * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ * See the GNU Lesser General Public License for more details.
+ * You should have received a copy of the GNU Lesser General Public License along with this
+ * program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
+ * Floor, Boston, MA 02110-1301, USA.
+ **/
 package org.bonitasoft.engine.expression.impl;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -11,7 +24,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.bonitasoft.engine.cache.CacheConfiguration;
-import org.bonitasoft.engine.cache.CacheConfigurations;
 import org.bonitasoft.engine.cache.SCacheException;
 import org.bonitasoft.engine.cache.ehcache.EhCacheCacheService;
 import org.bonitasoft.engine.classloader.ClassLoaderService;
@@ -56,8 +68,7 @@ public class GroovyScriptExpressionExecutorCacheStrategyTest {
     public void setup() throws Exception {
         final CacheConfiguration cacheConfiguration = new CacheConfiguration();
         cacheConfiguration.setName("GROOVY_SCRIPT_CACHE_NAME");
-        final CacheConfigurations cacheConfigurations = new CacheConfigurations();
-        cacheConfigurations.setConfigurations(Arrays.asList(cacheConfiguration));
+        final List<CacheConfiguration> cacheConfigurations = Arrays.asList(cacheConfiguration);
         cacheService = new EhCacheCacheService(logger, sessionAccessor, cacheConfigurations, defaultCacheConfiguration, diskStorePath);
         cacheService.start();
         groovyScriptExpressionExecutorCacheStrategy = new GroovyScriptExpressionExecutorCacheStrategy(cacheService, classLoaderService, logger);

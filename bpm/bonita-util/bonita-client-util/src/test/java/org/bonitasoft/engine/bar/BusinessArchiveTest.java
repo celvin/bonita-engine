@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2011, 2013-2014 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -13,6 +13,7 @@
  **/
 package org.bonitasoft.engine.bar;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -38,8 +39,13 @@ import org.bonitasoft.engine.bpm.bar.BusinessArchiveBuilder;
 import org.bonitasoft.engine.bpm.bar.BusinessArchiveFactory;
 import org.bonitasoft.engine.bpm.bar.InvalidBusinessArchiveFormatException;
 import org.bonitasoft.engine.bpm.bar.ProcessDefinitionBARContribution;
+import org.bonitasoft.engine.bpm.bar.form.model.FormMappingDefinition;
+import org.bonitasoft.engine.bpm.bar.form.model.FormMappingModel;
 import org.bonitasoft.engine.bpm.connector.ConnectorDefinition;
 import org.bonitasoft.engine.bpm.connector.ConnectorEvent;
+import org.bonitasoft.engine.bpm.contract.InputDefinition;
+import org.bonitasoft.engine.bpm.contract.Type;
+import org.bonitasoft.engine.bpm.contract.impl.InputDefinitionImpl;
 import org.bonitasoft.engine.bpm.data.DataDefinition;
 import org.bonitasoft.engine.bpm.data.TextDataDefinition;
 import org.bonitasoft.engine.bpm.document.DocumentDefinition;
@@ -59,8 +65,10 @@ import org.bonitasoft.engine.bpm.flownode.impl.internal.StandardLoopCharacterist
 import org.bonitasoft.engine.bpm.process.DesignProcessDefinition;
 import org.bonitasoft.engine.bpm.process.InvalidProcessDefinitionException;
 import org.bonitasoft.engine.bpm.process.ProcessDefinition;
+import org.bonitasoft.engine.bpm.process.impl.AutomaticTaskDefinitionBuilder;
 import org.bonitasoft.engine.bpm.process.impl.CallActivityBuilder;
 import org.bonitasoft.engine.bpm.process.impl.CatchMessageEventTriggerDefinitionBuilder;
+import org.bonitasoft.engine.bpm.process.impl.ContractDefinitionBuilder;
 import org.bonitasoft.engine.bpm.process.impl.MultiInstanceLoopCharacteristicsBuilder;
 import org.bonitasoft.engine.bpm.process.impl.ProcessDefinitionBuilder;
 import org.bonitasoft.engine.bpm.process.impl.SendTaskDefinitionBuilder;
@@ -68,6 +76,8 @@ import org.bonitasoft.engine.bpm.process.impl.ThrowMessageEventTriggerBuilder;
 import org.bonitasoft.engine.bpm.process.impl.UserTaskDefinitionBuilder;
 import org.bonitasoft.engine.expression.Expression;
 import org.bonitasoft.engine.expression.ExpressionBuilder;
+import org.bonitasoft.engine.form.FormMappingTarget;
+import org.bonitasoft.engine.form.FormMappingType;
 import org.bonitasoft.engine.io.IOUtil;
 import org.bonitasoft.engine.operation.LeftOperand;
 import org.bonitasoft.engine.operation.LeftOperandBuilder;
@@ -309,6 +319,23 @@ public class BusinessArchiveTest {
     }
 
     @Test
+    public void formMappingInBarShouldBeWrittenAndReadProperly() throws Exception {
+        final DesignProcessDefinition designProcessDefinition = new ProcessDefinitionBuilder().createNewInstance("MethCookingPlanning", "Season 5").done();
+
+        final FormMappingModel formMappingModel = new FormMappingModel();
+        formMappingModel.addFormMapping(new FormMappingDefinition("/?myPageTokenID", FormMappingType.PROCESS_START, FormMappingTarget.INTERNAL));
+        formMappingModel.addFormMapping(new FormMappingDefinition("someExternalPage", FormMappingType.TASK, FormMappingTarget.URL, "requestTask"));
+
+        final BusinessArchive businessArchive = new BusinessArchiveBuilder().createNewBusinessArchive().setProcessDefinition(designProcessDefinition)
+                .setFormMappings(formMappingModel).done();
+
+        BusinessArchiveFactory.writeBusinessArchiveToFile(businessArchive, barFile);
+
+        final BusinessArchive readBusinessArchive = BusinessArchiveFactory.readBusinessArchive(barFile);
+        assertThat(readBusinessArchive.getFormMappingModel().getFormMappings()).as("Form Mapping should be found in BusinessArchive").hasSize(2);
+    }
+
+    @Test
     public void putActorMappingInBar() throws Exception {
         final ProcessDefinitionBuilder processDefinitionBuilder = new ProcessDefinitionBuilder().createNewInstance("ProductionPlanning", "3.1");
         final DesignProcessDefinition designProcessDefinition = processDefinitionBuilder.done();
@@ -378,6 +405,7 @@ public class BusinessArchiveTest {
                         trueExpression);
         processDefinitionBuilder.addData("myData", "java.lang.Boolean", trueExpression).addDescription("My boolean data");
         final DesignProcessDefinition process = processDefinitionBuilder.done();
+
         final BusinessArchive businessArchive = new BusinessArchiveBuilder().createNewBusinessArchive().setProcessDefinition(process)
                 .addDocumentResource(new BarResource("testFile.txt", new byte[] { 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 })).done();
         BusinessArchiveFactory.writeBusinessArchiveToFile(businessArchive, barFile);
@@ -514,10 +542,29 @@ public class BusinessArchiveTest {
             final Iterator<ConnectorDefinition> itResultCon = resultAct.getConnectors().iterator();
             for (final ConnectorDefinition connectorDefinition : processActivityConnectors) {
                 final ConnectorDefinition nextResultConnector = itResultCon.next();
-                System.out.println(connectorDefinition.getFailAction());
                 assertEquals(connectorDefinition.getFailAction(), nextResultConnector.getFailAction());
             }
         }
+    }
+
+    @Test
+    public void readProcessWithContract() throws Exception {
+        final ProcessDefinitionBuilder builder = new ProcessDefinitionBuilder().createNewInstance("contract", "1.0");
+        builder.addActor("myActor");
+        final ContractDefinitionBuilder contractDefinitionBuilder = builder.addUserTask("step1", "myActor").addContract();
+        createContract(contractDefinitionBuilder);
+        createContract(builder.addContract());
+        final DesignProcessDefinition process = builder.getProcess();
+        final DesignProcessDefinition result = getDesignProcessDefinition(builder);
+
+        assertThat(process).isEqualTo(result);
+    }
+
+    void createContract(final ContractDefinitionBuilder contractDefinitionBuilder) {
+        contractDefinitionBuilder.addInput("numberOfDays", Type.INTEGER, null).addConstraint("Mystical constraint", "true", null, "numberOfDays");
+        final InputDefinition childText = new InputDefinitionImpl("childText", Type.TEXT, "a text simple input");
+        final InputDefinition childDecimal = new InputDefinitionImpl("childDecimal", Type.DECIMAL, "a decimal simple input");
+        contractDefinitionBuilder.addInput("complex", "a complex input", Arrays.asList(childText, childDecimal));
     }
 
     @Test
@@ -661,7 +708,10 @@ public class BusinessArchiveTest {
     @Test
     public void readProcessWithMultiInstanceFromBusinessArchive() throws Exception {
         final ProcessDefinitionBuilder builder = new ProcessDefinitionBuilder().createNewInstance("ProcessWithMultiInstances", "1.0");
-        final MultiInstanceLoopCharacteristicsBuilder multiInstance1 = builder.addAutomaticTask("auto1").addMultiInstance(false, "inputList");
+        builder.addData("inputList", List.class.getName(), null).addData("outputList", List.class.getName(), null);
+        final AutomaticTaskDefinitionBuilder automaticTaskBuilder = builder.addAutomaticTask("auto1");
+        automaticTaskBuilder.addShortTextData("input", null).addShortTextData("output", null);
+        final MultiInstanceLoopCharacteristicsBuilder multiInstance1 = automaticTaskBuilder.addMultiInstance(false, "inputList");
         multiInstance1.addDataInputItemRef("input");
         multiInstance1.addDataOutputItemRef("output");
         multiInstance1.addLoopDataOutputRef("outputList");

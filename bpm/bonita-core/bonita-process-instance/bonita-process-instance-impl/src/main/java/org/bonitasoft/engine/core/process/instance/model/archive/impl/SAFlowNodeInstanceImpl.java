@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2012 BonitaSoft S.A.
+ * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
@@ -38,8 +38,6 @@ public abstract class SAFlowNodeInstanceImpl extends SAFlowElementInstanceImpl i
     private long lastUpdateDate;
 
     private long expectedEndDate;
-
-    private long claimedDate;
 
     private String displayDescription;
 
@@ -134,15 +132,6 @@ public abstract class SAFlowNodeInstanceImpl extends SAFlowElementInstanceImpl i
 
     public void setExpectedEndDate(long expectedEndDate) {
         this.expectedEndDate = expectedEndDate;
-    }
-
-    @Override
-    public long getClaimedDate() {
-        return claimedDate;
-    }
-
-    public void setClaimedDate(long claimedDate) {
-        this.claimedDate = claimedDate;
     }
 
     @Override
