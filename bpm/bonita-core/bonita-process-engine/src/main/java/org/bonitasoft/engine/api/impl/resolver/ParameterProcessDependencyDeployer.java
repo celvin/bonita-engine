@@ -25,8 +25,10 @@ import org.bonitasoft.engine.bpm.process.Problem;
 import org.bonitasoft.engine.bpm.process.Problem.Level;
 import org.bonitasoft.engine.bpm.process.impl.internal.ProblemImpl;
 import org.bonitasoft.engine.commons.exceptions.SBonitaException;
+import org.bonitasoft.engine.commons.exceptions.SObjectCreationException;
 import org.bonitasoft.engine.core.process.definition.model.SParameterDefinition;
 import org.bonitasoft.engine.core.process.definition.model.SProcessDefinition;
+import org.bonitasoft.engine.exception.CreationException;
 import org.bonitasoft.engine.exception.NotFoundException;
 import org.bonitasoft.engine.parameter.OrderBy;
 import org.bonitasoft.engine.parameter.ParameterService;
@@ -43,11 +45,11 @@ public class ParameterProcessDependencyDeployer implements ProcessDependencyDepl
 
     @Override
     public boolean deploy(final TenantServiceAccessor tenantAccessor, final BusinessArchive businessArchive,
-                          final SProcessDefinition processDefinition) throws NotFoundException {
+                          final SProcessDefinition processDefinition) throws NotFoundException, CreationException {
         final Set<SParameterDefinition> parameters = processDefinition.getParameters();
         boolean resolved = true;
         if (parameters.isEmpty()) {
-            return resolved;
+            return true;
         }
         final ParameterService parameterService = tenantAccessor.getParameterService();
         final Map<String, String> defaultParamterValues = businessArchive.getParameters();
@@ -67,6 +69,8 @@ public class ParameterProcessDependencyDeployer implements ProcessDependencyDepl
             parameterService.addAll(processDefinition.getId(), storedParameters);
         } catch (final SParameterProcessNotFoundException e) {
             throw new NotFoundException(e);
+        } catch (SObjectCreationException e) {
+            throw new CreationException(e);
         }
         return resolved;
     }

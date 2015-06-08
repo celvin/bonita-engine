@@ -114,3 +114,5 @@ DELETE FROM page_mapping WHERE tenantid = ${tenantid}
 GO
 DELETE FROM process_content WHERE tenantid = ${tenantid}
 GO
+DELETE FROM proc_parameter WHERE tenantid = ${tenantid}
+GO

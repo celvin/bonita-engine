@@ -16,6 +16,10 @@ package org.bonitasoft.engine.parameter;
 import java.util.List;
 import java.util.Map;
 
+import org.bonitasoft.engine.commons.exceptions.SObjectCreationException;
+import org.bonitasoft.engine.commons.exceptions.SObjectModificationException;
+import org.bonitasoft.engine.persistence.SBonitaReadException;
+
 /**
  * @author Matthieu Chaffotte
  * @since 6.0
@@ -37,7 +41,7 @@ public interface ParameterService {
      *             error thrown if no parameter found for the specific parameterName
      */
     void update(final long processDefinitionId, final String parameterName, final String parameterValue) throws SParameterProcessNotFoundException,
-            SParameterNameNotFoundException;
+            SParameterNameNotFoundException, SBonitaReadException, SObjectModificationException;
 
     /**
      * Store all parameters provided to the specific process in file system
@@ -49,7 +53,7 @@ public interface ParameterService {
      * @throws SParameterProcessNotFoundException
      *             error thrown if no parameters configuration file found in file system
      */
-    void addAll(final long processDefinitionId, final Map<String, String> parameters) throws SParameterProcessNotFoundException;
+    void addAll(final long processDefinitionId, final Map<String, String> parameters) throws SParameterProcessNotFoundException, SObjectCreationException;
 
     /**
      * Delete all parameters for specific processDefinition
@@ -59,7 +63,7 @@ public interface ParameterService {
      * @throws SParameterProcessNotFoundException
      *             error thrown if no parameters configuration file found in file system
      */
-    void deleteAll(final long processDefinitionId) throws SParameterProcessNotFoundException;
+    void deleteAll(final long processDefinitionId) throws SParameterProcessNotFoundException, SBonitaReadException, SObjectModificationException;
 
     /**
      * Get parameters in a specific interval for specific process, this is used for pagination
@@ -79,7 +83,7 @@ public interface ParameterService {
      *             error throw if fromIndex >= total size of parameters
      */
     List<SParameter> get(final long processDefinitionId, final int fromIndex, final int numberOfResult, final OrderBy order)
-            throws SParameterProcessNotFoundException, SOutOfBoundException;
+            throws SParameterProcessNotFoundException, SOutOfBoundException, SBonitaReadException;
 
     /**
      * Get parameter by name in specific process
@@ -92,7 +96,7 @@ public interface ParameterService {
      * @throws SParameterProcessNotFoundException
      *             error thrown if no parameters configuration file found in file system
      */
-    SParameter get(final long processDefinitionId, final String parameterName) throws SParameterProcessNotFoundException;
+    SParameter get(final long processDefinitionId, final String parameterName) throws SParameterProcessNotFoundException, SBonitaReadException;
 
     /**
      * Get a list of parameters will null values in order in specific process
@@ -112,7 +116,7 @@ public interface ParameterService {
      *             error throw if fromIndex >= total size of parameters
      */
     List<SParameter> getNullValues(final long processDefinitionId, final int fromIndex, final int numberOfResult, final OrderBy order)
-            throws SParameterProcessNotFoundException, SOutOfBoundException;
+            throws SParameterProcessNotFoundException, SOutOfBoundException, SBonitaReadException;
 
     /**
      * Check the specific process contains null-valued parameter or not.
@@ -121,6 +125,6 @@ public interface ParameterService {
      * @return
      * @throws SParameterProcessNotFoundException
      */
-    boolean containsNullValues(final long processDefinitionId) throws SParameterProcessNotFoundException;
+    boolean containsNullValues(final long processDefinitionId) throws SParameterProcessNotFoundException, SBonitaReadException;
 
 }

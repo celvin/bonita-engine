@@ -114,7 +114,7 @@ public class ProcessParameterIT extends CommonAPIIT {
     @Test
     public void getParameters() throws BonitaException {
         final ProcessDefinitionBuilder processBuilder = new ProcessDefinitionBuilder().createNewInstance("firstProcess", "1.0");
-        processBuilder.addParameter("key1", String.class.getCanonicalName()).addParameter("key.2", String.class.getCanonicalName())
+        processBuilder.addParameter("key1", String.class.getCanonicalName()).addParameter("key2", String.class.getCanonicalName())
                 .addUserTask("userTask1", null);
 
         final DesignProcessDefinition processDefinition = processBuilder.done();
@@ -122,14 +122,14 @@ public class ProcessParameterIT extends CommonAPIIT {
         businessArchive.setProcessDefinition(processDefinition);
         final Map<String, String> params = new HashMap<String, String>();
         params.put("key1", "engine");
-        params.put("key.2", "bos");
+        params.put("key2", "bos");
         businessArchive.setParameters(params);
 
         final ProcessDefinition definition = getProcessAPI().deploy(businessArchive.done());
-        final List<ParameterInstance> parameters = getProcessAPI().getParameterInstances(definition.getId(), 0, 20, ParameterCriterion.NAME_ASC);
+        final List<ParameterInstance> parameters = getProcessAPI().getParameterInstances(definition.getId(), 0, 20, ParameterCriterion.NAME_DESC);
         assertEquals(2, parameters.size());
         final ParameterInstance firstParameter = parameters.get(0);
-        assertEquals("key.2", firstParameter.getName());
+        assertEquals("key2", firstParameter.getName());
         assertEquals("bos", firstParameter.getValue());
         final ParameterInstance secondParameter = parameters.get(1);
         assertEquals("key1", secondParameter.getName());

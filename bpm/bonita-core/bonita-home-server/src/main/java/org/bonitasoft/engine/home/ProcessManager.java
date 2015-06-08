@@ -21,13 +21,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import org.apache.commons.io.FileUtils;
 import org.bonitasoft.engine.bpm.bar.BusinessArchive;
 import org.bonitasoft.engine.exception.BonitaHomeNotSetException;
 import org.bonitasoft.engine.io.IOUtil;
-import org.bonitasoft.engine.io.PropertiesManager;
 
 /**
  * @author Baptiste Mesta
@@ -97,28 +95,6 @@ public class ProcessManager {
 
     Folder getProcessFolder(long tenantId, long processId) throws BonitaHomeNotSetException, IOException {
         return FolderMgr.getTenantWorkProcessFolder(getBonitaHomeFolder(), tenantId, processId);
-    }
-
-    private File getParameterFile(long tenantId, long processId) throws BonitaHomeNotSetException, IOException {
-        return getProcessFolder(tenantId, processId).getFile("parameters.properties");
-    }
-
-    public Properties getParameters(long tenantId, long processId) throws BonitaHomeNotSetException, IOException {
-        return PropertiesManager.getProperties(getParameterFile(tenantId, processId));
-    }
-
-    public void storeParameters(long tenantId, long processId, Properties properties) throws BonitaHomeNotSetException, IOException {
-        PropertiesManager.saveProperties(properties, getParameterFile(tenantId, processId));
-    }
-
-    public boolean hasParameters(long tenantId, long processId) throws IOException, BonitaHomeNotSetException {
-        final File file = getParameterFile(tenantId, processId);
-        return file.exists();
-    }
-
-    public boolean deleteParameters(long tenantId, long processId) throws IOException, BonitaHomeNotSetException {
-        final File file = getParameterFile(tenantId, processId);
-        return file.delete();
     }
 
     public List<BonitaResource> getUserFiltersFiles(long tenantId, long processId) throws BonitaHomeNotSetException, IOException {

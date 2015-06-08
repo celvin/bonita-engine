@@ -126,3 +126,5 @@ DROP TABLE page_mapping
 GO
 DROP TABLE process_content
 GO
+DROP TABLE proc_parameter
+GO
