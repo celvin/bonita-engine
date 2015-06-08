@@ -13,9 +13,6 @@
  **/
 package org.bonitasoft.engine.core.connector.impl;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyList;
 import static org.mockito.Matchers.anyString;
@@ -27,12 +24,10 @@ import static org.powermock.api.mockito.PowerMockito.mock;
 import static org.powermock.api.mockito.PowerMockito.mockStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
 
-
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -52,6 +47,7 @@ import org.bonitasoft.engine.core.process.definition.model.SProcessDefinition;
 import org.bonitasoft.engine.dependency.DependencyService;
 import org.bonitasoft.engine.exception.BonitaHomeNotSetException;
 import org.bonitasoft.engine.home.BonitaHomeServer;
+import org.bonitasoft.engine.home.ProcessManager;
 import org.bonitasoft.engine.io.IOUtil;
 import org.bonitasoft.engine.persistence.OrderByType;
 import org.bonitasoft.engine.sessionaccessor.ReadSessionAccessor;
@@ -87,6 +83,8 @@ public class ConnectorServiceImplTest {
 
     @Mock
     private BonitaHomeServer bonitaHomeServer;
+    @Mock
+    private ProcessManager processManager;
 
     private ConnectorServiceImpl connectorService;
 
@@ -111,6 +109,7 @@ public class ConnectorServiceImplTest {
         mockStatic(BonitaHomeServer.class);
 
         when(BonitaHomeServer.getInstance()).thenReturn(bonitaHomeServer);
+        when(bonitaHomeServer.getProcessManager()).thenReturn(processManager);
 
         doReturn(parser).when(parserFactory).createParser(anyList());
 
@@ -179,22 +178,15 @@ public class ConnectorServiceImplTest {
         when(parser.getObjectFromXML(eq(new byte[]{2}))).thenReturn(oldConnectorDescriptor);
         when(parser.getObjectFromXML(eq(implBytes))).thenReturn(hoogardenConnectorDescriptor);
 
-        doReturn(returnedMap).when(bonitaHomeServer).getConnectorFiles(tenantId, processDefId);
+        doReturn(returnedMap).when(processManager).getConnectorFiles(tenantId, processDefId);
         connectorService.setConnectorImplementation(sProcessDef, tenantId, connectorDefId, connectorDefVersion, zip1);
-        verify(bonitaHomeServer, times(1)).storeClasspathFile(tenantId, processDefId, "HoogardenConnector.jar", hoogardenConnectorBytes);
-        verify(bonitaHomeServer, times(1)).storeClasspathFile(tenantId, processDefId, "some1.jar", dep1Bytes);
-        verify(bonitaHomeServer, times(1)).storeConnectorFile(tenantId, processDefId, "HoogardenBeerConnector.impl", implBytes);
-        verify(bonitaHomeServer, times(1)).deleteClasspathFiles(tenantId, processDefId, "file.jar");
-        verify(bonitaHomeServer, times(1)).deleteConnectorFile(tenantId, processDefId, "file.impl");
+        verify(processManager, times(1)).storeClasspathFile(tenantId, processDefId, "HoogardenConnector.jar", hoogardenConnectorBytes);
+        verify(processManager, times(1)).storeClasspathFile(tenantId, processDefId, "some1.jar", dep1Bytes);
+        verify(processManager, times(1)).storeConnectorFile(tenantId, processDefId, "HoogardenBeerConnector.impl", implBytes);
+        verify(processManager, times(1)).deleteClasspathFiles(tenantId, processDefId, "file.jar");
+        verify(processManager, times(1)).deleteConnectorFile(tenantId, processDefId, "file.impl");
     }
 
-    private List<String> names(final List<File> files) {
-        final ArrayList<String> names = new ArrayList<String>();
-        for (final File file : files) {
-            names.add(file.getName());
-        }
-        return names;
-    }
 
     @Test
     public void getConnectorImplementationShouldReadFileWhenCacheIsVoid() throws Exception {
@@ -245,7 +237,7 @@ public class ConnectorServiceImplTest {
         zipFileMap.put("HoogardenConnector.jar", new byte[] { 12, 94, 14, 9, 54, 65, 98, 54, 21, 32, 65 });
         final byte[] zip1 = IOUtil.zip(zipFileMap);
 
-        doReturn(zipFileMap).when(bonitaHomeServer).getConnectorFiles(tenantId, processDefId);
+        doReturn(zipFileMap).when(processManager).getConnectorFiles(tenantId, processDefId);
 
         //setConnectorImplementation store to cache
         connectorService.setConnectorImplementation(sProcessDef, tenantId, connectorDefId, connectorDefVersion, zip1);
