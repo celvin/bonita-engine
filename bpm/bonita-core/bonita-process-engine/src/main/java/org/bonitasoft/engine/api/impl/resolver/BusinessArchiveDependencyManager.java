@@ -16,7 +16,9 @@ package org.bonitasoft.engine.api.impl.resolver;
 import java.util.List;
 
 import org.bonitasoft.engine.bpm.bar.BusinessArchive;
+import org.bonitasoft.engine.bpm.bar.BusinessArchiveBuilder;
 import org.bonitasoft.engine.bpm.process.Problem;
+import org.bonitasoft.engine.commons.exceptions.SBonitaException;
 import org.bonitasoft.engine.commons.exceptions.SObjectModificationException;
 import org.bonitasoft.engine.core.process.definition.model.SProcessDefinition;
 import org.bonitasoft.engine.exception.BonitaException;
@@ -40,7 +42,7 @@ public interface BusinessArchiveDependencyManager {
      * @return true if the process is resolved for this deployer, false otherwise
      * @throws BonitaException
      */
-    boolean deploy(BusinessArchive businessArchive, SProcessDefinition processDefinition) throws BonitaException;
+    boolean deploy(BusinessArchive businessArchive, SProcessDefinition processDefinition) throws BonitaException, SBonitaException;
 
     /**
      * @param processDefinition
@@ -51,4 +53,6 @@ public interface BusinessArchiveDependencyManager {
     List<Problem> checkResolution(final SProcessDefinition processDefinition);
 
     void delete(final SProcessDefinition processDefinition) throws SObjectModificationException;
+
+    void exportBusinessArchive(long processDefinitionId, BusinessArchiveBuilder businessArchiveBuilder) throws SBonitaException;
 }

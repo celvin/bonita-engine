@@ -19,6 +19,7 @@ import java.io.IOException;
 import org.bonitasoft.engine.api.impl.SessionInfos;
 import org.bonitasoft.engine.api.impl.resolver.BusinessArchiveDependenciesManager;
 import org.bonitasoft.engine.bpm.bar.BusinessArchive;
+import org.bonitasoft.engine.bpm.bar.InvalidBusinessArchiveFormatException;
 import org.bonitasoft.engine.bpm.process.DesignProcessDefinition;
 import org.bonitasoft.engine.classloader.ClassLoaderService;
 import org.bonitasoft.engine.commons.exceptions.SAlreadyExistsException;
@@ -110,8 +111,10 @@ public class BusinessArchiveServiceImpl implements BusinessArchiveService {
     }
 
     @Override
-    public BusinessArchive export(long processDefinitionId) {
-        return null;
+    public BusinessArchive export(long processDefinitionId) throws SBonitaException, InvalidBusinessArchiveFormatException {
+        final DesignProcessDefinition designProcessDefinition = processDefinitionService.getDesignProcessDefinition(processDefinitionId);
+
+        return businessArchiveDependenciesManager.exportBusinessArchive(processDefinitionId, designProcessDefinition);
     }
 
     @Override

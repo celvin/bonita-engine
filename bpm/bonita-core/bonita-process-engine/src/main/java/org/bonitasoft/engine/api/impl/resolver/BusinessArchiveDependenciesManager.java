@@ -27,7 +27,10 @@ import java.util.Map.Entry;
 
 import org.bonitasoft.engine.api.impl.transaction.dependency.AddSDependency;
 import org.bonitasoft.engine.bpm.bar.BusinessArchive;
+import org.bonitasoft.engine.bpm.bar.BusinessArchiveBuilder;
+import org.bonitasoft.engine.bpm.bar.InvalidBusinessArchiveFormatException;
 import org.bonitasoft.engine.bpm.process.ConfigurationState;
+import org.bonitasoft.engine.bpm.process.DesignProcessDefinition;
 import org.bonitasoft.engine.bpm.process.Problem;
 import org.bonitasoft.engine.builder.BuilderFactory;
 import org.bonitasoft.engine.commons.exceptions.SBonitaException;
@@ -81,8 +84,9 @@ public class BusinessArchiveDependenciesManager {
                         technicalLoggerService.log(BusinessArchiveDependenciesManager.class, INFO, problem.getDescription());
                     }
                 }
-            } catch (final BonitaException e) {
+            } catch (BonitaException | SBonitaException e) {
                 // not logged, we will check later why the process is not resolved
+                technicalLoggerService.log(BusinessArchiveDependenciesManager.class, ERROR, "Unable to deploy process", e);
                 resolved = false;
             }
         }
@@ -94,7 +98,8 @@ public class BusinessArchiveDependenciesManager {
             List<Long> processDefinitionIds = tenantAccessor.getProcessDefinitionService().getProcessDefinitionIds(0, Integer.MAX_VALUE);
             resolveDependencies(processDefinitionIds, tenantAccessor);
         } catch (SBonitaReadException e) {
-            technicalLoggerService.log(BusinessArchiveDependenciesManager.class, ERROR, "Unable to retrieve tenant process definitions, dependency resolution aborted");
+            technicalLoggerService.log(BusinessArchiveDependenciesManager.class, ERROR,
+                    "Unable to retrieve tenant process definitions, dependency resolution aborted");
         }
     }
 
@@ -117,11 +122,11 @@ public class BusinessArchiveDependenciesManager {
      * this does not throw exception, it only log because it can be retried after.
      */
     public void resolveDependencies(final long processDefinitionId, final TenantServiceAccessor tenantAccessor) {
-        final List<BusinessArchiveDependencyManager> resolvers = getResolvers();
-        resolveDependencies(processDefinitionId, tenantAccessor, resolvers.toArray(new BusinessArchiveDependencyManager[resolvers.size()]));
+        resolveDependencies(processDefinitionId, tenantAccessor, getResolvers().toArray(new BusinessArchiveDependencyManager[getResolvers().size()]));
     }
 
-    public void resolveDependencies(final long processDefinitionId, final TenantServiceAccessor tenantAccessor, final BusinessArchiveDependencyManager... resolvers) {
+    public void resolveDependencies(final long processDefinitionId, final TenantServiceAccessor tenantAccessor,
+            final BusinessArchiveDependencyManager... resolvers) {
         final TechnicalLoggerService loggerService = tenantAccessor.getTechnicalLoggerService();
         final ProcessDefinitionService processDefinitionService = tenantAccessor.getProcessDefinitionService();
         final DependencyService dependencyService = tenantAccessor.getDependencyService();
@@ -169,7 +174,7 @@ public class BusinessArchiveDependenciesManager {
      * @param processDefinitionId
      * @throws SBonitaException
      */
-    public void resolveAndCreateDependencies(final long tenantId, final ProcessDefinitionService processDefinitionService,
+    private void resolveAndCreateDependencies(final long tenantId, final ProcessDefinitionService processDefinitionService,
             final DependencyService dependencyService, final long processDefinitionId) throws SBonitaException {
         Map<String, byte[]> resources;
         try {
@@ -240,7 +245,7 @@ public class BusinessArchiveDependenciesManager {
             final Map<String, byte[]> resources = businessArchive.getResources("^classpath/.*$");
 
             // remove the classpath/ on path of dependencies
-            final Map<String, byte[]> resourcesWithRealName = new HashMap<String, byte[]>(resources.size());
+            final Map<String, byte[]> resourcesWithRealName = new HashMap<>(resources.size());
             for (final Entry<String, byte[]> resource : resources.entrySet()) {
                 final String name = resource.getKey().substring(10);
                 final byte[] jarContent = resource.getValue();
@@ -252,12 +257,22 @@ public class BusinessArchiveDependenciesManager {
     }
 
     private void addDependency(final String name, final byte[] jarContent, final DependencyService dependencyService,
-            final long processdefinitionId) throws SDependencyException {
-        final AddSDependency addSDependency = new AddSDependency(dependencyService, name, jarContent, processdefinitionId, ScopeType.PROCESS);
+            final long processDefinitionId) throws SDependencyException {
+        final AddSDependency addSDependency = new AddSDependency(dependencyService, name, jarContent, processDefinitionId, ScopeType.PROCESS);
         addSDependency.execute();
     }
 
     public List<BusinessArchiveDependencyManager> getResolvers() {
         return dependencyResolvers;
+    }
+
+    public BusinessArchive exportBusinessArchive(long processDefinitionId, DesignProcessDefinition designProcessDefinition)
+            throws InvalidBusinessArchiveFormatException, SBonitaException {
+        final BusinessArchiveBuilder businessArchiveBuilder = new BusinessArchiveBuilder().createNewBusinessArchive();
+        businessArchiveBuilder.setProcessDefinition(designProcessDefinition);
+        for (BusinessArchiveDependencyManager businessArchiveDependencyManager : getResolvers()) {
+            businessArchiveDependencyManager.exportBusinessArchive(processDefinitionId, businessArchiveBuilder);
+        }
+        return businessArchiveBuilder.done();
     }
 }

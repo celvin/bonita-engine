@@ -232,14 +232,19 @@
     <bean id="dependencyResolver" class="org.bonitasoft.engine.api.impl.resolver.BusinessArchiveDependenciesManager">
         <constructor-arg name="dependencyResolvers">
             <list>
+                <bean class="org.bonitasoft.engine.api.impl.resolver.ClasspathDependencyManager">
+                    <constructor-arg name="dependencyService" ref="dependencyService" />
+                </bean>
                 <bean class="org.bonitasoft.engine.api.impl.resolver.ActorBusinessArchiveDependencyManager">
                     <constructor-arg name="actorMappingService" ref="actorMappingService" />
                     <constructor-arg name="identityService" ref="identityService" />
                     <constructor-arg name="actorMappingParserFactory" ref="actorMappingParserFactory" />
+                    <constructor-arg name="xmlWriter" ref="xmlWriter" />
                 </bean>
                 <bean class="org.bonitasoft.engine.api.impl.resolver.ConnectorBusinessArchiveDependencyManager">
                     <constructor-arg name="connectorService" ref="connectorService" />
                     <constructor-arg name="readSessionAccessor" ref="sessionAccessor" />
+                    <constructor-arg name="xmlWriter" ref="xmlWriter" />
                 </bean>
                 <bean class="org.bonitasoft.engine.api.impl.resolver.UserFilterBusinessArchiveDependencyManager">
                     <constructor-arg name="userFilterService" ref="userFilterService" />

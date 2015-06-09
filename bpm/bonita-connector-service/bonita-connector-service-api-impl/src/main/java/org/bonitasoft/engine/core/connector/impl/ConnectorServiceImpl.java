@@ -436,7 +436,7 @@ public class ConnectorServiceImpl implements ConnectorService {
         for (final Map.Entry<String, byte[]> file : classpath.entrySet()) {
             final String name = file.getKey();
             final SDependency sDependency = BuilderFactory.get(SDependencyBuilderFactory.class)
-                        .createNewInstance(name, processDefinitionId, ScopeType.PROCESS, name + ".jar", file.getValue()).done();
+                        .createNewInstance(name, processDefinitionId, ScopeType.PROCESS, name, file.getValue()).done();
             dependencies.add(sDependency);
         }
         dependencyService.updateDependenciesOfArtifact(processDefinitionId, ScopeType.PROCESS, dependencies);

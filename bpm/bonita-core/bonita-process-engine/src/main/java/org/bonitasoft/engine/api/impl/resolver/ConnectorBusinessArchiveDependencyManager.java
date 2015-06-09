@@ -17,20 +17,27 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.bonitasoft.engine.bpm.bar.BarResource;
 import org.bonitasoft.engine.bpm.bar.BusinessArchive;
+import org.bonitasoft.engine.bpm.bar.BusinessArchiveBuilder;
 import org.bonitasoft.engine.bpm.process.Problem;
 import org.bonitasoft.engine.bpm.process.Problem.Level;
 import org.bonitasoft.engine.bpm.process.impl.internal.ProblemImpl;
+import org.bonitasoft.engine.commons.exceptions.SBonitaException;
 import org.bonitasoft.engine.commons.exceptions.SBonitaRuntimeException;
 import org.bonitasoft.engine.commons.exceptions.SObjectModificationException;
 import org.bonitasoft.engine.connector.ConnectorException;
 import org.bonitasoft.engine.core.connector.ConnectorService;
 import org.bonitasoft.engine.core.connector.exception.SConnectorException;
+import org.bonitasoft.engine.core.connector.parser.DescriptorNodeBuilder;
+import org.bonitasoft.engine.core.connector.parser.SConnectorImplementationDescriptor;
 import org.bonitasoft.engine.core.process.definition.model.SConnectorDefinition;
 import org.bonitasoft.engine.core.process.definition.model.SFlowNodeDefinition;
 import org.bonitasoft.engine.core.process.definition.model.SProcessDefinition;
 import org.bonitasoft.engine.sessionaccessor.ReadSessionAccessor;
 import org.bonitasoft.engine.sessionaccessor.STenantIdNotSetException;
+import org.bonitasoft.engine.xml.XMLNode;
+import org.bonitasoft.engine.xml.XMLWriter;
 
 /**
  * @author Baptiste Mesta
@@ -41,10 +48,12 @@ public class ConnectorBusinessArchiveDependencyManager implements BusinessArchiv
 
     private final ConnectorService connectorService;
     private final ReadSessionAccessor readSessionAccessor;
+    private final XMLWriter xmlWriter;
 
-    public ConnectorBusinessArchiveDependencyManager(ConnectorService connectorService, ReadSessionAccessor readSessionAccessor) {
+    public ConnectorBusinessArchiveDependencyManager(ConnectorService connectorService, ReadSessionAccessor readSessionAccessor, XMLWriter xmlWriter) {
         this.connectorService = connectorService;
         this.readSessionAccessor = readSessionAccessor;
+        this.xmlWriter = xmlWriter;
     }
 
     @Override
@@ -114,5 +123,14 @@ public class ConnectorBusinessArchiveDependencyManager implements BusinessArchiv
     @Override
     public void delete(SProcessDefinition processDefinition) throws SObjectModificationException {
 
+    }
+
+    @Override
+    public void exportBusinessArchive(long processDefinitionId, BusinessArchiveBuilder businessArchiveBuilder) throws SBonitaException {
+        final List<SConnectorImplementationDescriptor> connectorImplementations = connectorService.getConnectorImplementations(processDefinitionId, getTenantId(), 0, Integer.MAX_VALUE, null, null);
+        for (SConnectorImplementationDescriptor connectorImplementation : connectorImplementations) {
+            final XMLNode document = DescriptorNodeBuilder.getDocument(connectorImplementation);
+            businessArchiveBuilder.addConnectorImplementation(new BarResource(connectorImplementation.getId() + ".impl", xmlWriter.write(document)));
+        }
     }
 }

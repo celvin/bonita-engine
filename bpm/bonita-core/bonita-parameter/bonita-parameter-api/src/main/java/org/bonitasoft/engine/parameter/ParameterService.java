@@ -53,7 +53,7 @@ public interface ParameterService {
      * @throws SParameterProcessNotFoundException
      *             error thrown if no parameters configuration file found in file system
      */
-    void addAll(final long processDefinitionId, final Map<String, String> parameters) throws SParameterProcessNotFoundException, SObjectCreationException;
+    void addOrUpdateAll(final long processDefinitionId, final Map<String, String> parameters) throws SParameterProcessNotFoundException, SObjectCreationException;
 
     /**
      * Delete all parameters for specific processDefinition

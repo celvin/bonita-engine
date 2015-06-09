@@ -10,7 +10,7 @@
  * You should have received a copy of the GNU Lesser General Public License along with this
  * program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301, USA.
- **/
+ */
 package org.bonitasoft.engine.api.impl.resolver;
 
 import java.util.ArrayList;
@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.bonitasoft.engine.bpm.bar.BusinessArchive;
+import org.bonitasoft.engine.bpm.bar.BusinessArchiveBuilder;
 import org.bonitasoft.engine.bpm.process.Problem;
 import org.bonitasoft.engine.bpm.process.Problem.Level;
 import org.bonitasoft.engine.bpm.process.impl.internal.ProblemImpl;
@@ -52,7 +53,7 @@ public class ParameterBusinessArchiveDependencyManager implements BusinessArchiv
 
     @Override
     public boolean deploy(final BusinessArchive businessArchive,
-            final SProcessDefinition processDefinition) throws NotFoundException, CreationException {
+                          final SProcessDefinition processDefinition) throws NotFoundException, CreationException {
         final Set<SParameterDefinition> parameters = processDefinition.getParameters();
         boolean resolved = true;
         if (parameters.isEmpty()) {
@@ -72,7 +73,7 @@ public class ParameterBusinessArchiveDependencyManager implements BusinessArchiv
             resolved = false;
         }
         try {
-            parameterService.addAll(processDefinition.getId(), storedParameters);
+            parameterService.addOrUpdateAll(processDefinition.getId(), storedParameters);
         } catch (final SParameterProcessNotFoundException e) {
             throw new NotFoundException(e);
         } catch (SObjectCreationException e) {
@@ -113,6 +114,16 @@ public class ParameterBusinessArchiveDependencyManager implements BusinessArchiv
         } catch (SParameterProcessNotFoundException | SBonitaReadException e) {
             throw new SObjectModificationException("Unable to delete parameters of the process definition <" + processDefinition.getName() + ">", e);
         }
+    }
+
+    @Override
+    public void exportBusinessArchive(long processDefinitionId, BusinessArchiveBuilder businessArchiveBuilder) throws SBonitaException {
+        final List<SParameter> sParameter = parameterService.get(processDefinitionId, 0, Integer.MAX_VALUE, null);
+        Map<String, String> map = new HashMap<>();
+        for (SParameter parameter : sParameter) {
+            map.put(parameter.getName(), parameter.getValue());
+        }
+        businessArchiveBuilder.setParameters(map);
     }
 
 }

@@ -501,7 +501,6 @@ public class ProcessAPIImpl implements ProcessAPI {
         final SearchOptionsBuilder builder = new SearchOptionsBuilder(0, 1);
         builder.filter(ProcessInstanceSearchDescriptor.PROCESS_DEFINITION_ID, processDefinitionId);
         final SearchOptions searchOptions = builder.done();
-
         try {
             final boolean hasOpenProcessInstances = searchProcessInstances(getTenantAccessor(), searchOptions).getCount() > 0;
             checkIfItIsPossibleToDeleteProcessInstance(processDefinitionId, hasOpenProcessInstances);
@@ -746,17 +745,17 @@ public class ProcessAPIImpl implements ProcessAPI {
 
     @Override
     public byte[] exportBarProcessContentUnderHome(final long processDefinitionId) throws ProcessExportException {
-        final BusinessArchive export = getTenantAccessor().getBusinessArchiveService().export(processDefinitionId);
         File barExport = null;
         try {
             barExport = File.createTempFile("barExport", ".bar");
             barExport.delete();
+            final BusinessArchive export = getTenantAccessor().getBusinessArchiveService().export(processDefinitionId);
             BusinessArchiveFactory.writeBusinessArchiveToFile(export, barExport);
             return FileUtils.readFileToByteArray(barExport);
-        } catch (IOException e) {
+        } catch (IOException |InvalidBusinessArchiveFormatException | SBonitaException e) {
             throw new ProcessExportException(e);
         } finally {
-            if (barExport.exists()) {
+            if (barExport != null && barExport.exists()) {
                 barExport.delete();
             }
         }

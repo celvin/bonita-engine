@@ -24,11 +24,11 @@ public class DescriptorNodeBuilder {
 
     public static XMLNode getDocument(final SConnectorImplementationDescriptor descriptor) {
         final XMLNode connector = new XMLNode(XMLDescriptor.CONNECTOR_IMPLEMENTATION);
-        connector.addAttribute(XMLDescriptor.IMPLEMENTATION_ID, descriptor.getId());
-        connector.addAttribute(XMLDescriptor.IMPLEMENTATION_VERSION, descriptor.getVersion());
-        connector.addAttribute(XMLDescriptor.DEFINITION_ID, descriptor.getDefinitionId());
-        connector.addAttribute(XMLDescriptor.DEFINITION_VERSION, descriptor.getDefinitionVersion());
-        connector.addAttribute(XMLDescriptor.IMPLEMENTATION_CLASSNAME, descriptor.getImplementationClassName());
+        connector.addChild(XMLDescriptor.IMPLEMENTATION_ID, descriptor.getId());
+        connector.addChild(XMLDescriptor.IMPLEMENTATION_VERSION, descriptor.getVersion());
+        connector.addChild(XMLDescriptor.DEFINITION_ID, descriptor.getDefinitionId());
+        connector.addChild(XMLDescriptor.DEFINITION_VERSION, descriptor.getDefinitionVersion());
+        connector.addChild(XMLDescriptor.IMPLEMENTATION_CLASSNAME, descriptor.getImplementationClassName());
         final JarDependencies jarDependencies = descriptor.getJarDependencies();
         if (jarDependencies != null) {
             final XMLNode jarDependenciesNodes = getJarDependencies(jarDependencies);
@@ -40,8 +40,7 @@ public class DescriptorNodeBuilder {
     private static XMLNode getJarDependencies(final JarDependencies jarDependencies) {
         final XMLNode jarDependenciesNode = new XMLNode(XMLDescriptor.JAR_DEPENDENCIES);
         final List<String> dependencies = jarDependencies.getDependencies();
-        for (int i = 0; i < dependencies.size(); i++) {
-            final String dependency = dependencies.get(i);
+        for (final String dependency : dependencies) {
             final XMLNode dependencyNode = new XMLNode(XMLDescriptor.JAR_DEPENDENCY);
             dependencyNode.setContent(dependency);
             jarDependenciesNode.addChild(dependencyNode);

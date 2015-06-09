@@ -26,10 +26,12 @@ import org.bonitasoft.engine.actor.mapping.model.SActorBuilder;
 import org.bonitasoft.engine.actor.mapping.model.SActorBuilderFactory;
 import org.bonitasoft.engine.actor.mapping.model.SActorMember;
 import org.bonitasoft.engine.actor.xml.ActorMappingParserFactory;
+import org.bonitasoft.engine.api.impl.transaction.actor.ExportActorMapping;
 import org.bonitasoft.engine.api.impl.transaction.actor.ImportActorMapping;
 import org.bonitasoft.engine.bpm.actor.ActorMappingImportException;
 import org.bonitasoft.engine.bpm.bar.ActorMappingContribution;
 import org.bonitasoft.engine.bpm.bar.BusinessArchive;
+import org.bonitasoft.engine.bpm.bar.BusinessArchiveBuilder;
 import org.bonitasoft.engine.bpm.process.Problem;
 import org.bonitasoft.engine.bpm.process.Problem.Level;
 import org.bonitasoft.engine.bpm.process.impl.internal.ProblemImpl;
@@ -42,6 +44,7 @@ import org.bonitasoft.engine.identity.IdentityService;
 import org.bonitasoft.engine.persistence.OrderByType;
 import org.bonitasoft.engine.persistence.QueryOptions;
 import org.bonitasoft.engine.persistence.SBonitaReadException;
+import org.bonitasoft.engine.xml.XMLWriter;
 
 /**
  * @author Baptiste Mesta
@@ -53,11 +56,13 @@ public class ActorBusinessArchiveDependencyManager implements BusinessArchiveDep
     private final ActorMappingService actorMappingService;
     private final IdentityService identityService;
     private final ActorMappingParserFactory actorMappingParserFactory;
+    private final XMLWriter xmlWriter;
 
-    public ActorBusinessArchiveDependencyManager(ActorMappingService actorMappingService, IdentityService identityService, ActorMappingParserFactory actorMappingParserFactory) {
+    public ActorBusinessArchiveDependencyManager(ActorMappingService actorMappingService, IdentityService identityService, ActorMappingParserFactory actorMappingParserFactory, XMLWriter xmlWriter) {
         this.actorMappingService = actorMappingService;
         this.identityService = identityService;
         this.actorMappingParserFactory = actorMappingParserFactory;
+        this.xmlWriter = xmlWriter;
     }
 
     @Override
@@ -110,6 +115,14 @@ public class ActorBusinessArchiveDependencyManager implements BusinessArchiveDep
         } catch (SActorDeletionException e) {
             throw new SObjectModificationException("Unable to delete actors of the process definition <"+processDefinition.getName()+">",e);
         }
+    }
+
+    @Override
+    public void exportBusinessArchive(long processDefinitionId, BusinessArchiveBuilder businessArchiveBuilder) throws SBonitaException {
+        final ExportActorMapping exportActorMapping = new ExportActorMapping(actorMappingService, identityService, xmlWriter, processDefinitionId);
+        exportActorMapping.execute();
+        final String result = exportActorMapping.getResult();
+        businessArchiveBuilder.setActorMapping(result.getBytes());
     }
 
     public List<Problem> checkResolution(final ActorMappingService actorMappingService, final long processDefinitionId) {

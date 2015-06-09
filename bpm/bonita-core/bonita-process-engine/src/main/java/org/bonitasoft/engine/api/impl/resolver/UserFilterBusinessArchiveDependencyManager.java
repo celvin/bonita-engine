@@ -17,7 +17,9 @@ import java.util.Collections;
 import java.util.List;
 
 import org.bonitasoft.engine.bpm.bar.BusinessArchive;
+import org.bonitasoft.engine.bpm.bar.BusinessArchiveBuilder;
 import org.bonitasoft.engine.bpm.process.Problem;
+import org.bonitasoft.engine.commons.exceptions.SBonitaException;
 import org.bonitasoft.engine.commons.exceptions.SObjectModificationException;
 import org.bonitasoft.engine.core.filter.UserFilterService;
 import org.bonitasoft.engine.core.filter.exception.SUserFilterLoadingException;
@@ -60,6 +62,11 @@ public class UserFilterBusinessArchiveDependencyManager implements BusinessArchi
     @Override
     public void delete(SProcessDefinition processDefinition) throws SObjectModificationException {
 
+    }
+
+    @Override
+    public void exportBusinessArchive(long processDefinitionId, BusinessArchiveBuilder businessArchiveBuilder) throws SBonitaException {
+        //TODO
     }
 
 }

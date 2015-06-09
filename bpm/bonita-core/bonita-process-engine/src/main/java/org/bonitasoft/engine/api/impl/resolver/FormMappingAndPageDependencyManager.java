@@ -25,7 +25,9 @@ import java.util.regex.Pattern;
 
 import org.bonitasoft.engine.api.impl.converter.PageModelConverter;
 import org.bonitasoft.engine.bpm.bar.BusinessArchive;
+import org.bonitasoft.engine.bpm.bar.BusinessArchiveBuilder;
 import org.bonitasoft.engine.bpm.bar.form.model.FormMappingDefinition;
+import org.bonitasoft.engine.bpm.bar.form.model.FormMappingModel;
 import org.bonitasoft.engine.bpm.flownode.ActivityDefinition;
 import org.bonitasoft.engine.bpm.flownode.HumanTaskDefinition;
 import org.bonitasoft.engine.bpm.process.Problem;
@@ -38,6 +40,7 @@ import org.bonitasoft.engine.commons.exceptions.SObjectNotFoundException;
 import org.bonitasoft.engine.core.form.FormMappingService;
 import org.bonitasoft.engine.core.form.SFormMapping;
 import org.bonitasoft.engine.core.process.definition.model.SProcessDefinition;
+import org.bonitasoft.engine.form.FormMapping;
 import org.bonitasoft.engine.form.FormMappingTarget;
 import org.bonitasoft.engine.form.FormMappingType;
 import org.bonitasoft.engine.log.technical.TechnicalLogSeverity;
@@ -48,6 +51,7 @@ import org.bonitasoft.engine.page.PageService;
 import org.bonitasoft.engine.page.SPage;
 import org.bonitasoft.engine.page.SPageMapping;
 import org.bonitasoft.engine.persistence.SBonitaReadException;
+import org.bonitasoft.engine.service.ModelConvertor;
 import org.bonitasoft.engine.session.SessionService;
 import org.bonitasoft.engine.sessionaccessor.SessionAccessor;
 
@@ -64,8 +68,8 @@ public class FormMappingAndPageDependencyManager implements BusinessArchiveDepen
     private final TechnicalLoggerService technicalLoggerService;
     private final FormMappingService formMappingService;
 
-
-    public FormMappingAndPageDependencyManager(SessionService sessionService, SessionAccessor sessionAccessor, PageService pageService, TechnicalLoggerService technicalLoggerService, FormMappingService formMappingService) {
+    public FormMappingAndPageDependencyManager(SessionService sessionService, SessionAccessor sessionAccessor, PageService pageService,
+            TechnicalLoggerService technicalLoggerService, FormMappingService formMappingService) {
         this.sessionService = sessionService;
         this.sessionAccessor = sessionAccessor;
         this.pageService = pageService;
@@ -141,6 +145,28 @@ public class FormMappingAndPageDependencyManager implements BusinessArchiveDepen
         } catch (SBonitaReadException | SObjectNotFoundException e) {
             throw new SObjectModificationException("Unable to delete forms and page of the process definition <" + processDefinition.getName() + ">", e);
         }
+    }
+
+    @Override
+    public void exportBusinessArchive(long processDefinitionId, BusinessArchiveBuilder businessArchiveBuilder) throws SBonitaException {
+        final FormMappingModel formMappingModel = new FormMappingModel();
+        final List<SFormMapping> formMappings = formMappingService.list(processDefinitionId, 0, Integer.MAX_VALUE);
+        for (SFormMapping formMapping : formMappings) {
+            final FormMapping client = ModelConvertor.toFormMapping(formMapping);
+            String form = null;
+            switch (client.getTarget()) {
+                case INTERNAL:
+                    final SPage page = pageService.getPage(client.getPageId());
+                    form = page.getName();
+                    break;
+                case URL:
+                    form = client.getURL();
+                    break;
+            }
+            final FormMappingDefinition mapping = new FormMappingDefinition(form, client.getType(), client.getTarget(), client.getTask());
+            formMappingModel.addFormMapping(mapping);
+        }
+        businessArchiveBuilder.setFormMappings(formMappingModel);
     }
 
     protected void deleteFormMapping(Long processDefinitionId) throws SBonitaReadException, SObjectModificationException {

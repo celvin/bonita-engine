@@ -15,7 +15,9 @@
 package org.bonitasoft.engine.core;
 
 import org.bonitasoft.engine.bpm.bar.BusinessArchive;
+import org.bonitasoft.engine.bpm.bar.InvalidBusinessArchiveFormatException;
 import org.bonitasoft.engine.commons.exceptions.SAlreadyExistsException;
+import org.bonitasoft.engine.commons.exceptions.SBonitaException;
 import org.bonitasoft.engine.commons.exceptions.SObjectCreationException;
 import org.bonitasoft.engine.commons.exceptions.SObjectModificationException;
 import org.bonitasoft.engine.core.process.definition.exception.SProcessDefinitionNotFoundException;
@@ -29,7 +31,7 @@ public interface BusinessArchiveService {
 
     SProcessDefinition deploy(BusinessArchive businessArchive) throws SObjectCreationException, SAlreadyExistsException;
 
-    BusinessArchive export(long processDefinitionId);
+    BusinessArchive export(long processDefinitionId) throws SBonitaException, InvalidBusinessArchiveFormatException;
 
     void delete(long processDefinitionId) throws SProcessDefinitionNotFoundException, SObjectModificationException;
 }
