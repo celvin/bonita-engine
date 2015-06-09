@@ -34,7 +34,6 @@ import org.bonitasoft.engine.parameter.OrderBy;
 import org.bonitasoft.engine.parameter.ParameterService;
 import org.bonitasoft.engine.parameter.SParameter;
 import org.bonitasoft.engine.parameter.SParameterProcessNotFoundException;
-import org.bonitasoft.engine.service.TenantServiceAccessor;
 
 /**
  * @author Baptiste Mesta
@@ -43,17 +42,22 @@ import org.bonitasoft.engine.service.TenantServiceAccessor;
  */
 public class ParameterProcessDependencyDeployer implements ProcessDependencyDeployer {
 
+    private final ParameterService parameterService;
+
+    public ParameterProcessDependencyDeployer(ParameterService parameterService) {
+        this.parameterService = parameterService;
+    }
+
     @Override
-    public boolean deploy(final TenantServiceAccessor tenantAccessor, final BusinessArchive businessArchive,
+    public boolean deploy(final BusinessArchive businessArchive,
                           final SProcessDefinition processDefinition) throws NotFoundException, CreationException {
         final Set<SParameterDefinition> parameters = processDefinition.getParameters();
         boolean resolved = true;
         if (parameters.isEmpty()) {
             return true;
         }
-        final ParameterService parameterService = tenantAccessor.getParameterService();
         final Map<String, String> defaultParamterValues = businessArchive.getParameters();
-        final Map<String, String> storedParameters = new HashMap<String, String>();
+        final Map<String, String> storedParameters = new HashMap<>();
         for (final SParameterDefinition sParameterDefinition : parameters) {
             final String name = sParameterDefinition.getName();
             final String value = defaultParamterValues.get(sParameterDefinition.getName());
@@ -76,14 +80,12 @@ public class ParameterProcessDependencyDeployer implements ProcessDependencyDepl
     }
 
     @Override
-    public List<Problem> checkResolution(final TenantServiceAccessor tenantAccessor, final SProcessDefinition processDefinition) {
+    public List<Problem> checkResolution(final SProcessDefinition processDefinition) {
         if (processDefinition.getParameters().isEmpty()) {
             return Collections.emptyList();
         }
-        final ParameterService parameterService = tenantAccessor.getParameterService();
-
         List<SParameter> parameters;
-        final ArrayList<Problem> problems = new ArrayList<Problem>();
+        final ArrayList<Problem> problems = new ArrayList<>();
         int i = 0;
         do {
             try {

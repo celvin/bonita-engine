@@ -110,7 +110,7 @@ public class OrganizationAPIImpl {
     private void updateActorProcessDependenciesForAllActors(final TenantServiceAccessor tenantAccessor) throws SBonitaException {
         final ProcessDefinitionService processDefinitionService = tenantAccessor.getProcessDefinitionService();
         List<Long> processDefinitionIds;
-        final ActorProcessDependencyDeployer dependencyResolver = new ActorProcessDependencyDeployer();
+        final ActorProcessDependencyDeployer dependencyResolver = new ActorProcessDependencyDeployer(tenantAccessor.getActorMappingService(),tenantAccessor.getIdentityService(),tenantAccessor.getActorMappingParserFactory());
         do {
             processDefinitionIds = processDefinitionService.getProcessDefinitionIds(0, 100);
             for (final Long processDefinitionId : processDefinitionIds) {

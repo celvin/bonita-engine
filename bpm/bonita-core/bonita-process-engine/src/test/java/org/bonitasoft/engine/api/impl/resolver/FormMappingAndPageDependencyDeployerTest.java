@@ -9,7 +9,15 @@ import static org.mockito.Matchers.anyInt;
 import static org.mockito.Matchers.anyLong;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.eq;
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,7 +31,6 @@ import org.bonitasoft.engine.bpm.bar.BusinessArchiveBuilder;
 import org.bonitasoft.engine.bpm.form.FormMappingModelBuilder;
 import org.bonitasoft.engine.bpm.process.InvalidProcessDefinitionException;
 import org.bonitasoft.engine.bpm.process.Problem;
-import org.bonitasoft.engine.bpm.process.ProcessDefinition;
 import org.bonitasoft.engine.bpm.process.impl.ProcessDefinitionBuilder;
 import org.bonitasoft.engine.core.form.FormMappingService;
 import org.bonitasoft.engine.core.form.SFormMapping;
@@ -92,7 +99,8 @@ public class FormMappingAndPageDependencyDeployerTest {
 
     @Before
     public void before() {
-        formMappingAndPageDependencyDeployer = spy(new FormMappingAndPageDependencyDeployer());
+        formMappingAndPageDependencyDeployer = spy(new FormMappingAndPageDependencyDeployer(sessionService, sessionAccessor, pageService,
+                technicalLoggerService, formMappingService));
         formMappings = new ArrayList<>();
 
         doReturn(pageService).when(tenantServiceAccessor).getPageService();
@@ -122,10 +130,10 @@ public class FormMappingAndPageDependencyDeployerTest {
         doReturn(null).when(pageService).getPageByNameAndProcessDefinitionId(PAGE, PROCESS_DEFINITION_ID);
         BusinessArchive bar = new BusinessArchiveBuilder().createNewBusinessArchive().setFormMappings(buildFormMappingModel().build())
                 .setProcessDefinition(new ProcessDefinitionBuilder().createNewInstance("mockProcess", "1.0").done()).done();
-        doReturn(new ArrayList<Problem>()).when(formMappingAndPageDependencyDeployer).checkResolution(eq(tenantServiceAccessor), any(SProcessDefinition.class));
+        doReturn(new ArrayList<Problem>()).when(formMappingAndPageDependencyDeployer).checkResolution(any(SProcessDefinition.class));
         //when then
-        formMappingAndPageDependencyDeployer.deploy(tenantServiceAccessor, bar, sDefinition);
-        verify(formMappingAndPageDependencyDeployer).checkResolution(eq(tenantServiceAccessor), any(SProcessDefinition.class));
+        formMappingAndPageDependencyDeployer.deploy(bar, sDefinition);
+        verify(formMappingAndPageDependencyDeployer).checkResolution(any(SProcessDefinition.class));
     }
 
     @Test
@@ -139,7 +147,7 @@ public class FormMappingAndPageDependencyDeployerTest {
         doReturn(null).when(pageService).getPage(anyLong());
 
         //when
-        final List<Problem> problems = formMappingAndPageDependencyDeployer.checkResolution(tenantServiceAccessor, sDefinition);
+        final List<Problem> problems = formMappingAndPageDependencyDeployer.checkResolution(sDefinition);
 
         // then
         assertThat(problems).as("should return a problem").hasSize(1);
@@ -159,7 +167,7 @@ public class FormMappingAndPageDependencyDeployerTest {
         doReturn(null).when(pageService).getPage(anyLong());
 
         //when
-        final List<Problem> problems = formMappingAndPageDependencyDeployer.checkResolution(tenantServiceAccessor, sDefinition);
+        final List<Problem> problems = formMappingAndPageDependencyDeployer.checkResolution(sDefinition);
 
         // then
         assertThat(problems).as("should return a problem").hasSize(1);
@@ -179,7 +187,7 @@ public class FormMappingAndPageDependencyDeployerTest {
         doReturn(null).when(pageService).getPage(anyLong());
 
         //when
-        final List<Problem> problems = formMappingAndPageDependencyDeployer.checkResolution(tenantServiceAccessor, sDefinition);
+        final List<Problem> problems = formMappingAndPageDependencyDeployer.checkResolution(sDefinition);
 
         // then
         assertThat(problems).as("should not return a problem").isNotEmpty();
@@ -195,7 +203,7 @@ public class FormMappingAndPageDependencyDeployerTest {
         doReturn(formMappings).when(formMappingService).list(eq(PROCESS_DEFINITION_ID), anyInt(), anyInt());
 
         //when
-        final List<Problem> problems = formMappingAndPageDependencyDeployer.checkResolution(tenantServiceAccessor, sDefinition);
+        final List<Problem> problems = formMappingAndPageDependencyDeployer.checkResolution(sDefinition);
 
         // then
         assertThat(problems).as("should return a problem").hasSize(1);
@@ -214,7 +222,7 @@ public class FormMappingAndPageDependencyDeployerTest {
         doThrow(SBonitaReadException.class).when(pageService).getPage(anyLong());
 
         //when
-        final List<Problem> problems = formMappingAndPageDependencyDeployer.checkResolution(tenantServiceAccessor, sDefinition);
+        final List<Problem> problems = formMappingAndPageDependencyDeployer.checkResolution(sDefinition);
 
         // then
         assertThat(problems).as("should return a problem").hasSize(1);
@@ -244,7 +252,7 @@ public class FormMappingAndPageDependencyDeployerTest {
         when(pageService.addPage(any(sPage.getClass()), any(byte[].class))).then(answer);
 
         //when
-        formMappingAndPageDependencyDeployer.deployProcessPages(businessArchive, PROCESS_DEFINITION_ID, USER_ID, tenantServiceAccessor);
+        formMappingAndPageDependencyDeployer.deployProcessPages(businessArchive, PROCESS_DEFINITION_ID, USER_ID);
 
         //then
         verify(pageService, times(2)).addPage(any(SPage.class), any(byte[].class));
@@ -258,7 +266,7 @@ public class FormMappingAndPageDependencyDeployerTest {
         doReturn(sPage).when(pageService).getPageByNameAndProcessDefinitionId(anyString(), anyLong());
 
         //when
-        formMappingAndPageDependencyDeployer.deployProcessPages(businessArchive, PROCESS_DEFINITION_ID, USER_ID, tenantServiceAccessor);
+        formMappingAndPageDependencyDeployer.deployProcessPages(businessArchive, PROCESS_DEFINITION_ID, USER_ID);
 
         //then
         verify(pageService, never()).addPage(any(SPage.class), any(byte[].class));
@@ -294,7 +302,7 @@ public class FormMappingAndPageDependencyDeployerTest {
                         FormMappingModelBuilder.buildFormMappingModel()
                                 .addProcessStartForm(startForm, FormMappingTarget.INTERNAL)
                                 .addProcessOverviewForm(overviewForm, FormMappingTarget.INTERNAL)
-                                .build()).done(), processDefinitionId, tenantServiceAccessor);
+                                .build()).done(), processDefinitionId);
 
         // then:
         verify(formMappingService, times(1))
@@ -309,7 +317,7 @@ public class FormMappingAndPageDependencyDeployerTest {
         final long processDefinitionId = 3L;
 
         // when:
-        formMappingAndPageDependencyDeployer.deployFormMappings(barBuilder.done(), processDefinitionId, tenantServiceAccessor);
+        formMappingAndPageDependencyDeployer.deployFormMappings(barBuilder.done(), processDefinitionId);
 
         // then:
         verify(formMappingService, times(1)).create(processDefinitionId, null, FormMappingType.PROCESS_OVERVIEW.getId(), FormMappingTarget.UNDEFINED.name(),
@@ -331,7 +339,7 @@ public class FormMappingAndPageDependencyDeployerTest {
                 processDefBuilder.done());
         businessArchiveBuilder.setFormMappings(buildFormMappingModel().withFormMapping(
                 buildFormMapping(form, type, FormMappingTarget.INTERNAL).withTaskname(taskname).build()).build());
-        formMappingAndPageDependencyDeployer.deployFormMappings(businessArchiveBuilder.done(), processDefinitionId, tenantServiceAccessor);
+        formMappingAndPageDependencyDeployer.deployFormMappings(businessArchiveBuilder.done(), processDefinitionId);
 
         // then:
         verify(formMappingService, times(1)).create(processDefinitionId, taskname, type.getId(), FormMappingTarget.INTERNAL.name(), form);
@@ -351,7 +359,7 @@ public class FormMappingAndPageDependencyDeployerTest {
                 processDefBuilder.done());
         businessArchiveBuilder.setFormMappings(buildFormMappingModel().withFormMapping(
                 buildFormMapping(form, FormMappingType.valueOf(type), FormMappingTarget.INTERNAL).withTaskname(taskname).build()).build());
-        formMappingAndPageDependencyDeployer.deployFormMappings(businessArchiveBuilder.done(), processDefinitionId, tenantServiceAccessor);
+        formMappingAndPageDependencyDeployer.deployFormMappings(businessArchiveBuilder.done(), processDefinitionId);
 
         // then:
         verify(formMappingService, times(1)).create(processDefinitionId, null, FormMappingType.PROCESS_START.getId(), FormMappingTarget.UNDEFINED.name(), null);
@@ -370,7 +378,7 @@ public class FormMappingAndPageDependencyDeployerTest {
         final BusinessArchive businessArchive = new BusinessArchiveBuilder().createNewBusinessArchive().setProcessDefinition(processDefBuilder.done()).done();
 
         // when:
-        formMappingAndPageDependencyDeployer.deployFormMappings(businessArchive, processDefinitionId, tenantServiceAccessor);
+        formMappingAndPageDependencyDeployer.deployFormMappings(businessArchive, processDefinitionId);
 
         // then:
         verify(formMappingService, times(1)).create(processDefinitionId, taskName, FormMappingType.TASK.getId(), FormMappingTarget.UNDEFINED.name(), null);
@@ -391,7 +399,7 @@ public class FormMappingAndPageDependencyDeployerTest {
         final BusinessArchive businessArchive = businessArchiveBuilder.done();
 
         // when:
-        formMappingAndPageDependencyDeployer.deployFormMappings(businessArchive, processDefinitionId, tenantServiceAccessor);
+        formMappingAndPageDependencyDeployer.deployFormMappings(businessArchive, processDefinitionId);
 
         // then:
         verify(formMappingService, times(1)).create(eq(processDefinitionId), eq(declaredTaskName), eq(FormMappingType.TASK.getId()), anyString(), anyString());
@@ -411,12 +419,13 @@ public class FormMappingAndPageDependencyDeployerTest {
         sFormMappingProcessOverview.setPageMapping(pageMapping);
         sFormMappingProcessStart.setPageMapping(pageMapping);
 
-        formMappingAndPageDependencyDeployer.checkFormMappingResolution(tenantServiceAccessor, sFormMappingTask, problems);
-        formMappingAndPageDependencyDeployer.checkFormMappingResolution(tenantServiceAccessor, sFormMappingProcessOverview, problems);
-        formMappingAndPageDependencyDeployer.checkFormMappingResolution(tenantServiceAccessor, sFormMappingProcessStart, problems);
-        assertThat(problems).as("the problem list should contain three mapping problems").hasSize(3).extracting("resource", "resourceId").contains(tuple("form mapping", "Step1"),
-                tuple("form mapping", FormMappingType.PROCESS_OVERVIEW.name()),
-                tuple("form mapping", FormMappingType.PROCESS_START.name()));
+        formMappingAndPageDependencyDeployer.checkFormMappingResolution(sFormMappingTask, problems);
+        formMappingAndPageDependencyDeployer.checkFormMappingResolution(sFormMappingProcessOverview, problems);
+        formMappingAndPageDependencyDeployer.checkFormMappingResolution(sFormMappingProcessStart, problems);
+        assertThat(problems).as("the problem list should contain three mapping problems").hasSize(3).extracting("resource", "resourceId")
+                .contains(tuple("form mapping", "Step1"),
+                        tuple("form mapping", FormMappingType.PROCESS_OVERVIEW.name()),
+                        tuple("form mapping", FormMappingType.PROCESS_START.name()));
     }
 
     @Test
@@ -430,7 +439,7 @@ public class FormMappingAndPageDependencyDeployerTest {
 
         sFormMapping.setPageMapping(pageMapping);
 
-        formMappingAndPageDependencyDeployer.checkFormMappingResolution(tenantServiceAccessor, sFormMapping, problems);
+        formMappingAndPageDependencyDeployer.checkFormMappingResolution(sFormMapping, problems);
         assertThat(problems).as("the problem list should not contain any mapping problems").hasSize(0);
     }
 

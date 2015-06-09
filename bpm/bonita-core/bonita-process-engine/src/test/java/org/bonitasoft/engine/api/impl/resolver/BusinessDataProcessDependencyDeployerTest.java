@@ -47,7 +47,7 @@ public class BusinessDataProcessDependencyDeployerTest {
 
     @Before
     public void setUp() {
-        resolver = new BusinessDataProcessDependencyDeployer();
+        resolver = new BusinessDataProcessDependencyDeployer(businessDataRepository);
         final Set<String> entityClassNames = new HashSet<String>();
         entityClassNames.add("com.bonitasoft.Employee");
         entityClassNames.add("com.bonitasoft.LeaveRequest");
@@ -77,7 +77,7 @@ public class BusinessDataProcessDependencyDeployerTest {
     public void checkResolution_returns_no_problem_with_no_business_data() {
         final SProcessDefinition processDefinition = buildProcessDefinition();
 
-        final List<Problem> problems = resolver.checkResolution(tenantAccessor, processDefinition);
+        final List<Problem> problems = resolver.checkResolution(processDefinition);
 
         assertThat(problems).isEmpty();
     }
@@ -86,7 +86,7 @@ public class BusinessDataProcessDependencyDeployerTest {
     public void checkResolution_returns_no_problem_with_a_valid_business_data() {
         final SProcessDefinition processDefinition = buildProcessDefinition(buildBusinessDataDefinition("bizData", "com.bonitasoft.Employee"));
 
-        final List<Problem> problems = resolver.checkResolution(tenantAccessor, processDefinition);
+        final List<Problem> problems = resolver.checkResolution(processDefinition);
 
         assertThat(problems).isEmpty();
     }
@@ -96,7 +96,7 @@ public class BusinessDataProcessDependencyDeployerTest {
         final SProcessDefinition processDefinition = buildProcessDefinition(buildBusinessDataDefinition("bizData1", "com.bonitasoft.Address"),
                 buildBusinessDataDefinition("bizData2", Long.class.getName()));
 
-        final List<Problem> problems = resolver.checkResolution(tenantAccessor, processDefinition);
+        final List<Problem> problems = resolver.checkResolution(processDefinition);
 
         assertThat(problems).areExactly(2, new ProblemCondition());
     }

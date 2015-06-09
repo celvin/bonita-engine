@@ -47,7 +47,6 @@ import org.bonitasoft.engine.page.PageService;
 import org.bonitasoft.engine.page.SPage;
 import org.bonitasoft.engine.page.SPageMapping;
 import org.bonitasoft.engine.persistence.SBonitaReadException;
-import org.bonitasoft.engine.service.TenantServiceAccessor;
 import org.bonitasoft.engine.session.SessionService;
 import org.bonitasoft.engine.sessionaccessor.SessionAccessor;
 
@@ -58,21 +57,31 @@ public class FormMappingAndPageDependencyDeployer implements ProcessDependencyDe
 
     public static final String ERROR_MESSAGE = "error while resolving form mapping %s";
     private static final String regex = "^resources/customPages/(custompage_.*)\\.(zip)$";
+    private final SessionService sessionService;
+    private final SessionAccessor sessionAccessor;
+    private final PageService pageService;
+    private final TechnicalLoggerService technicalLoggerService;
+    private final FormMappingService formMappingService;
 
-    @Override
-    public boolean deploy(final TenantServiceAccessor tenantAccessor, final BusinessArchive businessArchive, final SProcessDefinition processDefinition)
-            throws ProcessDeployException {
-        SessionService sessionService = tenantAccessor.getSessionService();
-        SessionAccessor sessionAccessor = tenantAccessor.getSessionAccessor();
 
-        deployProcessPages(businessArchive, processDefinition.getId(), sessionService.getLoggedUserFromSession(sessionAccessor), tenantAccessor);
-        deployFormMappings(businessArchive, processDefinition.getId(), tenantAccessor);
-        return checkResolution(tenantAccessor, processDefinition).isEmpty();
+    public FormMappingAndPageDependencyDeployer(SessionService sessionService, SessionAccessor sessionAccessor, PageService pageService, TechnicalLoggerService technicalLoggerService, FormMappingService formMappingService) {
+        this.sessionService = sessionService;
+        this.sessionAccessor = sessionAccessor;
+        this.pageService = pageService;
+        this.technicalLoggerService = technicalLoggerService;
+        this.formMappingService = formMappingService;
     }
 
-    public void deployProcessPages(BusinessArchive businessArchive, Long processDefinitionId, long userId, TenantServiceAccessor tenantServiceAccessor) {
-        PageService pageService = tenantServiceAccessor.getPageService();
-        TechnicalLoggerService technicalLoggerService = tenantServiceAccessor.getTechnicalLoggerService();
+    @Override
+    public boolean deploy(final BusinessArchive businessArchive, final SProcessDefinition processDefinition)
+            throws ProcessDeployException {
+
+        deployProcessPages(businessArchive, processDefinition.getId(), sessionService.getLoggedUserFromSession(sessionAccessor));
+        deployFormMappings(businessArchive, processDefinition.getId());
+        return checkResolution(processDefinition).isEmpty();
+    }
+
+    public void deployProcessPages(BusinessArchive businessArchive, Long processDefinitionId, long userId) {
         final Map<String, byte[]> pageResources = getPageResources(businessArchive);
         for (final Map.Entry<String, byte[]> resource : pageResources.entrySet()) {
             try {
@@ -113,31 +122,30 @@ public class FormMappingAndPageDependencyDeployer implements ProcessDependencyDe
     }
 
     @Override
-    public List<Problem> checkResolution(final TenantServiceAccessor tenantAccessor, final SProcessDefinition processDefinition) {
+    public List<Problem> checkResolution(final SProcessDefinition processDefinition) {
         List<Problem> problems = new ArrayList<>();
         try {
-            problems = checkPageProcessResolution(tenantAccessor, processDefinition);
+            problems = checkPageProcessResolution(processDefinition);
         } catch (SBonitaReadException | SObjectNotFoundException e) {
             problems.add(new ProblemImpl(Problem.Level.ERROR, null, null, "unable to resolve form mapping dependencies"));
         }
         return problems;
     }
 
-    protected List<Problem> checkPageProcessResolution(TenantServiceAccessor tenantAccessor, SProcessDefinition sProcessDefinition) throws SBonitaReadException,
+    protected List<Problem> checkPageProcessResolution(SProcessDefinition sProcessDefinition) throws SBonitaReadException,
             SObjectNotFoundException {
         final List<Problem> problems = new ArrayList<>();
-        final FormMappingService formMappingService = tenantAccessor.getFormMappingService();
         List<SFormMapping> formMappings;
         do {
             formMappings = formMappingService.list(sProcessDefinition.getId(), 0, 100);
             for (SFormMapping formMapping : formMappings) {
-                checkFormMappingResolution(tenantAccessor, formMapping, problems);
+                checkFormMappingResolution(formMapping, problems);
             }
         } while (formMappings.size() == 100);
         return problems;
     }
 
-    protected void checkFormMappingResolution(TenantServiceAccessor tenantAccessor, SFormMapping formMapping, List<Problem> problems)
+    protected void checkFormMappingResolution(SFormMapping formMapping, List<Problem> problems)
             throws SBonitaReadException, SObjectNotFoundException {
         if (isMappingRelatedToCustomPage(formMapping)) {
             SPageMapping pageMapping = formMapping.getPageMapping();
@@ -146,23 +154,23 @@ public class FormMappingAndPageDependencyDeployer implements ProcessDependencyDe
                 return;
             }
             final Long pageId = pageMapping.getPageId();
-            if (pageId == null || tenantAccessor.getPageService().getPage(pageId) == null) {
+            if (pageId == null || pageService.getPage(pageId) == null) {
                 addProblem(formMapping, problems);
             }
         }
     }
 
     private void addProblem(SFormMapping formMapping, List<Problem> problems) {
-        problems.add(new ProblemImpl(Problem.Level.ERROR, formMapping.getProcessElementName(), "form mapping", String.format(ERROR_MESSAGE, formMapping.toString())));
+        problems.add(new ProblemImpl(Problem.Level.ERROR, formMapping.getProcessElementName(), "form mapping", String.format(ERROR_MESSAGE,
+                formMapping.toString())));
     }
 
     private boolean isMappingRelatedToCustomPage(SFormMapping formMapping) {
         return FormMappingTarget.INTERNAL.name().equals(formMapping.getTarget());
     }
 
-    public void deployFormMappings(final BusinessArchive businessArchive, final long processDefinitionId, TenantServiceAccessor tenantAccessor)
+    public void deployFormMappings(final BusinessArchive businessArchive, final long processDefinitionId)
             throws ProcessDeployException {
-        FormMappingService formMappingService = tenantAccessor.getFormMappingService();
         final List<FormMappingDefinition> formMappings = businessArchive.getFormMappingModel().getFormMappings();
         final List<ActivityDefinition> activities = businessArchive.getProcessDefinition().getFlowElementContainer().getActivities();
         try {

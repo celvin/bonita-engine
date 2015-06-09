@@ -15,6 +15,7 @@ package org.bonitasoft.engine.api.impl;
 
 import static java.util.Collections.singletonMap;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.charset.Charset;
@@ -32,6 +33,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
+import org.apache.commons.io.FileUtils;
 import org.bonitasoft.engine.actor.mapping.ActorMappingService;
 import org.bonitasoft.engine.actor.mapping.SActorNotFoundException;
 import org.bonitasoft.engine.actor.mapping.model.SActor;
@@ -116,6 +118,7 @@ import org.bonitasoft.engine.bpm.actor.ActorUpdater;
 import org.bonitasoft.engine.bpm.actor.ActorUpdater.ActorField;
 import org.bonitasoft.engine.bpm.bar.BusinessArchive;
 import org.bonitasoft.engine.bpm.bar.BusinessArchiveBuilder;
+import org.bonitasoft.engine.bpm.bar.BusinessArchiveFactory;
 import org.bonitasoft.engine.bpm.bar.InvalidBusinessArchiveFormatException;
 import org.bonitasoft.engine.bpm.category.Category;
 import org.bonitasoft.engine.bpm.category.CategoryCriterion;
@@ -197,11 +200,14 @@ import org.bonitasoft.engine.bpm.supervisor.ProcessSupervisor;
 import org.bonitasoft.engine.builder.BuilderFactory;
 import org.bonitasoft.engine.classloader.ClassLoaderService;
 import org.bonitasoft.engine.classloader.SClassLoaderException;
+import org.bonitasoft.engine.commons.exceptions.SAlreadyExistsException;
 import org.bonitasoft.engine.commons.exceptions.SBonitaException;
 import org.bonitasoft.engine.commons.exceptions.SBonitaRuntimeException;
+import org.bonitasoft.engine.commons.exceptions.SObjectCreationException;
 import org.bonitasoft.engine.commons.transaction.TransactionContent;
 import org.bonitasoft.engine.commons.transaction.TransactionContentWithResult;
 import org.bonitasoft.engine.commons.transaction.TransactionExecutor;
+import org.bonitasoft.engine.core.BusinessArchiveService;
 import org.bonitasoft.engine.core.category.CategoryService;
 import org.bonitasoft.engine.core.category.exception.SCategoryAlreadyExistsException;
 import org.bonitasoft.engine.core.category.exception.SCategoryInProcessAlreadyExistsException;
@@ -298,7 +304,6 @@ import org.bonitasoft.engine.data.instance.api.ParentContainerResolver;
 import org.bonitasoft.engine.data.instance.exception.SDataInstanceException;
 import org.bonitasoft.engine.data.instance.model.SDataInstance;
 import org.bonitasoft.engine.data.instance.model.archive.SADataInstance;
-import org.bonitasoft.engine.dependency.DependencyService;
 import org.bonitasoft.engine.dependency.model.ScopeType;
 import org.bonitasoft.engine.exception.AlreadyExistsException;
 import org.bonitasoft.engine.exception.BonitaException;
@@ -314,7 +319,6 @@ import org.bonitasoft.engine.exception.NotSerializableException;
 import org.bonitasoft.engine.exception.ProcessInstanceHierarchicalDeletionException;
 import org.bonitasoft.engine.exception.RetrieveException;
 import org.bonitasoft.engine.exception.SearchException;
-import org.bonitasoft.engine.exception.UnauthorizedAccessException;
 import org.bonitasoft.engine.exception.UpdateException;
 import org.bonitasoft.engine.execution.FlowNodeExecutor;
 import org.bonitasoft.engine.execution.ProcessExecutor;
@@ -352,7 +356,6 @@ import org.bonitasoft.engine.log.technical.TechnicalLoggerService;
 import org.bonitasoft.engine.operation.LeftOperand;
 import org.bonitasoft.engine.operation.Operation;
 import org.bonitasoft.engine.operation.OperationBuilder;
-import org.bonitasoft.engine.page.PageURL;
 import org.bonitasoft.engine.persistence.FilterOption;
 import org.bonitasoft.engine.persistence.OrderAndField;
 import org.bonitasoft.engine.persistence.OrderByOption;
@@ -724,37 +727,14 @@ public class ProcessAPIImpl implements ProcessAPI {
     @Override
     public ProcessDefinition deploy(final BusinessArchive businessArchive) throws ProcessDeployException, AlreadyExistsException {
         final TenantServiceAccessor tenantAccessor = getTenantAccessor();
-        final ProcessDefinitionService processDefinitionService = tenantAccessor.getProcessDefinitionService();
-        final DependencyService dependencyService = tenantAccessor.getDependencyService();
-        final DesignProcessDefinition designProcessDefinition = businessArchive.getProcessDefinition();;
-
-        SProcessDefinition sProcessDefinition;
+        final BusinessArchiveService businessArchiveService = tenantAccessor.getBusinessArchiveService();
         try {
-            try {
-                processDefinitionService.getProcessDefinitionId(designProcessDefinition.getName(), designProcessDefinition.getVersion());
-                throw new AlreadyExistsException("The process " + designProcessDefinition.getName() + " in version " + designProcessDefinition.getVersion()
-                        + " already exists.");
-            } catch (final SProcessDefinitionNotFoundException e) {
-                // ok
-            }
-            sProcessDefinition = processDefinitionService.store(designProcessDefinition);
-            unzipBar(businessArchive, sProcessDefinition, tenantAccessor.getTenantId());
-            final boolean isResolved = tenantAccessor.getDependencyResolver().resolveDependencies(businessArchive, tenantAccessor, sProcessDefinition);
-            if (isResolved) {
-                tenantAccessor.getDependencyResolver().resolveAndCreateDependencies(businessArchive, processDefinitionService, dependencyService,
-                        sProcessDefinition);
-            }
-        } catch (final BonitaHomeNotSetException | IOException | SBonitaException e) {
+            return ModelConvertor.toProcessDefinition(businessArchiveService.deploy(businessArchive));
+        } catch (SObjectCreationException e) {
             throw new ProcessDeployException(e);
+        } catch (SAlreadyExistsException e) {
+            throw new AlreadyExistsException(e.getMessage());
         }
-
-        final ProcessDefinition processDefinition = ModelConvertor.toProcessDefinition(sProcessDefinition);
-        final TechnicalLoggerService logger = tenantAccessor.getTechnicalLoggerService();
-        if (logger.isLoggable(this.getClass(), TechnicalLogSeverity.INFO)) {
-            logger.log(this.getClass(), TechnicalLogSeverity.INFO, "The user <" + SessionInfos.getUserNameFromSession() + "> has installed process <"
-                    + sProcessDefinition.getName() + "> in version <" + sProcessDefinition.getVersion() + "> with id <" + sProcessDefinition.getId() + ">");
-        }
-        return processDefinition;
     }
 
     @Override
@@ -766,19 +746,21 @@ public class ProcessAPIImpl implements ProcessAPI {
     }
 
     @Override
-    // TODO delete files after use/if an exception occurs
     public byte[] exportBarProcessContentUnderHome(final long processDefinitionId) throws ProcessExportException {
-        final long tenantId = getTenantAccessor().getTenantId();
+        final BusinessArchive export = getTenantAccessor().getBusinessArchiveService().export(processDefinitionId);
+        File barExport = null;
         try {
-            return BonitaHomeServer.getInstance().getProcessManager().exportBarProcessContentUnderHome(tenantId, processDefinitionId, exportActorMapping(processDefinitionId));
-        } catch (Exception e) {
+            barExport = File.createTempFile("barExport", ".bar");
+            barExport.delete();
+            BusinessArchiveFactory.writeBusinessArchiveToFile(export, barExport);
+            return FileUtils.readFileToByteArray(barExport);
+        } catch (IOException e) {
             throw new ProcessExportException(e);
+        } finally {
+            if (barExport.exists()) {
+                barExport.delete();
+            }
         }
-    }
-
-    protected void unzipBar(final BusinessArchive businessArchive, final SProcessDefinition sProcessDefinition, final long tenantId)
-            throws BonitaHomeNotSetException, IOException {
-        BonitaHomeServer.getInstance().getProcessManager().writeBusinessArchive(tenantId, sProcessDefinition.getId(), businessArchive);
     }
 
     @Override
@@ -5141,7 +5123,7 @@ public class ProcessAPIImpl implements ProcessAPI {
         }
         final List<Problem> problems = new ArrayList<Problem>();
         for (final ProcessDependencyDeployer resolver : resolvers) {
-            final List<Problem> problem = resolver.checkResolution(tenantAccessor, processDefinition);
+            final List<Problem> problem = resolver.checkResolution(processDefinition);
             if (problem != null) {
                 problems.addAll(problem);
             }

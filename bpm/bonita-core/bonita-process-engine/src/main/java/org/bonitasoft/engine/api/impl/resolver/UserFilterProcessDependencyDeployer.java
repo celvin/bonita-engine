@@ -22,7 +22,8 @@ import org.bonitasoft.engine.core.filter.UserFilterService;
 import org.bonitasoft.engine.core.filter.exception.SUserFilterLoadingException;
 import org.bonitasoft.engine.core.process.definition.model.SProcessDefinition;
 import org.bonitasoft.engine.filter.UserFilterException;
-import org.bonitasoft.engine.service.TenantServiceAccessor;
+import org.bonitasoft.engine.sessionaccessor.ReadSessionAccessor;
+import org.bonitasoft.engine.sessionaccessor.STenantIdNotSetException;
 
 /**
  * @author Baptiste Mesta
@@ -31,21 +32,27 @@ import org.bonitasoft.engine.service.TenantServiceAccessor;
  */
 public class UserFilterProcessDependencyDeployer implements ProcessDependencyDeployer {
 
+    private final ReadSessionAccessor readSessionAccessor;
+    private final UserFilterService userFilterService;
+
+    public UserFilterProcessDependencyDeployer(ReadSessionAccessor readSessionAccessor, UserFilterService userFilterService) {
+        this.readSessionAccessor = readSessionAccessor;
+        this.userFilterService = userFilterService;
+    }
+
     @Override
-    public boolean deploy(final TenantServiceAccessor tenantAccessor, final BusinessArchive businessArchive, final SProcessDefinition processDefinition)
+    public boolean deploy(final BusinessArchive businessArchive, final SProcessDefinition processDefinition)
             throws UserFilterException {
         try {
-            final long tenantId = tenantAccessor.getTenantId();
-            final UserFilterService userFilterService = tenantAccessor.getUserFilterService();
+            final long tenantId = readSessionAccessor.getTenantId();
             return userFilterService.loadUserFilters(processDefinition.getId(), tenantId);
-        } catch (final SUserFilterLoadingException e) {
+        } catch (final SUserFilterLoadingException | STenantIdNotSetException e) {
             throw new UserFilterException(e);
         }
     }
 
     @Override
-    public List<Problem> checkResolution(final TenantServiceAccessor tenantAccessor, final SProcessDefinition processDefinition) {
-        // TODO check what is resolved
+    public List<Problem> checkResolution(final SProcessDefinition processDefinition) {
         return Collections.emptyList();
     }
 

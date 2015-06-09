@@ -19,15 +19,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bonitasoft.engine.actor.mapping.ActorMappingService;
-import org.bonitasoft.engine.actor.xml.ActorBinding;
-import org.bonitasoft.engine.actor.xml.ActorMappingBinding;
-import org.bonitasoft.engine.actor.xml.ActorMembershipBinding;
+import org.bonitasoft.engine.actor.xml.ActorMappingParserFactory;
 import org.bonitasoft.engine.actor.xml.GroupPathsBinding;
 import org.bonitasoft.engine.actor.xml.RoleNamesBinding;
 import org.bonitasoft.engine.actor.xml.UserNamesBinding;
 import org.bonitasoft.engine.api.impl.TenantConfiguration;
 import org.bonitasoft.engine.api.impl.resolver.DependencyResolver;
-import org.bonitasoft.engine.api.impl.transaction.actor.ImportActorMapping;
 import org.bonitasoft.engine.archive.ArchiveService;
 import org.bonitasoft.engine.authentication.GenericAuthenticationService;
 import org.bonitasoft.engine.authentication.GenericAuthenticationServiceAccessor;
@@ -41,6 +38,7 @@ import org.bonitasoft.engine.classloader.ClassLoaderService;
 import org.bonitasoft.engine.command.CommandService;
 import org.bonitasoft.engine.commons.transaction.TransactionExecutor;
 import org.bonitasoft.engine.connector.ConnectorExecutor;
+import org.bonitasoft.engine.core.BusinessArchiveService;
 import org.bonitasoft.engine.core.category.CategoryService;
 import org.bonitasoft.engine.core.connector.ConnectorInstanceService;
 import org.bonitasoft.engine.core.connector.ConnectorService;
@@ -260,6 +258,7 @@ public class SpringTenantServiceAccessor implements TenantServiceAccessor {
     private GenericAuthenticationService genericAuthenticationService;
     private ReadPersistenceService readPersistenceService;
     private Recorder recorder;
+    private BusinessArchiveService businessArchiveService;
 
 
     @Override
@@ -550,27 +549,11 @@ public class SpringTenantServiceAccessor implements TenantServiceAccessor {
 
     @Override
     public Parser getActorMappingParser() {
-        final List<Class<? extends ElementBinding>> bindings = new ArrayList<Class<? extends ElementBinding>>();
-        bindings.add(ActorMappingBinding.class);
-        bindings.add(ActorBinding.class);
-        bindings.add(UserNamesBinding.class);
-        bindings.add(GroupPathsBinding.class);
-        bindings.add(RoleNamesBinding.class);
-        bindings.add(ActorMembershipBinding.class);
-        final Parser parser = getParserFactgory().createParser(bindings);
-        final InputStream resource = ImportActorMapping.class.getClassLoader().getResourceAsStream("actorMapping.xsd");
-        try {
-            parser.setSchema(resource);
-            return parser;
-        } catch (final SInvalidSchemaException ise) {
-            throw new BonitaRuntimeException(ise);
-        } finally {
-            try {
-                resource.close();
-            } catch (final IOException ioe) {
-                throw new BonitaRuntimeException(ioe);
-            }
-        }
+        return beanAccessor.getService(ActorMappingParserFactory.class).create();
+    }
+    @Override
+    public ActorMappingParserFactory getActorMappingParserFactory() {
+        return beanAccessor.getService(ActorMappingParserFactory.class);
     }
 
     @Override
@@ -883,6 +866,15 @@ public class SpringTenantServiceAccessor implements TenantServiceAccessor {
         }
         return recorder;
     }
+
+    @Override
+    public BusinessArchiveService getBusinessArchiveService() {
+        if (businessArchiveService == null) {
+            businessArchiveService = beanAccessor.getService(BusinessArchiveService.class);
+        }
+        return businessArchiveService;
+    }
+
 
     @Override
     public BusinessDataService getBusinessDataService() {

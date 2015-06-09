@@ -21,13 +21,15 @@ import org.bonitasoft.engine.bpm.bar.BusinessArchive;
 import org.bonitasoft.engine.bpm.process.Problem;
 import org.bonitasoft.engine.bpm.process.Problem.Level;
 import org.bonitasoft.engine.bpm.process.impl.internal.ProblemImpl;
+import org.bonitasoft.engine.commons.exceptions.SBonitaRuntimeException;
 import org.bonitasoft.engine.connector.ConnectorException;
 import org.bonitasoft.engine.core.connector.ConnectorService;
 import org.bonitasoft.engine.core.connector.exception.SConnectorException;
 import org.bonitasoft.engine.core.process.definition.model.SConnectorDefinition;
 import org.bonitasoft.engine.core.process.definition.model.SFlowNodeDefinition;
 import org.bonitasoft.engine.core.process.definition.model.SProcessDefinition;
-import org.bonitasoft.engine.service.TenantServiceAccessor;
+import org.bonitasoft.engine.sessionaccessor.ReadSessionAccessor;
+import org.bonitasoft.engine.sessionaccessor.STenantIdNotSetException;
 
 /**
  * @author Baptiste Mesta
@@ -36,17 +38,28 @@ import org.bonitasoft.engine.service.TenantServiceAccessor;
  */
 public class ConnectorProcessDependencyDeployer implements ProcessDependencyDeployer {
 
+    private final ConnectorService connectorService;
+    private final ReadSessionAccessor readSessionAccessor;
+
+    public ConnectorProcessDependencyDeployer(ConnectorService connectorService, ReadSessionAccessor readSessionAccessor) {
+        this.connectorService = connectorService;
+        this.readSessionAccessor = readSessionAccessor;
+    }
+
     @Override
-    public boolean deploy(final TenantServiceAccessor tenantAccessor, final BusinessArchive businessArchive, final SProcessDefinition processDefinition)
+    public boolean deploy(final BusinessArchive businessArchive, final SProcessDefinition processDefinition)
             throws ConnectorException {
         try {
-            final long tenantId = tenantAccessor.getTenantId();
-            final ConnectorService connectorService = tenantAccessor.getConnectorService();
+            final long tenantId = getTenantId();
             return connectorService.loadConnectors(processDefinition, tenantId)
                     && checkAllConnectorsHaveImplementation(connectorService, processDefinition, tenantId).isEmpty();
-        } catch (final SConnectorException e) {
+        } catch (final SConnectorException | STenantIdNotSetException e) {
             throw new ConnectorException(e);
         }
+    }
+
+    long getTenantId() throws STenantIdNotSetException {
+        return readSessionAccessor.getTenantId();
     }
 
     private List<Problem> checkAllConnectorsHaveImplementation(final ConnectorService connectorService, final SProcessDefinition processDefinition,
@@ -87,9 +100,13 @@ public class ConnectorProcessDependencyDeployer implements ProcessDependencyDepl
     }
 
     @Override
-    public List<Problem> checkResolution(final TenantServiceAccessor tenantAccessor, final SProcessDefinition processDefinition) {
-        final long tenantId = tenantAccessor.getTenantId();
-        final ConnectorService connectorService = tenantAccessor.getConnectorService();
+    public List<Problem> checkResolution(final SProcessDefinition processDefinition) {
+        long tenantId;
+        try {
+            tenantId = getTenantId();
+        } catch (STenantIdNotSetException e) {
+            throw new SBonitaRuntimeException(e);
+        }
         return checkAllConnectorsHaveImplementation(connectorService, processDefinition, tenantId);
     }
 }

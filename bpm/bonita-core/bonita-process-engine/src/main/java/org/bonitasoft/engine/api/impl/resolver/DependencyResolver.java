@@ -62,20 +62,22 @@ public class DependencyResolver {
     private static final int BATCH_SIZE = 100;
 
     private final List<ProcessDependencyDeployer> dependencyResolvers;
+    private TechnicalLoggerService technicalLoggerService;
 
-    public DependencyResolver(final List<ProcessDependencyDeployer> dependencyResolvers) {
+    public DependencyResolver(final List<ProcessDependencyDeployer> dependencyResolvers, TechnicalLoggerService technicalLoggerService) {
         this.dependencyResolvers = dependencyResolvers;
+        this.technicalLoggerService = technicalLoggerService;
     }
 
-    public boolean resolveDependencies(final BusinessArchive businessArchive, final TenantServiceAccessor tenantAccessor, final SProcessDefinition sDefinition) {
+    public boolean resolveDependencies(final BusinessArchive businessArchive, final SProcessDefinition sDefinition) {
         final List<ProcessDependencyDeployer> resolvers = getResolvers();
         boolean resolved = true;
         for (final ProcessDependencyDeployer resolver : resolvers) {
             try {
-                resolved &= resolver.deploy(tenantAccessor, businessArchive, sDefinition);
+                resolved &= resolver.deploy(businessArchive, sDefinition);
                 if (!resolved) {
-                    for (Problem problem : resolver.checkResolution(tenantAccessor, sDefinition)) {
-                        tenantAccessor.getTechnicalLoggerService().log(DependencyResolver.class, INFO, problem.getDescription());
+                    for (Problem problem : resolver.checkResolution(sDefinition)) {
+                        technicalLoggerService.log(DependencyResolver.class, INFO, problem.getDescription());
                     }
                 }
             } catch (final BonitaException e) {
@@ -87,12 +89,11 @@ public class DependencyResolver {
     }
 
     public void resolveDependenciesForAllProcesses(TenantServiceAccessor tenantAccessor) {
-        final TechnicalLoggerService loggerService = tenantAccessor.getTechnicalLoggerService();
         try {
             List<Long> processDefinitionIds = tenantAccessor.getProcessDefinitionService().getProcessDefinitionIds(0, Integer.MAX_VALUE);
             resolveDependencies(processDefinitionIds, tenantAccessor);
         } catch (SBonitaReadException e) {
-            loggerService.log(DependencyResolver.class, ERROR, "Unable to retrieve tenant process definitions, dependency resolution aborted");
+            technicalLoggerService.log(DependencyResolver.class, ERROR, "Unable to retrieve tenant process definitions, dependency resolution aborted");
         }
     }
 
@@ -120,7 +121,7 @@ public class DependencyResolver {
             boolean resolved = true;
             for (final ProcessDependencyDeployer dependencyResolver : resolvers) {
                 final SProcessDefinition processDefinition = processDefinitionService.getProcessDefinition(processDefinitionId);
-                resolved &= dependencyResolver.checkResolution(tenantAccessor, processDefinition).isEmpty();
+                resolved &= dependencyResolver.checkResolution(processDefinition).isEmpty();
             }
             changeResolutionStatus(processDefinitionId, tenantAccessor, processDefinitionService, dependencyService, resolved);
         } catch (final SBonitaException e) {

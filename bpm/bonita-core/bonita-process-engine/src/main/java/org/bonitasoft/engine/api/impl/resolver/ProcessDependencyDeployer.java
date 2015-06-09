@@ -19,7 +19,6 @@ import org.bonitasoft.engine.bpm.bar.BusinessArchive;
 import org.bonitasoft.engine.bpm.process.Problem;
 import org.bonitasoft.engine.core.process.definition.model.SProcessDefinition;
 import org.bonitasoft.engine.exception.BonitaException;
-import org.bonitasoft.engine.service.TenantServiceAccessor;
 
 /**
  * @author Baptiste Mesta
@@ -33,8 +32,6 @@ public interface ProcessDependencyDeployer {
      * e.g. load connectors
      * Must throw an exception is something is not resolved in the process
      *
-     * @param tenantAccessor
-     *        the tenantAccessor to access services
      * @param businessArchive
      *        the business archive containing the dependency
      * @param processDefinition
@@ -42,16 +39,14 @@ public interface ProcessDependencyDeployer {
      * @return true if the process is resolved for this deployer, false otherwise
      * @throws BonitaException
      */
-    boolean deploy(TenantServiceAccessor tenantAccessor, BusinessArchive businessArchive, SProcessDefinition processDefinition) throws BonitaException;
+    boolean deploy(BusinessArchive businessArchive, SProcessDefinition processDefinition) throws BonitaException;
 
     /**
-     * @param tenantAccessor
-     *        the tenantAccessor to access services
      * @param processDefinition
      *        the process definition
      * @return
      *         a list of resolution problems or an empty list is there is no issue for this artefact
      */
-    List<Problem> checkResolution(TenantServiceAccessor tenantAccessor, final SProcessDefinition processDefinition);
+    List<Problem> checkResolution(final SProcessDefinition processDefinition);
 
 }
