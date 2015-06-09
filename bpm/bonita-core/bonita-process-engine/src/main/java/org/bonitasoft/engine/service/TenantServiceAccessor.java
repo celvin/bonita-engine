@@ -16,7 +16,7 @@ package org.bonitasoft.engine.service;
 import org.bonitasoft.engine.actor.mapping.ActorMappingService;
 import org.bonitasoft.engine.actor.xml.ActorMappingParserFactory;
 import org.bonitasoft.engine.api.impl.TenantConfiguration;
-import org.bonitasoft.engine.api.impl.resolver.DependencyResolver;
+import org.bonitasoft.engine.api.impl.resolver.BusinessArchiveDependenciesManager;
 import org.bonitasoft.engine.archive.ArchiveService;
 import org.bonitasoft.engine.authentication.GenericAuthenticationService;
 import org.bonitasoft.engine.bpm.model.impl.BPMInstancesCreator;
@@ -195,7 +195,7 @@ public interface TenantServiceAccessor extends ServiceAccessor {
 
     CacheService getCacheService();
 
-    DependencyResolver getDependencyResolver();
+    BusinessArchiveDependenciesManager getBusinessArchiveDependenciesManager();
 
     WorkService getWorkService();
 

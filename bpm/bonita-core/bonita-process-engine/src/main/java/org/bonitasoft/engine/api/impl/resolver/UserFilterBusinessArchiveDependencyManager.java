@@ -18,6 +18,7 @@ import java.util.List;
 
 import org.bonitasoft.engine.bpm.bar.BusinessArchive;
 import org.bonitasoft.engine.bpm.process.Problem;
+import org.bonitasoft.engine.commons.exceptions.SObjectModificationException;
 import org.bonitasoft.engine.core.filter.UserFilterService;
 import org.bonitasoft.engine.core.filter.exception.SUserFilterLoadingException;
 import org.bonitasoft.engine.core.process.definition.model.SProcessDefinition;
@@ -30,12 +31,12 @@ import org.bonitasoft.engine.sessionaccessor.STenantIdNotSetException;
  * @author Matthieu Chaffotte
  * @author Celine Souchet
  */
-public class UserFilterProcessDependencyDeployer implements ProcessDependencyDeployer {
+public class UserFilterBusinessArchiveDependencyManager implements BusinessArchiveDependencyManager {
 
     private final ReadSessionAccessor readSessionAccessor;
     private final UserFilterService userFilterService;
 
-    public UserFilterProcessDependencyDeployer(ReadSessionAccessor readSessionAccessor, UserFilterService userFilterService) {
+    public UserFilterBusinessArchiveDependencyManager(ReadSessionAccessor readSessionAccessor, UserFilterService userFilterService) {
         this.readSessionAccessor = readSessionAccessor;
         this.userFilterService = userFilterService;
     }
@@ -54,6 +55,11 @@ public class UserFilterProcessDependencyDeployer implements ProcessDependencyDep
     @Override
     public List<Problem> checkResolution(final SProcessDefinition processDefinition) {
         return Collections.emptyList();
+    }
+
+    @Override
+    public void delete(SProcessDefinition processDefinition) throws SObjectModificationException {
+
     }
 
 }

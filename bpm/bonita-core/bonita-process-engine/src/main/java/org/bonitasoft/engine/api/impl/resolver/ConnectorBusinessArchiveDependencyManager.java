@@ -22,6 +22,7 @@ import org.bonitasoft.engine.bpm.process.Problem;
 import org.bonitasoft.engine.bpm.process.Problem.Level;
 import org.bonitasoft.engine.bpm.process.impl.internal.ProblemImpl;
 import org.bonitasoft.engine.commons.exceptions.SBonitaRuntimeException;
+import org.bonitasoft.engine.commons.exceptions.SObjectModificationException;
 import org.bonitasoft.engine.connector.ConnectorException;
 import org.bonitasoft.engine.core.connector.ConnectorService;
 import org.bonitasoft.engine.core.connector.exception.SConnectorException;
@@ -36,12 +37,12 @@ import org.bonitasoft.engine.sessionaccessor.STenantIdNotSetException;
  * @author Matthieu Chaffotte
  * @author Celine Souchet
  */
-public class ConnectorProcessDependencyDeployer implements ProcessDependencyDeployer {
+public class ConnectorBusinessArchiveDependencyManager implements BusinessArchiveDependencyManager {
 
     private final ConnectorService connectorService;
     private final ReadSessionAccessor readSessionAccessor;
 
-    public ConnectorProcessDependencyDeployer(ConnectorService connectorService, ReadSessionAccessor readSessionAccessor) {
+    public ConnectorBusinessArchiveDependencyManager(ConnectorService connectorService, ReadSessionAccessor readSessionAccessor) {
         this.connectorService = connectorService;
         this.readSessionAccessor = readSessionAccessor;
     }
@@ -108,5 +109,10 @@ public class ConnectorProcessDependencyDeployer implements ProcessDependencyDepl
             throw new SBonitaRuntimeException(e);
         }
         return checkAllConnectorsHaveImplementation(connectorService, processDefinition, tenantId);
+    }
+
+    @Override
+    public void delete(SProcessDefinition processDefinition) throws SObjectModificationException {
+
     }
 }

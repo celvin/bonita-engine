@@ -33,6 +33,7 @@ import org.bonitasoft.engine.bpm.process.ProcessDeployException;
 import org.bonitasoft.engine.bpm.process.impl.internal.ProblemImpl;
 import org.bonitasoft.engine.commons.exceptions.SBonitaException;
 import org.bonitasoft.engine.commons.exceptions.SObjectCreationException;
+import org.bonitasoft.engine.commons.exceptions.SObjectModificationException;
 import org.bonitasoft.engine.commons.exceptions.SObjectNotFoundException;
 import org.bonitasoft.engine.core.form.FormMappingService;
 import org.bonitasoft.engine.core.form.SFormMapping;
@@ -53,7 +54,7 @@ import org.bonitasoft.engine.sessionaccessor.SessionAccessor;
 /**
  * @author Laurent Leseigneur
  */
-public class FormMappingAndPageDependencyDeployer implements ProcessDependencyDeployer {
+public class FormMappingAndPageDependencyManager implements BusinessArchiveDependencyManager {
 
     public static final String ERROR_MESSAGE = "error while resolving form mapping %s";
     private static final String regex = "^resources/customPages/(custompage_.*)\\.(zip)$";
@@ -64,7 +65,7 @@ public class FormMappingAndPageDependencyDeployer implements ProcessDependencyDe
     private final FormMappingService formMappingService;
 
 
-    public FormMappingAndPageDependencyDeployer(SessionService sessionService, SessionAccessor sessionAccessor, PageService pageService, TechnicalLoggerService technicalLoggerService, FormMappingService formMappingService) {
+    public FormMappingAndPageDependencyManager(SessionService sessionService, SessionAccessor sessionAccessor, PageService pageService, TechnicalLoggerService technicalLoggerService, FormMappingService formMappingService) {
         this.sessionService = sessionService;
         this.sessionAccessor = sessionAccessor;
         this.pageService = pageService;
@@ -130,6 +131,36 @@ public class FormMappingAndPageDependencyDeployer implements ProcessDependencyDe
             problems.add(new ProblemImpl(Problem.Level.ERROR, null, null, "unable to resolve form mapping dependencies"));
         }
         return problems;
+    }
+
+    @Override
+    public void delete(SProcessDefinition processDefinition) throws SObjectModificationException {
+        try {
+            deleteFormMapping(processDefinition.getId());
+            deleteProcessPages(processDefinition.getId());
+        } catch (SBonitaReadException | SObjectNotFoundException e) {
+            throw new SObjectModificationException("Unable to delete forms and page of the process definition <" + processDefinition.getName() + ">", e);
+        }
+    }
+
+    protected void deleteFormMapping(Long processDefinitionId) throws SBonitaReadException, SObjectModificationException {
+        List<SFormMapping> formMappings;
+        do {
+            formMappings = formMappingService.list(processDefinitionId, 0, 100);
+            for (SFormMapping formMapping : formMappings) {
+                formMappingService.delete(formMapping);
+            }
+        } while (formMappings.size() == 100);
+    }
+
+    private void deleteProcessPages(Long processDefinitionId) throws SBonitaReadException, SObjectModificationException, SObjectNotFoundException {
+        List<SPage> sPages;
+        do {
+            sPages = pageService.getPageByProcessDefinitionId(processDefinitionId, 0, 100);
+            for (SPage sPage : sPages) {
+                pageService.deletePage(sPage.getId());
+            }
+        } while (sPages.size() == 100);
     }
 
     protected List<Problem> checkPageProcessResolution(SProcessDefinition sProcessDefinition) throws SBonitaReadException,

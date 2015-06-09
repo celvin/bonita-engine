@@ -17,16 +17,21 @@ package org.bonitasoft.engine.core;
 import java.io.IOException;
 
 import org.bonitasoft.engine.api.impl.SessionInfos;
-import org.bonitasoft.engine.api.impl.resolver.DependencyResolver;
+import org.bonitasoft.engine.api.impl.resolver.BusinessArchiveDependenciesManager;
 import org.bonitasoft.engine.bpm.bar.BusinessArchive;
 import org.bonitasoft.engine.bpm.process.DesignProcessDefinition;
+import org.bonitasoft.engine.classloader.ClassLoaderService;
 import org.bonitasoft.engine.commons.exceptions.SAlreadyExistsException;
 import org.bonitasoft.engine.commons.exceptions.SBonitaException;
 import org.bonitasoft.engine.commons.exceptions.SObjectCreationException;
+import org.bonitasoft.engine.commons.exceptions.SObjectModificationException;
 import org.bonitasoft.engine.core.process.definition.ProcessDefinitionService;
+import org.bonitasoft.engine.core.process.definition.exception.SDeletingEnabledProcessException;
 import org.bonitasoft.engine.core.process.definition.exception.SProcessDefinitionNotFoundException;
+import org.bonitasoft.engine.core.process.definition.exception.SProcessDeletionException;
 import org.bonitasoft.engine.core.process.definition.model.SProcessDefinition;
 import org.bonitasoft.engine.dependency.DependencyService;
+import org.bonitasoft.engine.dependency.model.ScopeType;
 import org.bonitasoft.engine.exception.BonitaHomeNotSetException;
 import org.bonitasoft.engine.home.BonitaHomeServer;
 import org.bonitasoft.engine.log.technical.TechnicalLogSeverity;
@@ -42,17 +47,20 @@ public class BusinessArchiveServiceImpl implements BusinessArchiveService {
 
     private final ProcessDefinitionService processDefinitionService;
     private final DependencyService dependencyService;
-    private final DependencyResolver dependencyResolver;
+    private final BusinessArchiveDependenciesManager businessArchiveDependenciesManager;
     private final TechnicalLoggerService logger;
     private final ReadSessionAccessor readSessionAccessor;
+    private final ClassLoaderService classLoaderService;
 
     public BusinessArchiveServiceImpl(ProcessDefinitionService processDefinitionService, DependencyService dependencyService,
-            DependencyResolver dependencyResolver, TechnicalLoggerService logger, ReadSessionAccessor readSessionAccessor) {
+            BusinessArchiveDependenciesManager businessArchiveDependenciesManager, TechnicalLoggerService logger, ReadSessionAccessor readSessionAccessor,
+            ClassLoaderService classLoaderService) {
         this.processDefinitionService = processDefinitionService;
         this.dependencyService = dependencyService;
-        this.dependencyResolver = dependencyResolver;
+        this.businessArchiveDependenciesManager = businessArchiveDependenciesManager;
         this.logger = logger;
         this.readSessionAccessor = readSessionAccessor;
+        this.classLoaderService = classLoaderService;
     }
 
     @Override
@@ -66,9 +74,9 @@ public class BusinessArchiveServiceImpl implements BusinessArchiveService {
             sProcessDefinition = processDefinitionService.store(designProcessDefinition);
 
             unzipBar(businessArchive, sProcessDefinition, getTenantId());
-            final boolean isResolved = dependencyResolver.resolveDependencies(businessArchive, sProcessDefinition);
+            final boolean isResolved = businessArchiveDependenciesManager.resolveDependencies(businessArchive, sProcessDefinition);
             if (isResolved) {
-                dependencyResolver.resolveAndCreateDependencies(businessArchive, processDefinitionService, dependencyService,
+                businessArchiveDependenciesManager.resolveAndCreateDependencies(businessArchive, processDefinitionService, dependencyService,
                         sProcessDefinition);
             }
         } catch (SAlreadyExistsException e) {
@@ -104,6 +112,20 @@ public class BusinessArchiveServiceImpl implements BusinessArchiveService {
     @Override
     public BusinessArchive export(long processDefinitionId) {
         return null;
+    }
+
+    @Override
+    public void delete(long processDefinitionId) throws SProcessDefinitionNotFoundException, SObjectModificationException {
+        try {
+            final SProcessDefinition processDefinition = processDefinitionService.getProcessDefinition(processDefinitionId);
+            businessArchiveDependenciesManager.deleteDependencies(processDefinition);
+            processDefinitionService.delete(processDefinition.getId());
+            classLoaderService.removeLocalClassLoader(ScopeType.PROCESS.name(), processDefinition.getId());
+            BonitaHomeServer.getInstance().getProcessManager().deleteProcess(readSessionAccessor.getTenantId(), processDefinitionId);
+        } catch (SBonitaReadException | SProcessDeletionException | SDeletingEnabledProcessException | BonitaHomeNotSetException | STenantIdNotSetException
+                | IOException e) {
+            throw new SObjectModificationException("Unable to delete the process definition <" + processDefinitionId + ">", e);
+        }
     }
 
     protected void unzipBar(final BusinessArchive businessArchive, final SProcessDefinition sProcessDefinition, final long tenantId)

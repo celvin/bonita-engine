@@ -105,7 +105,7 @@ public class TenantAdministrationAPIImpl implements TenantAdministrationAPI {
 
     private void resolveDependenciesForAllProcesses() {
         final TenantServiceAccessor tenantAccessor = getTenantAccessor();
-        tenantAccessor.getDependencyResolver().resolveDependenciesForAllProcesses(tenantAccessor);
+        tenantAccessor.getBusinessArchiveDependenciesManager().resolveDependenciesForAllProcesses(tenantAccessor);
     }
 
     private void setTenantPaused(final boolean shouldBePaused) throws UpdateException {

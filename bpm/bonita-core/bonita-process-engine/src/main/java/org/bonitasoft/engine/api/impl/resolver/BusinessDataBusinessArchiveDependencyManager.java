@@ -23,17 +23,18 @@ import org.bonitasoft.engine.bpm.process.Problem;
 import org.bonitasoft.engine.bpm.process.Problem.Level;
 import org.bonitasoft.engine.bpm.process.impl.internal.ProblemImpl;
 import org.bonitasoft.engine.business.data.BusinessDataRepository;
+import org.bonitasoft.engine.commons.exceptions.SObjectModificationException;
 import org.bonitasoft.engine.core.process.definition.model.SBusinessDataDefinition;
 import org.bonitasoft.engine.core.process.definition.model.SProcessDefinition;
 
 /**
  * @author Matthieu Chaffotte
  */
-public class BusinessDataProcessDependencyDeployer implements ProcessDependencyDeployer {
+public class BusinessDataBusinessArchiveDependencyManager implements BusinessArchiveDependencyManager {
 
     private final BusinessDataRepository businessDataRepository;
 
-    public BusinessDataProcessDependencyDeployer(BusinessDataRepository businessDataRepository) {
+    public BusinessDataBusinessArchiveDependencyManager(BusinessDataRepository businessDataRepository) {
         this.businessDataRepository = businessDataRepository;
     }
 
@@ -59,6 +60,11 @@ public class BusinessDataProcessDependencyDeployer implements ProcessDependencyD
             }
         }
         return problems;
+    }
+
+    @Override
+    public void delete(SProcessDefinition processDefinition) throws SObjectModificationException {
+
     }
 
 }

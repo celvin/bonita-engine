@@ -17,6 +17,7 @@ import java.util.List;
 
 import org.bonitasoft.engine.bpm.bar.BusinessArchive;
 import org.bonitasoft.engine.bpm.process.Problem;
+import org.bonitasoft.engine.commons.exceptions.SObjectModificationException;
 import org.bonitasoft.engine.core.process.definition.model.SProcessDefinition;
 import org.bonitasoft.engine.exception.BonitaException;
 
@@ -25,7 +26,7 @@ import org.bonitasoft.engine.exception.BonitaException;
  * @author Matthieu Chaffotte
  * @author Celine Souchet
  */
-public interface ProcessDependencyDeployer {
+public interface BusinessArchiveDependencyManager {
 
     /**
      * deploy a dedicated part of the process
@@ -49,4 +50,5 @@ public interface ProcessDependencyDeployer {
      */
     List<Problem> checkResolution(final SProcessDefinition processDefinition);
 
+    void delete(final SProcessDefinition processDefinition) throws SObjectModificationException;
 }

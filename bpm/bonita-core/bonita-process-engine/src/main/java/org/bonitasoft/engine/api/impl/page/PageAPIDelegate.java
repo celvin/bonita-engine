@@ -14,7 +14,6 @@
 package org.bonitasoft.engine.api.impl.page;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -24,7 +23,7 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.bonitasoft.engine.api.impl.converter.PageModelConverter;
-import org.bonitasoft.engine.api.impl.resolver.DependencyResolver;
+import org.bonitasoft.engine.api.impl.resolver.BusinessArchiveDependenciesManager;
 import org.bonitasoft.engine.api.impl.transaction.page.SearchPages;
 import org.bonitasoft.engine.builder.BuilderFactory;
 import org.bonitasoft.engine.commons.exceptions.SBonitaException;
@@ -88,11 +87,11 @@ public class PageAPIDelegate {
     private final SearchEntitiesDescriptor searchEntitiesDescriptor;
     private final PageMappingService pageMappingService;
     private final FormMappingService formMappingService;
-    private final DependencyResolver dependencyResolver;
+    private final BusinessArchiveDependenciesManager businessArchiveDependenciesManager;
 
     public PageAPIDelegate(final TenantServiceAccessor tenantAccessor, final long userIdFromSession) {
         this.tenantAccessor = tenantAccessor;
-        dependencyResolver = tenantAccessor.getDependencyResolver();
+        businessArchiveDependenciesManager = tenantAccessor.getBusinessArchiveDependenciesManager();
         this.userIdFromSession = userIdFromSession;
         pageService = tenantAccessor.getPageService();
         pageMappingService = tenantAccessor.getPageMappingService();
@@ -199,7 +198,7 @@ public class PageAPIDelegate {
 
 
     private void updateProcessResolution(Long processDefinitionId) {
-        dependencyResolver.resolveDependencies(processDefinitionId, tenantAccessor);
+        businessArchiveDependenciesManager.resolveDependencies(processDefinitionId, tenantAccessor);
     }
 
     public void deletePages(final List<Long> pageIds) throws DeletionException {

@@ -35,7 +35,7 @@ import org.mockito.Mock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 @RunWith(MockitoJUnitRunner.class)
-public class BusinessDataProcessDependencyDeployerTest {
+public class BusinessDataBusinessArchiveDependencyManagerTest {
 
     @Mock
     private TenantServiceAccessor tenantAccessor;
@@ -43,11 +43,11 @@ public class BusinessDataProcessDependencyDeployerTest {
     @Mock
     private BusinessDataRepository businessDataRepository;
 
-    private BusinessDataProcessDependencyDeployer resolver;
+    private BusinessDataBusinessArchiveDependencyManager resolver;
 
     @Before
     public void setUp() {
-        resolver = new BusinessDataProcessDependencyDeployer(businessDataRepository);
+        resolver = new BusinessDataBusinessArchiveDependencyManager(businessDataRepository);
         final Set<String> entityClassNames = new HashSet<String>();
         entityClassNames.add("com.bonitasoft.Employee");
         entityClassNames.add("com.bonitasoft.LeaveRequest");

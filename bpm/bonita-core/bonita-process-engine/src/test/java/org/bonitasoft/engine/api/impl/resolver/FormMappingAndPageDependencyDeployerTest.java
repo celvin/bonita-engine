@@ -72,7 +72,7 @@ public class FormMappingAndPageDependencyDeployerTest {
     private java.util.Map<java.lang.String, byte[]> ressources;
     @Mock
     private Properties properties;
-    private FormMappingAndPageDependencyDeployer formMappingAndPageDependencyDeployer;
+    private FormMappingAndPageDependencyManager formMappingAndPageDependencyDeployer;
     @Mock
     private TenantServiceAccessor tenantServiceAccessor;
     @Mock
@@ -99,7 +99,7 @@ public class FormMappingAndPageDependencyDeployerTest {
 
     @Before
     public void before() {
-        formMappingAndPageDependencyDeployer = spy(new FormMappingAndPageDependencyDeployer(sessionService, sessionAccessor, pageService,
+        formMappingAndPageDependencyDeployer = spy(new FormMappingAndPageDependencyManager(sessionService, sessionAccessor, pageService,
                 technicalLoggerService, formMappingService));
         formMappings = new ArrayList<>();
 
@@ -151,7 +151,7 @@ public class FormMappingAndPageDependencyDeployerTest {
 
         // then
         assertThat(problems).as("should return a problem").hasSize(1);
-        ProblemAssert.assertThat(problems.get(0)).hasDescription(String.format(FormMappingAndPageDependencyDeployer.ERROR_MESSAGE, sFormMapping))
+        ProblemAssert.assertThat(problems.get(0)).hasDescription(String.format(FormMappingAndPageDependencyManager.ERROR_MESSAGE, sFormMapping))
                 .hasLevel(Problem.Level.ERROR);
 
     }
@@ -171,7 +171,7 @@ public class FormMappingAndPageDependencyDeployerTest {
 
         // then
         assertThat(problems).as("should return a problem").hasSize(1);
-        ProblemAssert.assertThat(problems.get(0)).hasDescription(String.format(FormMappingAndPageDependencyDeployer.ERROR_MESSAGE, sFormMapping))
+        ProblemAssert.assertThat(problems.get(0)).hasDescription(String.format(FormMappingAndPageDependencyManager.ERROR_MESSAGE, sFormMapping))
                 .hasLevel(Problem.Level.ERROR);
 
     }
@@ -207,7 +207,7 @@ public class FormMappingAndPageDependencyDeployerTest {
 
         // then
         assertThat(problems).as("should return a problem").hasSize(1);
-        ProblemAssert.assertThat(problems.get(0)).hasDescription(String.format(FormMappingAndPageDependencyDeployer.ERROR_MESSAGE, sFormMapping))
+        ProblemAssert.assertThat(problems.get(0)).hasDescription(String.format(FormMappingAndPageDependencyManager.ERROR_MESSAGE, sFormMapping))
                 .hasLevel(Problem.Level.ERROR);
 
     }
