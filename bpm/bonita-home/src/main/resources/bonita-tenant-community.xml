@@ -245,11 +245,12 @@
                 <bean class="org.bonitasoft.engine.api.impl.resolver.ConnectorBusinessArchiveDependencyManager">
                     <constructor-arg name="connectorService" ref="connectorService" />
                     <constructor-arg name="readSessionAccessor" ref="sessionAccessor" />
-                    <constructor-arg name="xmlWriter" ref="xmlWriter" />
+                    <constructor-arg name="businessArchiveResourceService" ref="businessArchiveResourceService" />
                 </bean>
                 <bean class="org.bonitasoft.engine.api.impl.resolver.UserFilterBusinessArchiveDependencyManager">
                     <constructor-arg name="userFilterService" ref="userFilterService" />
                     <constructor-arg name="readSessionAccessor" ref="sessionAccessor" />
+                    <constructor-arg name="businessArchiveResourceService" ref="businessArchiveResourceService" />
                 </bean>
                 <bean class="org.bonitasoft.engine.api.impl.resolver.ParameterBusinessArchiveDependencyManager">
                     <constructor-arg name="parameterService" ref="parameterService" />
@@ -264,12 +265,21 @@
                 <bean class="org.bonitasoft.engine.api.impl.resolver.BusinessDataBusinessArchiveDependencyManager">
                     <constructor-arg name="businessDataRepository" ref="businessDataRepository" />
                 </bean>
+                <bean class="org.bonitasoft.engine.api.impl.resolver.DocumentInitialValueDependencyManager">
+                    <constructor-arg name="businessArchiveResourceService" ref="businessArchiveResourceService" />
+                </bean>
+                <bean class="org.bonitasoft.engine.api.impl.resolver.ExternalResourceDependencyManager">
+                    <constructor-arg name="businessArchiveResourceService" ref="businessArchiveResourceService" />
+                </bean>
             </list>
         </constructor-arg>
         <constructor-arg name="technicalLoggerService" ref="tenantTechnicalLoggerService" />
     </bean>
 
-    <bean id="businessArchiveService" class="org.bonitasoft.engine.core.BusinessArchiveServiceImpl">
+    <bean id="businessArchiveResourceService" class="org.bonitasoft.engine.bar.BusinessArchiveResourceServiceImpl">
+    </bean>
+
+    <bean id="businessArchiveService" class="org.bonitasoft.engine.bar.BusinessArchiveServiceImpl">
         <constructor-arg name="processDefinitionService" ref="processDefinitionService" />
         <constructor-arg name="dependencyService" ref="dependencyService" />
         <constructor-arg name="businessArchiveDependenciesManager" ref="dependencyResolver" />

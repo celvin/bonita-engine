@@ -369,6 +369,7 @@ public class ConnectorServiceImpl implements ConnectorService {
     protected boolean loadConnectors(final long processDefinitionId, final long tenantId) throws SConnectorException {
         boolean resolved = true;
         try {
+            //TODO user BusinessArchiveResourceService instead of bonita home
             final Map<String, byte[]> connectorFiles = BonitaHomeServer.getInstance().getProcessManager().getConnectorFiles(tenantId, processDefinitionId);
 
             if (connectorFiles != null && connectorFiles.size() > 0) {

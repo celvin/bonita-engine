@@ -20,7 +20,9 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Random;
+import java.util.Set;
 
 import org.bonitasoft.engine.TestWithUser;
 import org.bonitasoft.engine.api.ProcessAPI;
@@ -180,9 +182,9 @@ public class ProcessDeploymentIT extends TestWithUser {
         businessArchiveBuilder.addUserFilters(new BarResource("theUserFilter.impl", userFilterImpl));
         final byte[] pdfContent = new byte[] { 5, 0, 1, 4, 6, 5, 2, 3, 1, 5, 6, 8, 4, 6, 6, 3, 2, 4, 5 };
         businessArchiveBuilder.addDocumentResource(new BarResource("myPdf.pdf", pdfContent));
-        businessArchiveBuilder.addClasspathResource(BuildTestUtil.generateJarAndBuildBarResource(org.bonitasoft.engine.api.ProcessAPI.class, "myJar,jar"));
+        businessArchiveBuilder.addClasspathResource(BuildTestUtil.generateJarAndBuildBarResource(ProcessAPI.class, "myJar,jar"));
         businessArchiveBuilder.addExternalResource(new BarResource("index.html", "<html>".getBytes()));
-        businessArchiveBuilder.addExternalResource(new BarResource("content/other.html","<html>1".getBytes()));
+        businessArchiveBuilder.addExternalResource(new BarResource("content/other.html", "<html>1".getBytes()));
 
         //deploy
         final BusinessArchive businessArchive = businessArchiveBuilder.done();
@@ -190,20 +192,25 @@ public class ProcessDeploymentIT extends TestWithUser {
         assertThat(getProcessAPI().getProcessResolutionProblems(processDefinition.getId())).isEmpty();
         getProcessAPI().enableProcess(processDefinition.getId());
 
-
         //modify
-
-
 
         //export
         final byte[] bytes = getProcessAPI().exportBarProcessContentUnderHome(processDefinition.getId());
         final BusinessArchive exportedBAR = BusinessArchiveFactory.readBusinessArchive(new ByteArrayInputStream(bytes));
 
         //check
-        assertThat(exportedBAR).isEqualTo(businessArchive);
-
-
+        assertThat(exportedBAR.getResources().keySet()).contains(toStringArray(businessArchive.getResources().keySet()));
+        List<FormMappingDefinition> formMappings = businessArchive.getFormMappingModel().getFormMappings();
+        assertThat(exportedBAR.getFormMappingModel().getFormMappings()).contains(formMappings.toArray(new FormMappingDefinition[formMappings.size()]));
+        assertThat(exportedBAR.getParameters()).isEqualTo(businessArchive.getParameters());
+        assertThat(exportedBAR.getProcessDefinition()).isEqualTo(businessArchive.getProcessDefinition());
 
         deleteUsers(john, jack);
+        disableAndDeleteProcess(processDefinition);
     }
+
+    private String[] toStringArray(Set<String> strings) {
+        return strings.toArray(new String[strings.size()]);
+    }
+
 }

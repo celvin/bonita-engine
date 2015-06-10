@@ -1,6 +1,6 @@
 /**
- * Copyright (C) 2015 BonitaSoft S.A.
- * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
+ * Copyright (C) 2015 Bonitasoft S.A.
+ * Bonitasoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
  * of the GNU Lesser General Public License as published by the Free Software Foundation
  * version 2.1 of the License.
@@ -11,6 +11,7 @@
  * program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301, USA.
  **/
+
 package org.bonitasoft.engine.api.impl.resolver;
 
 import java.util.Collections;
@@ -24,59 +25,43 @@ import org.bonitasoft.engine.bpm.bar.BusinessArchiveBuilder;
 import org.bonitasoft.engine.bpm.process.Problem;
 import org.bonitasoft.engine.commons.exceptions.SBonitaException;
 import org.bonitasoft.engine.commons.exceptions.SObjectModificationException;
-import org.bonitasoft.engine.core.filter.UserFilterService;
-import org.bonitasoft.engine.core.filter.exception.SUserFilterLoadingException;
 import org.bonitasoft.engine.core.process.definition.model.SProcessDefinition;
-import org.bonitasoft.engine.filter.UserFilterException;
-import org.bonitasoft.engine.sessionaccessor.ReadSessionAccessor;
-import org.bonitasoft.engine.sessionaccessor.STenantIdNotSetException;
+import org.bonitasoft.engine.exception.BonitaException;
 
 /**
  * @author Baptiste Mesta
- * @author Matthieu Chaffotte
- * @author Celine Souchet
  */
-public class UserFilterBusinessArchiveDependencyManager extends BARResourceDependencyManager {
+public class DocumentInitialValueDependencyManager extends BARResourceDependencyManager {
 
-    private final ReadSessionAccessor readSessionAccessor;
-    private final UserFilterService userFilterService;
+    public static final String FOLDER = "documents";
 
-    public UserFilterBusinessArchiveDependencyManager(ReadSessionAccessor readSessionAccessor, UserFilterService userFilterService,
-            BusinessArchiveResourceService businessArchiveResourceService) {
+    public DocumentInitialValueDependencyManager(BusinessArchiveResourceService businessArchiveResourceService) {
         super(businessArchiveResourceService);
-        this.readSessionAccessor = readSessionAccessor;
-        this.userFilterService = userFilterService;
     }
 
     @Override
-    public boolean deploy(final BusinessArchive businessArchive, final SProcessDefinition processDefinition)
-            throws UserFilterException {
-        try {
-            saveResources(businessArchive, processDefinition, "userFilters", BARResourceType.USER_FILTER);
-            final long tenantId = readSessionAccessor.getTenantId();
-            return userFilterService.loadUserFilters(processDefinition.getId(), tenantId);
-        } catch (final SUserFilterLoadingException | STenantIdNotSetException e) {
-            throw new UserFilterException(e);
-        }
+    public boolean deploy(BusinessArchive businessArchive, SProcessDefinition processDefinition) throws BonitaException, SBonitaException {
+        saveResources(businessArchive, processDefinition, FOLDER, BARResourceType.DOCUMENT);
+        return true;
     }
 
     @Override
-    public List<Problem> checkResolution(final SProcessDefinition processDefinition) {
+    public List<Problem> checkResolution(SProcessDefinition processDefinition) {
         return Collections.emptyList();
     }
 
     @Override
     public void delete(SProcessDefinition processDefinition) throws SObjectModificationException {
-
+        //done globally
     }
 
     @Override
     public void exportBusinessArchive(long processDefinitionId, BusinessArchiveBuilder businessArchiveBuilder) throws SBonitaException {
-        exportResourcesToBusinessArchive(processDefinitionId, businessArchiveBuilder, BARResourceType.USER_FILTER);
+        exportResourcesToBusinessArchive(processDefinitionId, businessArchiveBuilder, BARResourceType.DOCUMENT);
     }
 
     @Override
     void addToBusinessArchive(BusinessArchiveBuilder businessArchiveBuilder, BarResource resource) {
-        businessArchiveBuilder.addUserFilters(resource);
+        businessArchiveBuilder.addDocumentResource(resource);
     }
 }

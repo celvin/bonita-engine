@@ -17,6 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import org.bonitasoft.engine.bar.BARResourceType;
+import org.bonitasoft.engine.bar.BusinessArchiveResourceService;
 import org.bonitasoft.engine.bpm.bar.BarResource;
 import org.bonitasoft.engine.bpm.bar.BusinessArchive;
 import org.bonitasoft.engine.bpm.bar.BusinessArchiveBuilder;
@@ -29,31 +31,28 @@ import org.bonitasoft.engine.commons.exceptions.SObjectModificationException;
 import org.bonitasoft.engine.connector.ConnectorException;
 import org.bonitasoft.engine.core.connector.ConnectorService;
 import org.bonitasoft.engine.core.connector.exception.SConnectorException;
-import org.bonitasoft.engine.core.connector.parser.DescriptorNodeBuilder;
-import org.bonitasoft.engine.core.connector.parser.SConnectorImplementationDescriptor;
 import org.bonitasoft.engine.core.process.definition.model.SConnectorDefinition;
 import org.bonitasoft.engine.core.process.definition.model.SFlowNodeDefinition;
 import org.bonitasoft.engine.core.process.definition.model.SProcessDefinition;
 import org.bonitasoft.engine.sessionaccessor.ReadSessionAccessor;
 import org.bonitasoft.engine.sessionaccessor.STenantIdNotSetException;
-import org.bonitasoft.engine.xml.XMLNode;
-import org.bonitasoft.engine.xml.XMLWriter;
 
 /**
  * @author Baptiste Mesta
  * @author Matthieu Chaffotte
  * @author Celine Souchet
  */
-public class ConnectorBusinessArchiveDependencyManager implements BusinessArchiveDependencyManager {
+public class ConnectorBusinessArchiveDependencyManager extends BARResourceDependencyManager {
 
+    public static final String CONNECTOR = "connector";
     private final ConnectorService connectorService;
     private final ReadSessionAccessor readSessionAccessor;
-    private final XMLWriter xmlWriter;
 
-    public ConnectorBusinessArchiveDependencyManager(ConnectorService connectorService, ReadSessionAccessor readSessionAccessor, XMLWriter xmlWriter) {
+    public ConnectorBusinessArchiveDependencyManager(ConnectorService connectorService, ReadSessionAccessor readSessionAccessor,
+            BusinessArchiveResourceService businessArchiveResourceService) {
+        super(businessArchiveResourceService);
         this.connectorService = connectorService;
         this.readSessionAccessor = readSessionAccessor;
-        this.xmlWriter = xmlWriter;
     }
 
     @Override
@@ -61,6 +60,7 @@ public class ConnectorBusinessArchiveDependencyManager implements BusinessArchiv
             throws ConnectorException {
         try {
             final long tenantId = getTenantId();
+            saveResources(businessArchive, processDefinition, CONNECTOR, BARResourceType.CONNECTOR);
             return connectorService.loadConnectors(processDefinition, tenantId)
                     && checkAllConnectorsHaveImplementation(connectorService, processDefinition, tenantId).isEmpty();
         } catch (final SConnectorException | STenantIdNotSetException e) {
@@ -127,10 +127,11 @@ public class ConnectorBusinessArchiveDependencyManager implements BusinessArchiv
 
     @Override
     public void exportBusinessArchive(long processDefinitionId, BusinessArchiveBuilder businessArchiveBuilder) throws SBonitaException {
-        final List<SConnectorImplementationDescriptor> connectorImplementations = connectorService.getConnectorImplementations(processDefinitionId, getTenantId(), 0, Integer.MAX_VALUE, null, null);
-        for (SConnectorImplementationDescriptor connectorImplementation : connectorImplementations) {
-            final XMLNode document = DescriptorNodeBuilder.getDocument(connectorImplementation);
-            businessArchiveBuilder.addConnectorImplementation(new BarResource(connectorImplementation.getId() + ".impl", xmlWriter.write(document)));
-        }
+        exportResourcesToBusinessArchive(processDefinitionId, businessArchiveBuilder, BARResourceType.CONNECTOR);
+    }
+
+    @Override
+    void addToBusinessArchive(BusinessArchiveBuilder businessArchiveBuilder, BarResource resource) {
+        businessArchiveBuilder.addConnectorImplementation(resource);
     }
 }

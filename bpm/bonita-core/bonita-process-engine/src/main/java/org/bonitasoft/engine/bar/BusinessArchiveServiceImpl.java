@@ -12,7 +12,7 @@
  * Floor, Boston, MA 02110-1301, USA.
  **/
 
-package org.bonitasoft.engine.core;
+package org.bonitasoft.engine.bar;
 
 import java.io.IOException;
 
