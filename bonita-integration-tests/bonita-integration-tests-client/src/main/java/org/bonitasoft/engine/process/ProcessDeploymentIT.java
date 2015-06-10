@@ -13,10 +13,13 @@
  **/
 package org.bonitasoft.engine.process;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assert.assertEquals;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Random;
 
 import org.bonitasoft.engine.TestWithUser;
@@ -25,12 +28,20 @@ import org.bonitasoft.engine.bpm.bar.BarResource;
 import org.bonitasoft.engine.bpm.bar.BusinessArchive;
 import org.bonitasoft.engine.bpm.bar.BusinessArchiveBuilder;
 import org.bonitasoft.engine.bpm.bar.BusinessArchiveFactory;
+import org.bonitasoft.engine.bpm.bar.form.model.FormMappingDefinition;
+import org.bonitasoft.engine.bpm.bar.form.model.FormMappingModel;
+import org.bonitasoft.engine.bpm.connector.ConnectorEvent;
 import org.bonitasoft.engine.bpm.process.ActivationState;
 import org.bonitasoft.engine.bpm.process.ConfigurationState;
 import org.bonitasoft.engine.bpm.process.DesignProcessDefinition;
 import org.bonitasoft.engine.bpm.process.ProcessDefinition;
 import org.bonitasoft.engine.bpm.process.ProcessDeploymentInfo;
+import org.bonitasoft.engine.bpm.process.impl.ProcessDefinitionBuilder;
+import org.bonitasoft.engine.connectors.TestConnectorWithOutput;
 import org.bonitasoft.engine.exception.AlreadyExistsException;
+import org.bonitasoft.engine.form.FormMappingTarget;
+import org.bonitasoft.engine.form.FormMappingType;
+import org.bonitasoft.engine.identity.User;
 import org.bonitasoft.engine.io.IOUtil;
 import org.bonitasoft.engine.test.APITestUtil;
 import org.bonitasoft.engine.test.BuildTestUtil;
@@ -133,4 +144,66 @@ public class ProcessDeploymentIT extends TestWithUser {
         }
     }
 
+    @Test
+    public void exportBusinessArchiveWithAllArtifacts() throws Exception {
+        final User john = createUser("john", "bpm");
+        final User jack = createUser("jack", "bpm");
+        //create the process
+        final BusinessArchiveBuilder businessArchiveBuilder = new BusinessArchiveBuilder().createNewBusinessArchive();
+        final ProcessDefinitionBuilder processDefinitionBuilder = new ProcessDefinitionBuilder().createNewInstance("MyProcess", "1.0");
+        processDefinitionBuilder.addConnector("connectorName", "theConnectorId", "theConnectorVersion", ConnectorEvent.ON_ENTER);
+        processDefinitionBuilder.addActor("actor");
+        processDefinitionBuilder.addUserTask("step1", "actor").addUserFilter("userFilterName", "theUserFilterId", "theUserFilterVersion");
+        processDefinitionBuilder.addParameter("param1", String.class.getName());
+        processDefinitionBuilder.addDocumentDefinition("myDoc").addContentFileName("myPdfModifiedName.pdf").addDescription("a cool pdf document")
+                .addMimeType("application/pdf")
+                .addFile("myPdf.pdf").addDescription("my description");
+        businessArchiveBuilder.setProcessDefinition(processDefinitionBuilder.done());
+
+        //create the business archive
+        businessArchiveBuilder.setParameters(Collections.singletonMap("param1", "theValue"));
+        final FormMappingModel formMappingModel = new FormMappingModel();
+        formMappingModel.addFormMapping(new FormMappingDefinition("theUrl", FormMappingType.TASK, FormMappingTarget.URL, "step1"));
+        businessArchiveBuilder.setFormMappings(formMappingModel);
+        businessArchiveBuilder.setActorMapping(("<actormappings:actorMappings xmlns:actormappings=\"http://www.bonitasoft.org/ns/actormapping/6.0\">\n" +
+                "\t<actorMapping name=\"actor\">\n" +
+                "\t\t<users>\n" +
+                "\t\t\t<user>john</user>\n" +
+                "\t\t</users>\n" +
+                "\t</actorMapping>\n" +
+                "</actormappings:actorMappings>").getBytes());
+        final byte[] connectorImplementationFile = BuildTestUtil.buildConnectorImplementationFile("theConnectorId", "theConnectorVersion", "impl1", "1.0",
+                TestConnectorWithOutput.class.getName());
+        businessArchiveBuilder.addConnectorImplementation(new BarResource("theConnctor.impl", connectorImplementationFile));
+        final byte[] userFilterImpl = BuildTestUtil.buildConnectorImplementationFile("theConnectorId", "theConnectorVersion", "impl1", "1.0",
+                TestConnectorWithOutput.class.getName());
+        businessArchiveBuilder.addUserFilters(new BarResource("theUserFilter.impl", userFilterImpl));
+        final byte[] pdfContent = new byte[] { 5, 0, 1, 4, 6, 5, 2, 3, 1, 5, 6, 8, 4, 6, 6, 3, 2, 4, 5 };
+        businessArchiveBuilder.addDocumentResource(new BarResource("myPdf.pdf", pdfContent));
+        businessArchiveBuilder.addClasspathResource(BuildTestUtil.generateJarAndBuildBarResource(org.bonitasoft.engine.api.ProcessAPI.class, "myJar,jar"));
+        businessArchiveBuilder.addExternalResource(new BarResource("index.html", "<html>".getBytes()));
+        businessArchiveBuilder.addExternalResource(new BarResource("content/other.html","<html>1".getBytes()));
+
+        //deploy
+        final BusinessArchive businessArchive = businessArchiveBuilder.done();
+        final ProcessDefinition processDefinition = getProcessAPI().deploy(businessArchive);
+        assertThat(getProcessAPI().getProcessResolutionProblems(processDefinition.getId())).isEmpty();
+        getProcessAPI().enableProcess(processDefinition.getId());
+
+
+        //modify
+
+
+
+        //export
+        final byte[] bytes = getProcessAPI().exportBarProcessContentUnderHome(processDefinition.getId());
+        final BusinessArchive exportedBAR = BusinessArchiveFactory.readBusinessArchive(new ByteArrayInputStream(bytes));
+
+        //check
+        assertThat(exportedBAR).isEqualTo(businessArchive);
+
+
+
+        deleteUsers(john, jack);
+    }
 }

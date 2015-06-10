@@ -89,9 +89,9 @@ public class OrganizationAPIImpl {
 
     private void deleteCustomUserInfo(IdentityService identityService) throws SIdentityException {
         // only definitions will be deleted because values are deleted on cascade from DB
-        List<SCustomUserInfoDefinition> customUserInfoDefinitions = null;
+        List<SCustomUserInfoDefinition> customUserInfoDefinitions;
         do {
-            // the start index is always zero because the curent page will be deleted
+            // the start index is always zero because the current page will be deleted
             customUserInfoDefinitions = identityService.getCustomUserInfoDefinitions(0, pageSize);
             deleteCustomUserInfo(customUserInfoDefinitions, identityService);
         } while (customUserInfoDefinitions.size() == pageSize);
@@ -110,7 +110,7 @@ public class OrganizationAPIImpl {
     private void updateActorProcessDependenciesForAllActors(final TenantServiceAccessor tenantAccessor) throws SBonitaException {
         final ProcessDefinitionService processDefinitionService = tenantAccessor.getProcessDefinitionService();
         List<Long> processDefinitionIds;
-        final ActorBusinessArchiveDependencyManager dependencyResolver = new ActorBusinessArchiveDependencyManager(tenantAccessor.getActorMappingService(),tenantAccessor.getIdentityService(),tenantAccessor.getActorMappingParserFactory(), tenantAccessor.getXMLWriter());
+        final ActorBusinessArchiveDependencyManager dependencyResolver = new ActorBusinessArchiveDependencyManager(tenantAccessor.getActorMappingService(),tenantAccessor.getIdentityService(),tenantAccessor.getActorMappingParserFactory(), tenantAccessor.getXMLWriter(), tenantAccessor.getTechnicalLoggerService());
         do {
             processDefinitionIds = processDefinitionService.getProcessDefinitionIds(0, 100);
             for (final Long processDefinitionId : processDefinitionIds) {

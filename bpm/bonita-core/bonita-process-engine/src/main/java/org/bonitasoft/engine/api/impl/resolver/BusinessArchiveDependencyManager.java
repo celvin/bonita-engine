@@ -48,7 +48,7 @@ public interface BusinessArchiveDependencyManager {
      * @param processDefinition
      *        the process definition
      * @return
-     *         a list of resolution problems or an empty list is there is no issue for this artefact
+     *         a list of resolution problems or an empty list is there is no issue for this artifact
      */
     List<Problem> checkResolution(final SProcessDefinition processDefinition);
 

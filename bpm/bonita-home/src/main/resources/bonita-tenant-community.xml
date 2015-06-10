@@ -240,6 +240,7 @@
                     <constructor-arg name="identityService" ref="identityService" />
                     <constructor-arg name="actorMappingParserFactory" ref="actorMappingParserFactory" />
                     <constructor-arg name="xmlWriter" ref="xmlWriter" />
+                    <constructor-arg name="technicalLoggerService" ref="tenantTechnicalLoggerService" />
                 </bean>
                 <bean class="org.bonitasoft.engine.api.impl.resolver.ConnectorBusinessArchiveDependencyManager">
                     <constructor-arg name="connectorService" ref="connectorService" />
