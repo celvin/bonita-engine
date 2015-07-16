@@ -1,16 +1,12 @@
-/**
+/*******************************************************************************
  * Copyright (C) 2015 BonitaSoft S.A.
- * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
- * This library is free software; you can redistribute it and/or modify it under the terms
- * of the GNU Lesser General Public License as published by the Free Software Foundation
- * version 2.1 of the License.
- * This library is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
- * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
- * See the GNU Lesser General Public License for more details.
- * You should have received a copy of the GNU Lesser General Public License along with this
- * program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
- * Floor, Boston, MA 02110-1301, USA.
- **/
+ * BonitaSoft is a trademark of BonitaSoft SA.
+ * This software file is BONITASOFT CONFIDENTIAL. Not For Distribution.
+ * For commercial licensing information, contact:
+ * BonitaSoft, 32 rue Gustave Eiffel – 38000 Grenoble
+ * or BonitaSoft US, 51 Federal Street, Suite 305, San Francisco, CA 94107
+ ******************************************************************************/
+
 package org.bonitasoft.engine.service.impl;
 
 import java.io.IOException;
@@ -19,15 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.bonitasoft.engine.actor.mapping.ActorMappingService;
-import org.bonitasoft.engine.actor.xml.ActorBinding;
-import org.bonitasoft.engine.actor.xml.ActorMappingBinding;
-import org.bonitasoft.engine.actor.xml.ActorMembershipBinding;
-import org.bonitasoft.engine.actor.xml.GroupPathsBinding;
-import org.bonitasoft.engine.actor.xml.RoleNamesBinding;
-import org.bonitasoft.engine.actor.xml.UserNamesBinding;
 import org.bonitasoft.engine.api.impl.TenantConfiguration;
 import org.bonitasoft.engine.api.impl.resolver.DependencyResolver;
-import org.bonitasoft.engine.api.impl.transaction.actor.ImportActorMapping;
 import org.bonitasoft.engine.archive.ArchiveService;
 import org.bonitasoft.engine.authentication.GenericAuthenticationService;
 import org.bonitasoft.engine.authentication.GenericAuthenticationServiceAccessor;
@@ -82,6 +71,7 @@ import org.bonitasoft.engine.parameter.ParameterService;
 import org.bonitasoft.engine.persistence.ReadPersistenceService;
 import org.bonitasoft.engine.profile.ProfileService;
 import org.bonitasoft.engine.profile.xml.ChildrenEntriesBinding;
+import org.bonitasoft.engine.profile.xml.GroupPathsBinding;
 import org.bonitasoft.engine.profile.xml.MembershipBinding;
 import org.bonitasoft.engine.profile.xml.MembershipsBinding;
 import org.bonitasoft.engine.profile.xml.ParentProfileEntryBinding;
@@ -90,6 +80,8 @@ import org.bonitasoft.engine.profile.xml.ProfileEntriesBinding;
 import org.bonitasoft.engine.profile.xml.ProfileEntryBinding;
 import org.bonitasoft.engine.profile.xml.ProfileMappingBinding;
 import org.bonitasoft.engine.profile.xml.ProfilesBinding;
+import org.bonitasoft.engine.profile.xml.RoleNamesBinding;
+import org.bonitasoft.engine.profile.xml.UserNamesBinding;
 import org.bonitasoft.engine.recorder.Recorder;
 import org.bonitasoft.engine.scheduler.JobService;
 import org.bonitasoft.engine.scheduler.SchedulerService;
@@ -122,51 +114,28 @@ import org.bonitasoft.engine.xml.XMLWriter;
 public class SpringTenantServiceAccessor implements TenantServiceAccessor {
 
     private final SpringTenantFileSystemBeanAccessor beanAccessor;
-
-    private IdentityService identityService;
-
-    private LoginService loginService;
-
-    private QueriableLoggerService queriableLoggerService;
-
-    private TechnicalLoggerService technicalLoggerService;
-
-    private TransactionService transactionService;
-
-    private ProcessDefinitionService processDefinitionService;
-
-    private ActivityInstanceService activityInstanceService;
-
-    private ProcessInstanceService processInstanceService;
-
-    private FlowNodeExecutor flowNodeExecutor;
-
-    private ProcessExecutor processExecutor;
-
-    private FlowNodeStateManager flowNodeStateManager;
-
-    private TransactionExecutor transactionExecutor;
-
-    private BPMInstancesCreator bpmInstancesCreator;
-
-    private ActorMappingService actorMappingService;
-
-    private ArchiveService archiveService;
-
-    private CategoryService categoryService;
-
-    private ExpressionService expressionService;
-
-    private CommandService commandService;
-
-    private ClassLoaderService classLoaderService;
-
-    private DependencyService dependencyService;
-
-    private EventInstanceService eventInstanceService;
-
     private final long tenantId;
-
+    private IdentityService identityService;
+    private LoginService loginService;
+    private QueriableLoggerService queriableLoggerService;
+    private TechnicalLoggerService technicalLoggerService;
+    private TransactionService transactionService;
+    private ProcessDefinitionService processDefinitionService;
+    private ActivityInstanceService activityInstanceService;
+    private ProcessInstanceService processInstanceService;
+    private FlowNodeExecutor flowNodeExecutor;
+    private ProcessExecutor processExecutor;
+    private FlowNodeStateManager flowNodeStateManager;
+    private TransactionExecutor transactionExecutor;
+    private BPMInstancesCreator bpmInstancesCreator;
+    private ActorMappingService actorMappingService;
+    private ArchiveService archiveService;
+    private CategoryService categoryService;
+    private ExpressionService expressionService;
+    private CommandService commandService;
+    private ClassLoaderService classLoaderService;
+    private DependencyService dependencyService;
+    private EventInstanceService eventInstanceService;
     private ConnectorService connectorService;
 
     private ConnectorInstanceService connectorInstanceService;
@@ -261,6 +230,10 @@ public class SpringTenantServiceAccessor implements TenantServiceAccessor {
     private ReadPersistenceService readPersistenceService;
     private Recorder recorder;
 
+    public SpringTenantServiceAccessor(final Long tenantId) {
+        beanAccessor = SpringFileSystemBeanAccessorFactory.getTenantAccessor(tenantId);
+        this.tenantId = tenantId;
+    }
 
     @Override
     public ParentContainerResolver getParentContainerResolver() {
@@ -268,11 +241,6 @@ public class SpringTenantServiceAccessor implements TenantServiceAccessor {
             parentContainerResolver = beanAccessor.getService(ParentContainerResolver.class);
         }
         return parentContainerResolver;
-    }
-
-    public SpringTenantServiceAccessor(final Long tenantId) {
-        beanAccessor = SpringFileSystemBeanAccessorFactory.getTenantAccessor(tenantId);
-        this.tenantId = tenantId;
     }
 
     @Override
@@ -549,31 +517,6 @@ public class SpringTenantServiceAccessor implements TenantServiceAccessor {
     }
 
     @Override
-    public Parser getActorMappingParser() {
-        final List<Class<? extends ElementBinding>> bindings = new ArrayList<Class<? extends ElementBinding>>();
-        bindings.add(ActorMappingBinding.class);
-        bindings.add(ActorBinding.class);
-        bindings.add(UserNamesBinding.class);
-        bindings.add(GroupPathsBinding.class);
-        bindings.add(RoleNamesBinding.class);
-        bindings.add(ActorMembershipBinding.class);
-        final Parser parser = getParserFactgory().createParser(bindings);
-        final InputStream resource = ImportActorMapping.class.getClassLoader().getResourceAsStream("actorMapping.xsd");
-        try {
-            parser.setSchema(resource);
-            return parser;
-        } catch (final SInvalidSchemaException ise) {
-            throw new BonitaRuntimeException(ise);
-        } finally {
-            try {
-                resource.close();
-            } catch (final IOException ioe) {
-                throw new BonitaRuntimeException(ioe);
-            }
-        }
-    }
-
-    @Override
     public XMLWriter getXMLWriter() {
         return beanAccessor.getService(XMLWriter.class);
     }
@@ -655,7 +598,6 @@ public class SpringTenantServiceAccessor implements TenantServiceAccessor {
         bindings.add(MembershipsBinding.class);
         bindings.add(MembershipBinding.class);
         bindings.add(UserNamesBinding.class);
-        bindings.add(RoleNamesBinding.class);
         bindings.add(RoleNamesBinding.class);
         bindings.add(GroupPathsBinding.class);
         final Parser parser = getParserFactgory().createParser(bindings);
@@ -817,6 +759,7 @@ public class SpringTenantServiceAccessor implements TenantServiceAccessor {
         }
         return parameterService;
     }
+
     /**
      * might not be an available service
      */
@@ -891,8 +834,6 @@ public class SpringTenantServiceAccessor implements TenantServiceAccessor {
         }
         return businessDataService;
     }
-
-
 
     @Override
     public FormMappingService getFormMappingService() {
