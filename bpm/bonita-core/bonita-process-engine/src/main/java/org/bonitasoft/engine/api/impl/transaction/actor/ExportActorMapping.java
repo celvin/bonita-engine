@@ -1,4 +1,4 @@
-/**
+/*******************************************************************************
  * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
@@ -10,7 +10,7 @@
  * You should have received a copy of the GNU Lesser General Public License along with this
  * program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301, USA.
- **/
+ ******************************************************************************/
 package org.bonitasoft.engine.api.impl.transaction.actor;
 
 import java.util.List;
@@ -18,9 +18,9 @@ import java.util.List;
 import org.bonitasoft.engine.actor.mapping.ActorMappingService;
 import org.bonitasoft.engine.actor.mapping.model.SActor;
 import org.bonitasoft.engine.actor.mapping.model.SActorMember;
-import org.bonitasoft.engine.actor.xml.Actor;
-import org.bonitasoft.engine.actor.xml.ActorMapping;
 import org.bonitasoft.engine.actor.xml.ActorMappingNodeBuilder;
+import org.bonitasoft.engine.bpm.bar.actorMapping.Actor;
+import org.bonitasoft.engine.bpm.bar.actorMapping.ActorMapping;
 import org.bonitasoft.engine.commons.exceptions.SBonitaException;
 import org.bonitasoft.engine.commons.transaction.TransactionContentWithResult;
 import org.bonitasoft.engine.identity.IdentityService;

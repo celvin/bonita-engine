@@ -1,4 +1,3 @@
-
 /*******************************************************************************
  * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
@@ -20,8 +19,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.io.InputStream;
 
 import org.apache.commons.io.IOUtils;
-import org.bonitasoft.engine.actor.xml.Actor;
-import org.bonitasoft.engine.actor.xml.ActorMapping;
+import org.bonitasoft.engine.bpm.bar.actorMapping.Actor;
+import org.bonitasoft.engine.bpm.bar.actorMapping.ActorMapping;
 import org.bonitasoft.engine.persistence.SBonitaReadException;
 import org.junit.Test;
 

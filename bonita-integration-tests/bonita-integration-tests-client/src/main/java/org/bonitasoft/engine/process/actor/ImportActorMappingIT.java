@@ -1,4 +1,4 @@
-/**
+/*******************************************************************************
  * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
@@ -10,7 +10,7 @@
  * You should have received a copy of the GNU Lesser General Public License along with this
  * program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301, USA.
- **/
+ ******************************************************************************/
 package org.bonitasoft.engine.process.actor;
 
 import static org.junit.Assert.assertEquals;
@@ -26,8 +26,10 @@ import org.bonitasoft.engine.bpm.actor.ActorCriterion;
 import org.bonitasoft.engine.bpm.actor.ActorInstance;
 import org.bonitasoft.engine.bpm.actor.ActorMappingImportException;
 import org.bonitasoft.engine.bpm.actor.ActorMember;
+import org.bonitasoft.engine.bpm.bar.ActorMappingConverter;
 import org.bonitasoft.engine.bpm.bar.BusinessArchive;
 import org.bonitasoft.engine.bpm.bar.BusinessArchiveBuilder;
+import org.bonitasoft.engine.bpm.bar.actorMapping.ActorMapping;
 import org.bonitasoft.engine.bpm.flownode.HumanTaskInstance;
 import org.bonitasoft.engine.bpm.process.ActivationState;
 import org.bonitasoft.engine.bpm.process.ConfigurationState;
@@ -234,8 +236,8 @@ public class ImportActorMappingIT extends TestWithTechnicalUser {
         final DesignProcessDefinition processDefinition = createProcessDefinitionBuilder().done();
         final BusinessArchiveBuilder businessArchive = new BusinessArchiveBuilder().createNewBusinessArchive();
         businessArchive.setProcessDefinition(processDefinition);
-
-        final byte[] actormapping = xmlToByteArray(xmlFileName);
+        ActorMapping actormapping = new ActorMappingConverter().deserializeFromXML(xmlToByteArray(xmlFileName));
+        //final byte[] actormapping = xmlToByteArray(xmlFileName);
         if (actormapping != null) {
             businessArchive.setActorMapping(actormapping);
         }
@@ -245,7 +247,6 @@ public class ImportActorMappingIT extends TestWithTechnicalUser {
 
     /**
      * @param xmlFileName
-     * @param businessArchive
      * @return
      * @throws IOException
      * @since 6.0
@@ -289,7 +290,7 @@ public class ImportActorMappingIT extends TestWithTechnicalUser {
 
     /**
      * @param user
-     * @param string
+     * @param xmlFileName
      * @throws Exception
      * @since 6.0
      */

@@ -1,4 +1,4 @@
-/**
+/*******************************************************************************
  * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
@@ -10,7 +10,7 @@
  * You should have received a copy of the GNU Lesser General Public License along with this
  * program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301, USA.
- **/
+ ******************************************************************************/
 package org.bonitasoft.engine.bpm.bar;
 
 import java.io.Serializable;
@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
 
+import org.bonitasoft.engine.bpm.bar.actorMapping.ActorMapping;
 import org.bonitasoft.engine.bpm.bar.form.model.FormMappingModel;
 import org.bonitasoft.engine.bpm.process.DesignProcessDefinition;
 
@@ -34,19 +35,31 @@ import org.bonitasoft.engine.bpm.process.DesignProcessDefinition;
 public class BusinessArchive implements Serializable {
 
     private static final long serialVersionUID = -6410347766671025202L;
-
-    private DesignProcessDefinition processDefinition;
-
-    private Map<String, String> parameters;
-
     private final Map<String, byte[]> resources = new HashMap<String, byte[]>();
-
+    private DesignProcessDefinition processDefinition;
+    private Map<String, String> parameters;
     private FormMappingModel formMappingModel = new FormMappingModel();
+
+    private ActorMapping actorMapping = null;
 
     /**
      * Default constructor. Creates an instance of {@code BusinessArchive}
      */
     public BusinessArchive() {
+    }
+
+    /*
+     * Retrieves the actorMapping from the bar
+     */
+    public ActorMapping getActorMapping() {
+        return actorMapping;
+    }
+
+    /*
+     * Sets the actorMapping in the bar
+     */
+    public void setActorMapping(ActorMapping actorMapping) {
+        this.actorMapping = actorMapping;
     }
 
     /**

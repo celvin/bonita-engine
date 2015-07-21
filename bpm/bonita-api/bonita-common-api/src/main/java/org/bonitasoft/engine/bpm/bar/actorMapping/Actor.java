@@ -1,4 +1,3 @@
-
 /*******************************************************************************
  * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
@@ -13,7 +12,7 @@
  * Floor, Boston, MA 02110-1301, USA.
  ******************************************************************************/
 
-package org.bonitasoft.engine.actor.xml;
+package org.bonitasoft.engine.bpm.bar.actorMapping;
 
 import java.util.HashSet;
 import java.util.List;
@@ -27,7 +26,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
-import org.bonitasoft.engine.bpm.bar.xml.XMLProcessDefinition.BEntry;
+import org.bonitasoft.engine.bar.BEntry;
 
 /**
  * @author Matthieu Chaffotte

@@ -1,4 +1,3 @@
-
 /*******************************************************************************
  * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
@@ -13,25 +12,25 @@
  * Floor, Boston, MA 02110-1301, USA.
  ******************************************************************************/
 
-package org.bonitasoft.engine.actor.xml;
+package org.bonitasoft.engine.bpm.bar.actorMapping;
 
 import javax.xml.bind.annotation.adapters.XmlAdapter;
 
-import org.bonitasoft.engine.bpm.bar.xml.XMLProcessDefinition;
+import org.bonitasoft.engine.bar.BEntry;
 
 /**
  * Created by mazourd on 15/07/15.
  */
-public class BEntryAdapter extends XmlAdapter<BEntryAdapter.Entry, XMLProcessDefinition.BEntry<String, String>> {
+public class BEntryAdapter extends XmlAdapter<BEntryAdapter.Entry, BEntry<String, String>> {
 
     @Override
-    public XMLProcessDefinition.BEntry<String, String> unmarshal(Entry v) throws Exception {
-        XMLProcessDefinition.BEntry<String, String> mapEntry = new XMLProcessDefinition.BEntry<>(v.group, v.role);
+    public BEntry<String, String> unmarshal(Entry v) throws Exception {
+        BEntry<String, String> mapEntry = new BEntry<>(v.group, v.role);
         return mapEntry;
     }
 
     @Override
-    public Entry marshal(XMLProcessDefinition.BEntry<String, String> mapEntry) throws Exception {
+    public Entry marshal(BEntry<String, String> mapEntry) throws Exception {
         Entry entree = new Entry();
         entree.group = mapEntry.getKey();
         entree.role = mapEntry.getValue();

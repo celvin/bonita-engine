@@ -1,4 +1,4 @@
-/**
+/*******************************************************************************
  * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
  * This library is free software; you can redistribute it and/or modify it under the terms
@@ -10,12 +10,13 @@
  * You should have received a copy of the GNU Lesser General Public License along with this
  * program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301, USA.
- **/
+ ******************************************************************************/
 package org.bonitasoft.engine.bpm.bar;
 
 import java.util.ArrayList;
 import java.util.Map;
 
+import org.bonitasoft.engine.bpm.bar.actorMapping.ActorMapping;
 import org.bonitasoft.engine.bpm.bar.form.model.FormMappingModel;
 import org.bonitasoft.engine.bpm.document.DocumentDefinition;
 import org.bonitasoft.engine.bpm.process.DesignProcessDefinition;
@@ -149,8 +150,18 @@ public class BusinessArchiveBuilder {
      * @return
      *         the same {@link BusinessArchiveBuilder} in order to chain calls
      */
+    @Deprecated
     public BusinessArchiveBuilder setActorMapping(final byte[] xmlContent) {
         entity.addResource(ActorMappingContribution.ACTOR_MAPPING_FILE, xmlContent);
+        return this;
+    }
+
+    /*
+     * The version for stocking directly the actorMapping in the BusinessArchive as an object rather than
+     * as an XML file.
+     */
+    public BusinessArchiveBuilder setActorMapping(ActorMapping actorMapping) {
+        entity.setActorMapping(actorMapping);
         return this;
     }
 

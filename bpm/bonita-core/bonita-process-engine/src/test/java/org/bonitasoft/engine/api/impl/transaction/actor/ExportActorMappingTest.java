@@ -1,4 +1,3 @@
-
 /*******************************************************************************
  * Copyright (C) 2015 BonitaSoft S.A.
  * BonitaSoft, 32 rue Gustave Eiffel - 38000 Grenoble
@@ -24,14 +23,64 @@ import javax.xml.bind.JAXBContext;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 
-import org.bonitasoft.engine.actor.xml.Actor;
-import org.bonitasoft.engine.actor.xml.ActorMapping;
+import org.bonitasoft.engine.bpm.bar.ActorMappingConverter;
+import org.bonitasoft.engine.bpm.bar.actorMapping.Actor;
+import org.bonitasoft.engine.bpm.bar.actorMapping.ActorMapping;
 import org.junit.Test;
 
 /**
  * Created by mazourd on 13/07/15.
  */
 public class ExportActorMappingTest {
+
+    /*
+     * Test the deserialization of an empty actor mapping
+     */
+    @Test
+    public void testActorMappingNull() throws Exception {
+        ActorMapping employeeActor = new ActorMapping();
+        StringWriter result = new StringWriter();
+        JAXBContext jaxbContext = JAXBContext.newInstance(ActorMapping.class);
+        Marshaller marshaller = jaxbContext.createMarshaller();
+        marshaller.marshal(employeeActor, result);
+        String result2 = result.toString();
+        Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
+        Object actors = unmarshaller.unmarshal(new StringReader(result2));
+        assertThat(employeeActor).isEqualTo(actors);
+        System.out.print(result2);
+    }
+
+    /*
+     * Test the deserialization of an empty actor mapping with the converter
+     */
+    @Test
+    public void testActorMappingNullWithJavaIO() throws Exception {
+        ActorMapping employeeActor = new ActorMapping();
+        byte[] result;
+        ActorMappingConverter actorMappingConverter = new ActorMappingConverter();
+        result = actorMappingConverter.serializeToXML(employeeActor);
+        ActorMapping result2 = actorMappingConverter.deserializeFromXML(result);
+        assertThat(employeeActor).isEqualTo(result2);
+        System.out.print(result);
+        System.out.print(result2);
+    }
+
+    /*
+     * Test the deserialization of actor mapping with an empty actor with the converter
+     */
+    @Test
+    public void testActorMappingWithOneEmptyActorJavaIO() throws Exception {
+        ActorMapping employeeActor = new ActorMapping();
+        Actor actor = new Actor("lulu");
+        employeeActor.addActor(actor);
+        byte[] result;
+        ActorMappingConverter actorMappingConverter = new ActorMappingConverter();
+        result = actorMappingConverter.serializeToXML(employeeActor);
+        ActorMapping result2 = actorMappingConverter.deserializeFromXML(result);
+        assertThat(employeeActor).isEqualTo(result2);
+        System.out.print(result);
+        System.out.print(result2);
+    }
 
     /*
      * Test the creation of a simple actor mapping xml file, and if it can be read correctly
@@ -65,6 +114,7 @@ public class ExportActorMappingTest {
         employeeActor.getActors().get(0).addRole("dev");
         employeeActor.getActors().get(1).addUser("lala.ru");
         employeeActor.getActors().get(1).addMembership("group1", "role1");
+        employeeActor.getActors().get(0).setDescription("Just here for the tests");
         StringWriter result = new StringWriter();
         JAXBContext jaxbContext = JAXBContext.newInstance(ActorMapping.class);
         Marshaller marshaller = jaxbContext.createMarshaller();
