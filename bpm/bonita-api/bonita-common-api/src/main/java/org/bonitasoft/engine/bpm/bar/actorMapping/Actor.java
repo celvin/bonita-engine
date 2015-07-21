@@ -62,7 +62,10 @@ public class Actor {
     }
 
     public Actor() {
-
+        users = new HashSet<String>();
+        groups = new HashSet<String>();
+        roles = new HashSet<String>();
+        memberships = new HashSet<BEntry<String, String>>();
     }
 
     public String getName() {

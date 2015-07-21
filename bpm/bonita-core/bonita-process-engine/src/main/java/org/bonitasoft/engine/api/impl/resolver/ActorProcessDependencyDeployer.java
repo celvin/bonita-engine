@@ -28,8 +28,8 @@ import org.bonitasoft.engine.actor.mapping.model.SActorBuilderFactory;
 import org.bonitasoft.engine.actor.mapping.model.SActorMember;
 import org.bonitasoft.engine.api.impl.transaction.actor.ImportActorMapping;
 import org.bonitasoft.engine.bpm.actor.ActorMappingImportException;
-import org.bonitasoft.engine.bpm.bar.ActorMappingContribution;
 import org.bonitasoft.engine.bpm.bar.BusinessArchive;
+import org.bonitasoft.engine.bpm.bar.actorMapping.ActorMapping;
 import org.bonitasoft.engine.bpm.process.Problem;
 import org.bonitasoft.engine.bpm.process.Problem.Level;
 import org.bonitasoft.engine.bpm.process.impl.internal.ProblemImpl;
@@ -76,9 +76,8 @@ public class ActorProcessDependencyDeployer implements ProcessDependencyDeployer
         }
         try {
             actorMappingService.addActors(sActors);
-            final byte[] actorMappingXML = businessArchive.getResource(ActorMappingContribution.ACTOR_MAPPING_FILE);
-            if (actorMappingXML != null) {
-                final String actorMapping = new String(actorMappingXML);
+            ActorMapping actorMapping = businessArchive.getActorMapping();
+            if (actorMapping != null) {
                 final ImportActorMapping importActorMapping = new ImportActorMapping(actorMappingService, identityService, processDefinition.getId(),
                         actorMapping);
                 try {

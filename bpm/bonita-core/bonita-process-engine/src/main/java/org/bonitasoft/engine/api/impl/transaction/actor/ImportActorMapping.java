@@ -25,6 +25,7 @@ import org.bonitasoft.engine.actor.mapping.SActorMemberAlreadyExistsException;
 import org.bonitasoft.engine.actor.mapping.model.SActor;
 import org.bonitasoft.engine.actor.mapping.model.SActorMember;
 import org.bonitasoft.engine.bar.BEntry;
+import org.bonitasoft.engine.bpm.bar.ActorMappingConverter;
 import org.bonitasoft.engine.bpm.bar.actorMapping.Actor;
 import org.bonitasoft.engine.bpm.bar.actorMapping.ActorMapping;
 import org.bonitasoft.engine.commons.exceptions.SBonitaException;
@@ -33,7 +34,6 @@ import org.bonitasoft.engine.identity.IdentityService;
 import org.bonitasoft.engine.identity.model.SGroup;
 import org.bonitasoft.engine.identity.model.SRole;
 import org.bonitasoft.engine.identity.model.SUser;
-import org.bonitasoft.engine.io.IOUtil;
 import org.bonitasoft.engine.persistence.SBonitaReadException;
 import org.xml.sax.SAXException;
 
@@ -48,8 +48,11 @@ public class ImportActorMapping implements TransactionContent {
 
     private final long processDefinitionId;
 
-    private final String xmlContent;
+    private String xmlContent = null;
 
+    private ActorMapping actorMapping = null;
+
+    @Deprecated
     public ImportActorMapping(final ActorMappingService actorMappingService, final IdentityService identityService,
             final long processDefinitionId, final String xmlContent) {
         super();
@@ -59,9 +62,21 @@ public class ImportActorMapping implements TransactionContent {
         this.xmlContent = xmlContent;
     }
 
+    public ImportActorMapping(final ActorMappingService actorMappingService, final IdentityService identityService,
+            final long processDefinitionId, ActorMapping actorMapping) {
+        super();
+        this.actorMappingService = actorMappingService;
+        this.identityService = identityService;
+        this.processDefinitionId = processDefinitionId;
+        this.actorMapping = actorMapping;
+        this.xmlContent = null;
+    }
+
     @Override
     public void execute() throws SBonitaException {
-        final ActorMapping actorMapping = getActorMappingFromXML();
+        if (this.actorMapping == null) {
+            actorMapping = getActorMappingFromXML();
+        }
         final List<Actor> actors = actorMapping.getActors();
         for (final Actor actor : actors) {
             final SActor sActor = actorMappingService.getActor(actor.getName(), processDefinitionId);
@@ -155,7 +170,8 @@ public class ImportActorMapping implements TransactionContent {
     ActorMapping getActorMappingFromXML() throws SBonitaException {
         byte[] b = xmlContent.getBytes();
         try {
-            return IOUtil.unmarshallXMLtoObject(b, ActorMapping.class, ActorMapping.class.getResource("/actorMapping.xsd"));
+            return ActorMappingConverter.deserializeFromXML(b);
+            //return IOUtil.unmarshallXMLtoObject(b, ActorMapping.class, ActorMapping.class.getResource("/actorMapping.xsd"));
         } catch (JAXBException | SAXException | IOException e) {
             throw new SBonitaReadException("Unable to read the actor mapping xml", e);
         }

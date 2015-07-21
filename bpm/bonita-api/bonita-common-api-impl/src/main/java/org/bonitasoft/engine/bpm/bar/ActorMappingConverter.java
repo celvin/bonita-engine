@@ -41,25 +41,11 @@ public class ActorMappingConverter {
         xsdUrl = ActorMapping.class.getResource(XSD_MODEL);
     }
 
-    public byte[] serializeToXML(final ActorMapping model) throws IOException, JAXBException, org.xml.sax.SAXException {
-        return marshall(model);
-    }
-
-    protected byte[] marshall(final ActorMapping model) throws JAXBException, IOException, org.xml.sax.SAXException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        final JAXBContext contextObj = JAXBContext.newInstance(model.getClass());
-        final Marshaller m = contextObj.createMarshaller();
-        m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
-        m.marshal(model, baos);
-        baos.close();
-        return baos.toByteArray();
-    }
-
-    public ActorMapping deserializeFromXML(final byte[] xmlModel) throws IOException, JAXBException, org.xml.sax.SAXException {
+    public static ActorMapping deserializeFromXML(final byte[] xmlModel) throws IOException, JAXBException, org.xml.sax.SAXException {
         return unmarshall(xmlModel);
     }
 
-    protected ActorMapping unmarshall(final byte[] model) throws JAXBException, IOException, org.xml.sax.SAXException {
+    protected static ActorMapping unmarshall(final byte[] model) throws JAXBException, IOException, org.xml.sax.SAXException {
         if (model == null) {
             return null;
         }
@@ -73,6 +59,20 @@ public class ActorMappingConverter {
         } finally {
             bais.close();
         }
+    }
+
+    public byte[] serializeToXML(final ActorMapping model) throws IOException, JAXBException, org.xml.sax.SAXException {
+        return marshall(model);
+    }
+
+    protected byte[] marshall(final ActorMapping model) throws JAXBException, IOException, org.xml.sax.SAXException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        final JAXBContext contextObj = JAXBContext.newInstance(model.getClass());
+        final Marshaller m = contextObj.createMarshaller();
+        m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+        m.marshal(model, baos);
+        baos.close();
+        return baos.toByteArray();
     }
 
 }

@@ -11,6 +11,7 @@
  * program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301, USA.
  ******************************************************************************/
+
 package org.bonitasoft.engine.process.actor;
 
 import static org.junit.Assert.assertEquals;
@@ -241,7 +242,6 @@ public class ImportActorMappingIT extends TestWithTechnicalUser {
         if (actormapping != null) {
             businessArchive.setActorMapping(actormapping);
         }
-
         return businessArchive;
     }
 

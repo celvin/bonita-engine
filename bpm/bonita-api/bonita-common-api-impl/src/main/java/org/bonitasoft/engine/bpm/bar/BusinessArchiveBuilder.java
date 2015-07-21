@@ -11,6 +11,7 @@
  * program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
  * Floor, Boston, MA 02110-1301, USA.
  ******************************************************************************/
+
 package org.bonitasoft.engine.bpm.bar;
 
 import java.util.ArrayList;
@@ -156,15 +157,6 @@ public class BusinessArchiveBuilder {
         return this;
     }
 
-    /*
-     * The version for stocking directly the actorMapping in the BusinessArchive as an object rather than
-     * as an XML file.
-     */
-    public BusinessArchiveBuilder setActorMapping(ActorMapping actorMapping) {
-        entity.setActorMapping(actorMapping);
-        return this;
-    }
-
     /**
      * Set the form mappings Model for this {@link BusinessArchive}.
      * <p>
@@ -235,4 +227,16 @@ public class BusinessArchiveBuilder {
         return entity;
     }
 
+    public ActorMapping getActorMapping() {
+        return entity.getActorMapping();
+    }
+
+    /*
+     * The version for stocking directly the actorMapping in the BusinessArchive as an object rather than
+     * as an XML file.
+     */
+    public BusinessArchiveBuilder setActorMapping(ActorMapping actorMapping) {
+        entity.setActorMapping(actorMapping);
+        return this;
+    }
 }
