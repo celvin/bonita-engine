@@ -13,26 +13,6 @@
  **/
 package org.bonitasoft.engine.process;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThat;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
-import java.io.IOException;
-import java.io.Serializable;
-import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
 import org.bonitasoft.engine.TestWithUser;
 import org.bonitasoft.engine.api.ProcessAPI;
 import org.bonitasoft.engine.api.ProcessManagementAPI;
@@ -40,7 +20,6 @@ import org.bonitasoft.engine.bpm.bar.BarResource;
 import org.bonitasoft.engine.bpm.bar.BusinessArchive;
 import org.bonitasoft.engine.bpm.bar.BusinessArchiveBuilder;
 import org.bonitasoft.engine.bpm.bar.ExternalResourceContribution;
-import org.bonitasoft.engine.bpm.bar.InvalidBusinessArchiveFormatException;
 import org.bonitasoft.engine.bpm.connector.ArchiveConnectorInstancesSearchDescriptor;
 import org.bonitasoft.engine.bpm.connector.ArchivedConnectorInstance;
 import org.bonitasoft.engine.bpm.connector.ConnectorEvent;
@@ -62,7 +41,6 @@ import org.bonitasoft.engine.bpm.process.InvalidProcessDefinitionException;
 import org.bonitasoft.engine.bpm.process.ProcessActivationException;
 import org.bonitasoft.engine.bpm.process.ProcessDefinition;
 import org.bonitasoft.engine.bpm.process.ProcessDefinitionNotFoundException;
-import org.bonitasoft.engine.bpm.process.ProcessDeployException;
 import org.bonitasoft.engine.bpm.process.ProcessDeploymentInfo;
 import org.bonitasoft.engine.bpm.process.ProcessDeploymentInfoCriterion;
 import org.bonitasoft.engine.bpm.process.ProcessDeploymentInfoUpdater;
@@ -73,7 +51,6 @@ import org.bonitasoft.engine.bpm.process.impl.AutomaticTaskDefinitionBuilder;
 import org.bonitasoft.engine.bpm.process.impl.ProcessDefinitionBuilder;
 import org.bonitasoft.engine.bpm.process.impl.UserTaskDefinitionBuilder;
 import org.bonitasoft.engine.connectors.TestConnectorThatThrowException;
-import org.bonitasoft.engine.exception.AlreadyExistsException;
 import org.bonitasoft.engine.exception.BonitaException;
 import org.bonitasoft.engine.exception.DeletionException;
 import org.bonitasoft.engine.exception.ExecutionException;
@@ -99,6 +76,26 @@ import org.bonitasoft.engine.test.annotation.Cover.BPMNConcept;
 import org.hamcrest.CoreMatchers;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.io.IOException;
+import java.io.Serializable;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * @author Baptiste Mesta

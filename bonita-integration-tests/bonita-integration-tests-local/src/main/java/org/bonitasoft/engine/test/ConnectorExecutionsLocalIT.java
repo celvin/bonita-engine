@@ -13,22 +13,6 @@
  **/
 package org.bonitasoft.engine.test;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-
-import static org.junit.Assert.assertTrue;
-
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.PrintStream;
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.io.IOUtils;
 import org.bonitasoft.engine.BPMRemoteTestsLocal;
 import org.bonitasoft.engine.LocalServerTestsInitializer;
@@ -77,6 +61,19 @@ import org.bonitasoft.engine.test.runner.BonitaSuiteRunner;
 import org.bonitasoft.engine.test.runner.BonitaTestRunner;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import java.io.IOException;
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Baptiste Mesta
