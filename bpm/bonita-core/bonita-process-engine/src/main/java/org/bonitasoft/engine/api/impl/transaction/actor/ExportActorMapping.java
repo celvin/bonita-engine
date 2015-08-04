@@ -14,12 +14,11 @@
 
 package org.bonitasoft.engine.api.impl.transaction.actor;
 
-import java.util.List;
-
 import org.bonitasoft.engine.actor.mapping.ActorMappingService;
 import org.bonitasoft.engine.actor.mapping.model.SActor;
 import org.bonitasoft.engine.actor.mapping.model.SActorMember;
-import org.bonitasoft.engine.actor.xml.ActorMappingNodeBuilder;
+import org.bonitasoft.engine.bpm.bar.ActorMappingMarshaller;
+import org.bonitasoft.engine.bpm.bar.XmlParseException;
 import org.bonitasoft.engine.bpm.bar.actorMapping.Actor;
 import org.bonitasoft.engine.bpm.bar.actorMapping.ActorMapping;
 import org.bonitasoft.engine.commons.exceptions.SBonitaException;
@@ -33,8 +32,9 @@ import org.bonitasoft.engine.identity.model.SRole;
 import org.bonitasoft.engine.identity.model.SUser;
 import org.bonitasoft.engine.persistence.OrderByType;
 import org.bonitasoft.engine.persistence.QueryOptions;
-import org.bonitasoft.engine.xml.XMLNode;
-import org.bonitasoft.engine.xml.XMLWriter;
+import org.bonitasoft.engine.persistence.SBonitaReadException;
+
+import java.util.List;
 
 /**
  * @author Matthieu Chaffotte
@@ -45,27 +45,28 @@ public class ExportActorMapping implements TransactionContentWithResult<String> 
 
     private final IdentityService identityService;
 
-    private final XMLWriter writer;
-
     private final long processDefinitionId;
 
     private String xmlContent;
 
-    public ExportActorMapping(final ActorMappingService actorMappingService, final IdentityService identityService, final XMLWriter writer,
+    public ExportActorMapping(final ActorMappingService actorMappingService, final IdentityService identityService,
             final long processDefinitionId) {
         super();
         this.actorMappingService = actorMappingService;
         this.identityService = identityService;
-        this.writer = writer;
         this.processDefinitionId = processDefinitionId;
     }
 
     @Override
     public void execute() throws SBonitaException {
         final ActorMapping mapping = getActorMapping();
-        final XMLNode node = getNode(mapping);
-        final byte[] bytes = writer.write(node);
-        xmlContent = new String(bytes);
+        ActorMappingMarshaller marshaller = new ActorMappingMarshaller();
+
+        try {
+            xmlContent = new String(marshaller.serializeToXML(mapping));
+        } catch (XmlParseException e) {
+            throw new SBonitaReadException("Failed to generate xml from actorMapping",e);
+        }
     }
 
     private ActorMapping getActorMapping() throws SBonitaException {
@@ -117,10 +118,6 @@ public class ExportActorMapping implements TransactionContentWithResult<String> 
             final SGroup group = identityService.getGroup(sActorMember.getGroupId());
             actor.addMembership(group.getPath(), role.getName());
         }
-    }
-
-    private XMLNode getNode(final ActorMapping mapping) {
-        return ActorMappingNodeBuilder.getDocument(mapping);
     }
 
     @Override

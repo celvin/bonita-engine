@@ -31,7 +31,7 @@
         <dependency>
             <groupId>org.bonitasoft.engine.util</groupId>
             <artifactId>bonita-common-util</artifactId>
-            <version>7.1.0-SNAPSHOT</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.commons</groupId>

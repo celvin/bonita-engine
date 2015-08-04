@@ -14,13 +14,13 @@
 
 package org.bonitasoft.engine.bpm.bar;
 
-import java.util.ArrayList;
-import java.util.Map;
-
 import org.bonitasoft.engine.bpm.bar.actorMapping.ActorMapping;
 import org.bonitasoft.engine.bpm.bar.form.model.FormMappingModel;
 import org.bonitasoft.engine.bpm.document.DocumentDefinition;
 import org.bonitasoft.engine.bpm.process.DesignProcessDefinition;
+
+import java.util.ArrayList;
+import java.util.Map;
 
 /**
  * <b>Creates {@link BusinessArchive}</b>
@@ -152,8 +152,15 @@ public class BusinessArchiveBuilder {
      *         the same {@link BusinessArchiveBuilder} in order to chain calls
      */
     @Deprecated
-    public BusinessArchiveBuilder setActorMapping(final byte[] xmlContent) {
-        entity.addResource(ActorMappingContribution.ACTOR_MAPPING_FILE, xmlContent);
+    public BusinessArchiveBuilder setActorMapping(final byte[] xmlContent) throws Exception {
+        ActorMapping actorMapping;
+        ActorMappingMarshaller marshaller = new ActorMappingMarshaller();
+        try {
+            actorMapping = marshaller.deserializeFromXML(xmlContent);
+        } catch (XmlParseException e) {
+            throw new Exception("Generation of the actorMapping from the provided Xml failed", e);
+        }
+        setActorMapping(actorMapping);
         return this;
     }
 
@@ -231,12 +238,9 @@ public class BusinessArchiveBuilder {
         return entity.getActorMapping();
     }
 
-    /*
-     * The version for stocking directly the actorMapping in the BusinessArchive as an object rather than
-     * as an XML file.
-     */
     public BusinessArchiveBuilder setActorMapping(ActorMapping actorMapping) {
         entity.setActorMapping(actorMapping);
         return this;
+
     }
 }

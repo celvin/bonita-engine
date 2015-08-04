@@ -14,19 +14,17 @@
 
 package org.bonitasoft.engine.bpm.bar.actorMapping;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
-
-import org.bonitasoft.engine.bar.BEntry;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * @author Matthieu Chaffotte
@@ -35,37 +33,78 @@ import org.bonitasoft.engine.bar.BEntry;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class Actor {
 
+    @XmlAccessorType(XmlAccessType.FIELD)
+    public static class Membership {
+
+        private String role;
+
+        private String group;
+
+        public Membership() {
+        }
+
+        public Membership(String group, String role) {
+            this.group = group;
+            this.role = role;
+        }
+
+        public String getGroup() {
+            return group;
+        }
+
+        public void setGroup(String group) {
+            this.group = group;
+        }
+
+        public String getRole() {
+            return role;
+        }
+
+        public void setRole(String role) {
+            this.role = role;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o)
+                return true;
+            if (o == null || getClass() != o.getClass())
+                return false;
+            Membership that = (Membership) o;
+            return Objects.equals(role, that.role) &&
+                    Objects.equals(group, that.group);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(role, group);
+        }
+    }
+
     @XmlAttribute
     private String name;
     @XmlAttribute
     private String description;
     @XmlElementWrapper(name = "users", required = false)
     @XmlElement(name = "user")
-    private Set<String> users;
+    private Set<String> users = new HashSet<String>();;
     @XmlElementWrapper(name = "groups", required = false)
     @XmlElement(name = "group")
-    private Set<String> groups;
+    private Set<String> groups = new HashSet<String>();
     @XmlElementWrapper(name = "roles", required = false)
     @XmlElement(name = "role")
-    private Set<String> roles;
+    private Set<String> roles = new HashSet<String>();
     @XmlElementWrapper(name = "memberships", required = false)
-    @XmlJavaTypeAdapter(BEntryAdapter.class)
     @XmlElement(name = "membership")
-    private Set<BEntry<String, String>> memberships = null;
+    private Set<Membership> memberships = null;
 
     public Actor(final String name) {
         this.name = name;
-        users = new HashSet<String>();
-        groups = new HashSet<String>();
-        roles = new HashSet<String>();
-        memberships = new HashSet<BEntry<String, String>>();
+        memberships = new HashSet<Membership>();
     }
 
     public Actor() {
-        users = new HashSet<String>();
-        groups = new HashSet<String>();
-        roles = new HashSet<String>();
-        memberships = new HashSet<BEntry<String, String>>();
+        memberships = new HashSet<Membership>();
     }
 
     public String getName() {
@@ -117,10 +156,10 @@ public class Actor {
     }
 
     public void addMembership(final String groupName, final String roleName) {
-        memberships.add(new BEntry<String, String>(groupName, roleName));
+        memberships.add(new Membership(groupName, roleName));
     }
 
-    public Set<BEntry<String, String>> getMemberships() {
+    public Set<Membership> getMemberships() {
         return memberships;
     }
 
@@ -146,13 +185,13 @@ public class Actor {
 
     @Override
     public String toString() {
-        return "Actor{" +
-                "name='" + name + '\'' +
-                ", description='" + description + '\'' +
-                ", users=" + users +
-                ", groups=" + groups +
-                ", roles=" + roles +
-                ", memberships=" + memberships +
-                '}';
+        return new ToStringBuilder(this)
+                .append("name", name)
+                .append("description", description)
+                .append("users", users)
+                .append("groups", groups)
+                .append("roles", roles)
+                .append("memberships", memberships)
+                .toString();
     }
 }

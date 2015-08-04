@@ -14,13 +14,11 @@
 
 package org.bonitasoft.engine.bpm.bar;
 
-import java.io.File;
-import java.io.IOException;
-
-import javax.xml.bind.JAXBException;
-
 import org.bonitasoft.engine.bpm.bar.actorMapping.ActorMapping;
 import org.bonitasoft.engine.io.IOUtil;
+
+import java.io.File;
+import java.io.IOException;
 
 /**
  * @author Emmanuel Duchastenier
@@ -50,12 +48,13 @@ public class ActorMappingContribution extends GenericFileContribution {
         if (file.exists()) {
             final byte[] content = IOUtil.getContent(file);
             try {
-                businessArchive.setActorMapping(new ActorMappingConverter().deserializeFromXML(content));
-            } catch (JAXBException | org.xml.sax.SAXException e) {
+                businessArchive.setActorMapping(new ActorMappingMarshaller().deserializeFromXML(content));
+            } catch (XmlParseException e) {
                 return false;
             }
+            return true;
         }
-        return true;
+        return false;
     }
 
     @Override
@@ -63,10 +62,10 @@ public class ActorMappingContribution extends GenericFileContribution {
         final ActorMapping actorMapping = businessArchive.getActorMapping();
         if (actorMapping != null) {
             try {
-                final byte[] fileContent = new ActorMappingConverter().serializeToXML(actorMapping);
-                final File file = new File(barFolder, ACTOR_MAPPING_FILE);
-                IOUtil.write(file, fileContent);
-            } catch (JAXBException | org.xml.sax.SAXException e) {
+            final byte[] fileContent = new ActorMappingMarshaller().serializeToXML(actorMapping);
+            final File file = new File(barFolder, ACTOR_MAPPING_FILE);
+            IOUtil.write(file, fileContent);
+            } catch (XmlParseException e) {
                 throw new IOException("Cannot write Actor Mapping to Bar folder", e);
             }
         }

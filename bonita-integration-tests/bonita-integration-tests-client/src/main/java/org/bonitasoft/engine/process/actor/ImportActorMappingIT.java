@@ -14,20 +14,13 @@
 
 package org.bonitasoft.engine.process.actor;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.List;
-
 import org.apache.commons.io.IOUtils;
 import org.bonitasoft.engine.TestWithTechnicalUser;
 import org.bonitasoft.engine.bpm.actor.ActorCriterion;
 import org.bonitasoft.engine.bpm.actor.ActorInstance;
 import org.bonitasoft.engine.bpm.actor.ActorMappingImportException;
 import org.bonitasoft.engine.bpm.actor.ActorMember;
-import org.bonitasoft.engine.bpm.bar.ActorMappingConverter;
+import org.bonitasoft.engine.bpm.bar.ActorMappingMarshaller;
 import org.bonitasoft.engine.bpm.bar.BusinessArchive;
 import org.bonitasoft.engine.bpm.bar.BusinessArchiveBuilder;
 import org.bonitasoft.engine.bpm.bar.actorMapping.ActorMapping;
@@ -50,6 +43,13 @@ import org.bonitasoft.engine.test.annotation.Cover.BPMNConcept;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author Matthieu Chaffotte
@@ -237,7 +237,7 @@ public class ImportActorMappingIT extends TestWithTechnicalUser {
         final DesignProcessDefinition processDefinition = createProcessDefinitionBuilder().done();
         final BusinessArchiveBuilder businessArchive = new BusinessArchiveBuilder().createNewBusinessArchive();
         businessArchive.setProcessDefinition(processDefinition);
-        ActorMapping actormapping = new ActorMappingConverter().deserializeFromXML(xmlToByteArray(xmlFileName));
+        ActorMapping actormapping = new ActorMappingMarshaller().deserializeFromXML(xmlToByteArray(xmlFileName));
         //final byte[] actormapping = xmlToByteArray(xmlFileName);
         if (actormapping != null) {
             businessArchive.setActorMapping(actormapping);

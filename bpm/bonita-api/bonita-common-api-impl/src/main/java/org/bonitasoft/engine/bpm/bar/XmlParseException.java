@@ -12,37 +12,41 @@
  * Floor, Boston, MA 02110-1301, USA.
  ******************************************************************************/
 
-package org.bonitasoft.engine.bpm.bar.actorMapping;
+package org.bonitasoft.engine.bpm.bar;
 
-import javax.xml.bind.annotation.adapters.XmlAdapter;
+import org.bonitasoft.engine.exception.BonitaException;
 
-import org.bonitasoft.engine.bar.BEntry;
+import java.util.List;
 
 /**
- * Created by mazourd on 15/07/15.
+ * @author mazourd
  */
-public class BEntryAdapter extends XmlAdapter<BEntryAdapter.Entry, BEntry<String, String>> {
+public class XmlParseException extends BonitaException {
 
-    @Override
-    public BEntry<String, String> unmarshal(Entry v) throws Exception {
-        BEntry<String, String> mapEntry = new BEntry<>(v.group, v.role);
-        return mapEntry;
+
+    public XmlParseException(final Exception e) {
+        super(e);
     }
 
-    @Override
-    public Entry marshal(BEntry<String, String> mapEntry) throws Exception {
-        Entry entree = new Entry();
-        entree.group = mapEntry.getKey();
-        entree.role = mapEntry.getValue();
-        return entree;
+    public XmlParseException(final String message, final Exception e) {
+        super(message, e);
     }
 
-    public static class Entry {
-
-        public String group;
-
-        public String role;
-
+    public XmlParseException(final String message) {
+        super(message);
     }
+
+    public XmlParseException(final List<String> messages) {
+        super(constructMessage(messages));
+    }
+
+    private static String constructMessage(final List<String> messages) {
+        final StringBuilder stringBuilder = new StringBuilder("Invalid business archive:\n");
+        for (final String string : messages) {
+            stringBuilder.append(string).append('\n');
+        }
+        return stringBuilder.toString();
+    }
+
 
 }

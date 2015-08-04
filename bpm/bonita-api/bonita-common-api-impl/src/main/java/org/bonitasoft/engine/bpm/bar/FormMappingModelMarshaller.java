@@ -13,25 +13,24 @@
  **/
 package org.bonitasoft.engine.bpm.bar;
 
-import java.io.IOException;
-import java.net.URL;
-
-import javax.xml.bind.JAXBException;
-
 import org.bonitasoft.engine.bpm.bar.form.model.FormMappingModel;
 import org.bonitasoft.engine.io.IOUtil;
 import org.xml.sax.SAXException;
 
+import javax.xml.bind.JAXBException;
+import java.io.IOException;
+import java.net.URL;
+
 /**
  * @author Emmanuel Duchastenier
  */
-public class FormMappingModelConverter {
+public class FormMappingModelMarshaller {
 
     private static final String XSD_MODEL = "/form-mapping.xsd";
 
     private final URL xsdUrl;
 
-    public FormMappingModelConverter() {
+    public FormMappingModelMarshaller() {
         xsdUrl = FormMappingModel.class.getResource(XSD_MODEL);
     }
 

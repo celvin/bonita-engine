@@ -14,14 +14,15 @@
 
 package org.bonitasoft.engine.bpm.bar.actorMapping;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * @author Matthieu Chaffotte
@@ -30,7 +31,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ActorMapping {
 
-    //@XmlElementWrapper(name = "actor-mappings",required = true)
+
     @XmlElement(name = "actorMapping", required = false)
     private List<Actor> actors;
 
@@ -52,9 +53,9 @@ public class ActorMapping {
 
     @Override
     public String toString() {
-        return "ActorMapping{" +
-                "actors=" + actors +
-                '}';
+        return new ToStringBuilder(this)
+                .append("actors", actors)
+                .toString();
     }
 
     @Override

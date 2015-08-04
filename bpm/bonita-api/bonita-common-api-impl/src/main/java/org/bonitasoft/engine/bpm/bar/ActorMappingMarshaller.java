@@ -14,10 +14,7 @@
 
 package org.bonitasoft.engine.bpm.bar;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.net.URL;
+import org.bonitasoft.engine.bpm.bar.actorMapping.ActorMapping;
 
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBElement;
@@ -25,54 +22,58 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.transform.stream.StreamSource;
-
-import org.bonitasoft.engine.bpm.bar.actorMapping.ActorMapping;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.net.URL;
 
 /**
  * Created by mazourd on 17/07/15.
  */
-public class ActorMappingConverter {
+public class ActorMappingMarshaller {
 
     private static final String XSD_MODEL = "/actorMapping.xsd";
 
     private final URL xsdUrl;
 
-    public ActorMappingConverter() {
+    public ActorMappingMarshaller() {
         xsdUrl = ActorMapping.class.getResource(XSD_MODEL);
     }
 
-    public static ActorMapping deserializeFromXML(final byte[] xmlModel) throws IOException, JAXBException, org.xml.sax.SAXException {
+    public static ActorMapping deserializeFromXML(final byte[] xmlModel) throws XmlParseException {
         return unmarshall(xmlModel);
     }
 
-    protected static ActorMapping unmarshall(final byte[] model) throws JAXBException, IOException, org.xml.sax.SAXException {
+    private static ActorMapping unmarshall(final byte[] model) throws XmlParseException {
         if (model == null) {
             return null;
         }
-        final JAXBContext contextObj = JAXBContext.newInstance(ActorMapping.class);
-        final Unmarshaller um = contextObj.createUnmarshaller();
-        final ByteArrayInputStream bais = new ByteArrayInputStream(model);
-        final StreamSource ss = new StreamSource(bais);
-        try {
+        try (ByteArrayInputStream bais = new ByteArrayInputStream(model)) {
+            final JAXBContext contextObj = JAXBContext.newInstance(ActorMapping.class);
+            final Unmarshaller um = contextObj.createUnmarshaller();
+            final StreamSource ss = new StreamSource(bais);
             final JAXBElement<ActorMapping> jaxbElement = um.unmarshal(ss, ActorMapping.class);
             return jaxbElement.getValue();
-        } finally {
-            bais.close();
+        } catch (JAXBException| IOException e) {
+            throw new XmlParseException("Failed to deserialize the ActorMapping",e);
         }
     }
 
-    public byte[] serializeToXML(final ActorMapping model) throws IOException, JAXBException, org.xml.sax.SAXException {
+    public byte[] serializeToXML(final ActorMapping model) throws XmlParseException {
         return marshall(model);
     }
 
-    protected byte[] marshall(final ActorMapping model) throws JAXBException, IOException, org.xml.sax.SAXException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        final JAXBContext contextObj = JAXBContext.newInstance(model.getClass());
+    private byte[] marshall(final ActorMapping model) throws XmlParseException {
+
+        try (ByteArrayOutputStream baos = new ByteArrayOutputStream()){
+            final JAXBContext contextObj = JAXBContext.newInstance(model.getClass());
         final Marshaller m = contextObj.createMarshaller();
         m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
         m.marshal(model, baos);
-        baos.close();
-        return baos.toByteArray();
+            return baos.toByteArray();
+        } catch (JAXBException| IOException e){
+            throw new XmlParseException("Failed to serialize the ActorMapping",e);
+        }
     }
 
 }

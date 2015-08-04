@@ -15,12 +15,6 @@
 
 package org.bonitasoft.engine.api.impl.resolver;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
 import org.bonitasoft.engine.actor.mapping.ActorMappingService;
 import org.bonitasoft.engine.actor.mapping.model.SActor;
 import org.bonitasoft.engine.actor.mapping.model.SActorBuilder;
@@ -42,6 +36,12 @@ import org.bonitasoft.engine.persistence.OrderByType;
 import org.bonitasoft.engine.persistence.QueryOptions;
 import org.bonitasoft.engine.persistence.SBonitaReadException;
 import org.bonitasoft.engine.service.TenantServiceAccessor;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author Baptiste Mesta
@@ -78,10 +78,9 @@ public class ActorProcessDependencyDeployer implements ProcessDependencyDeployer
             actorMappingService.addActors(sActors);
             ActorMapping actorMapping = businessArchive.getActorMapping();
             if (actorMapping != null) {
-                final ImportActorMapping importActorMapping = new ImportActorMapping(actorMappingService, identityService, processDefinition.getId(),
-                        actorMapping);
+                final ImportActorMapping importActorMapping = new ImportActorMapping(actorMappingService,identityService);
                 try {
-                    importActorMapping.execute();
+                    importActorMapping.execute(actorMapping,processDefinition.getId());
                 } catch (final SBonitaException e) {
                     // ignore
                 }

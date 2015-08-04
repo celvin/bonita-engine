@@ -25,11 +25,11 @@ import org.bonitasoft.engine.form.FormMappingTarget;
 import org.bonitasoft.engine.form.FormMappingType;
 import org.junit.Test;
 
-public class FormMappingModelConverterTest {
+public class FormMappingModelMarshallerTest {
 
     @Test
     public void serializeThenDeserializeModelShouldReturnTheOriginalModel() throws Exception {
-        final FormMappingModelConverter convertor = new FormMappingModelConverter();
+        final FormMappingModelMarshaller convertor = new FormMappingModelMarshaller();
         final FormMappingModel model = buildDefaultModelWithOneFormMapping();
         final byte[] serialize = convertor.serializeToXML(model);
         final FormMappingModel actual = convertor.deserializeFromXML(serialize);
@@ -39,7 +39,7 @@ public class FormMappingModelConverterTest {
 
     @Test
     public void serializeThenDeserializeEmptyModelShouldReturnTheOriginalEmptyModel() throws Exception {
-        final FormMappingModelConverter convertor = new FormMappingModelConverter();
+        final FormMappingModelMarshaller convertor = new FormMappingModelMarshaller();
         final FormMappingModel model = buildEmptyDefaultModel();
         final byte[] serialize = convertor.serializeToXML(model);
         final FormMappingModel actual = convertor.deserializeFromXML(serialize);
@@ -49,7 +49,7 @@ public class FormMappingModelConverterTest {
 
     @Test
     public void serializeThenDeserializeModelWithoutTaskNameShouldReturnTheOriginalModel() throws Exception {
-        final FormMappingModelConverter convertor = new FormMappingModelConverter();
+        final FormMappingModelMarshaller convertor = new FormMappingModelMarshaller();
         final FormMappingModel model = buildFormMappingModel().withFormMapping(buildFormMapping()).build();
         final byte[] serialize = convertor.serializeToXML(model);
         final FormMappingModel actual = convertor.deserializeFromXML(serialize);
@@ -60,7 +60,7 @@ public class FormMappingModelConverterTest {
     @Test(expected = JAXBException.class)
     public void deserializeADifferentModelShouldThrowAnException() throws Exception {
         final byte[] serialize = "<someXML />".getBytes();
-        final FormMappingModelConverter convertor = new FormMappingModelConverter();
+        final FormMappingModelMarshaller convertor = new FormMappingModelMarshaller();
         convertor.deserializeFromXML(serialize);
     }
 
@@ -84,8 +84,8 @@ public class FormMappingModelConverterTest {
 
     //    @Test
     //    public void should_be_backward_compatible() throws Exception {
-    //        final byte[] xml = org.apache.commons.io.IOUtils.toByteArray(FormMappingModelConverterTest.class.getResourceAsStream("/form-mapping_7.0.0.xml"));
-    //        final FormMappingModelConverter convertor = new FormMappingModelConverter();
+    //        final byte[] xml = org.apache.commons.io.IOUtils.toByteArray(FormMappingModelMarshallerTest.class.getResourceAsStream("/form-mapping_7.0.0.xml"));
+    //        final FormMappingModelMarshaller convertor = new FormMappingModelMarshaller();
     //        convertor.unmarshall(xml);
     //        // expect no unmarshalling exception
     //    }

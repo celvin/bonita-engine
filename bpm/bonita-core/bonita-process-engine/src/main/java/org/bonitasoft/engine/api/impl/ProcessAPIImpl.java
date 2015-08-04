@@ -15,25 +15,6 @@
 
 package org.bonitasoft.engine.api.impl;
 
-import static java.util.Collections.singletonMap;
-
-import java.io.IOException;
-import java.io.Serializable;
-import java.nio.charset.Charset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.concurrent.Callable;
-
 import org.bonitasoft.engine.actor.mapping.ActorMappingService;
 import org.bonitasoft.engine.actor.mapping.SActorNotFoundException;
 import org.bonitasoft.engine.actor.mapping.model.SActor;
@@ -432,7 +413,25 @@ import org.bonitasoft.engine.supervisor.mapping.model.SProcessSupervisor;
 import org.bonitasoft.engine.supervisor.mapping.model.SProcessSupervisorBuilder;
 import org.bonitasoft.engine.supervisor.mapping.model.SProcessSupervisorBuilderFactory;
 import org.bonitasoft.engine.transaction.UserTransactionService;
-import org.bonitasoft.engine.xml.XMLWriter;
+
+import java.io.IOException;
+import java.io.Serializable;
+import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.concurrent.Callable;
+
+import static java.util.Collections.singletonMap;
 
 /**
  * @author Baptiste Mesta
@@ -2683,7 +2682,7 @@ public class ProcessAPIImpl implements ProcessAPI {
             final ActorMappingService actorMappingService = tenantAccessor.getActorMappingService();
             final IdentityService identityService = tenantAccessor.getIdentityService();
             try {
-                new ImportActorMapping(actorMappingService, identityService, processDefinitionId, xmlContent).execute();
+                new ImportActorMapping(actorMappingService,identityService).importActorMappingFromXml(xmlContent,processDefinitionId);
                 tenantAccessor.getDependencyResolver().resolveDependencies(processDefinitionId, tenantAccessor);
             } catch (final SBonitaException sbe) {
                 throw new ActorMappingImportException(sbe);
@@ -2696,9 +2695,8 @@ public class ProcessAPIImpl implements ProcessAPI {
         final TenantServiceAccessor tenantAccessor = getTenantAccessor();
         final ActorMappingService actorMappingService = tenantAccessor.getActorMappingService();
         final IdentityService identityService = tenantAccessor.getIdentityService();
-        final XMLWriter writer = tenantAccessor.getXMLWriter();
         try {
-            final ExportActorMapping exportActorMapping = new ExportActorMapping(actorMappingService, identityService, writer, processDefinitionId);
+            final ExportActorMapping exportActorMapping = new ExportActorMapping(actorMappingService, identityService, processDefinitionId);
             exportActorMapping.execute();
             return exportActorMapping.getResult();
         } catch (final SBonitaException sbe) {

@@ -14,55 +14,87 @@
 
 package org.bonitasoft.engine.api.impl.transaction.actor;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import java.io.InputStream;
-
-import org.apache.commons.io.IOUtils;
+import org.bonitasoft.engine.actor.mapping.ActorMappingService;
+import org.bonitasoft.engine.actor.mapping.model.impl.SActorImpl;
 import org.bonitasoft.engine.bpm.bar.actorMapping.Actor;
 import org.bonitasoft.engine.bpm.bar.actorMapping.ActorMapping;
-import org.bonitasoft.engine.persistence.SBonitaReadException;
+import org.bonitasoft.engine.commons.exceptions.SBonitaException;
+import org.bonitasoft.engine.identity.IdentityService;
+import org.bonitasoft.engine.identity.model.impl.SGroupImpl;
+import org.bonitasoft.engine.identity.model.impl.SRoleImpl;
+import org.bonitasoft.engine.identity.model.impl.SUserImpl;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.runners.MockitoJUnitRunner;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.mockito.Matchers.anyLong;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Created by mazourd on 03/07/15.
  */
+@RunWith(MockitoJUnitRunner.class)
 public class ImportActorMappingTest {
 
-    /*
-     * Test the correct reading of a pre-existing (ie. before rework of xml gestion) style actor-mapping xml document.
-     */
+    @Mock
+    private ActorMappingService actorMappingService;
+    @Mock
+    private IdentityService identityService;
+    @Mock
+    private ActorMapping actorMapping;
+    @InjectMocks
+    private ImportActorMapping importActorMapping;
+    private long ACTOR_ID = 12;
+
     @Test
-    public void testGetActorMappingFromXML() throws Exception {
-        InputStream xmlStream = ImportActorMappingTest.class.getResourceAsStream("/complexActorMapping.xml");
-        String xmlContent = IOUtils.toString(xmlStream);
-
-        ImportActorMapping importActorMapping = new ImportActorMapping(null, null, -1, xmlContent);
-        ActorMapping actorMappingFromXML = importActorMapping.getActorMappingFromXML();
-
-        Actor actorTest = new Actor("Employee actor");
-        actorTest.addUser("john");
-        actorTest.addRole("dev");
-        actorTest.addGroup("/RD");
-        actorTest.addMembership("/RD", "dev");
-        assertThat(actorMappingFromXML.getActors()).contains(actorTest);
-        System.out.print(actorMappingFromXML.getActors().toString());
-    }
-
-    /*
-     * Tests if the macro reading the actor-mapping xml(s) correctly detects a garbage input.
-     */
-    @Test
-    public void testLeveeExceptionSurXMLNonValide() throws Exception {
-        InputStream xmlStream = ImportActorMappingTest.class.getResourceAsStream("/testfaux.xml");
-        String xmlContent = IOUtils.toString(xmlStream);
-
-        ImportActorMapping importActorMapping = new ImportActorMapping(null, null, -1, xmlContent);
-        try {
-            ActorMapping actorMappingFromXML = importActorMapping.getActorMappingFromXML();
-            throw new Exception("Devrait échouer à la lecture");
-        } catch (SBonitaReadException S) {
-            System.out.print("exception correctly raised");
+    public void UTest_execute_method() throws SBonitaException {
+        //given
+        ArrayList<String> mocklist = new ArrayList<String>();
+        mocklist.add("mock");
+        Actor actor1 = new Actor("Lulu");
+        Actor actor2 = new Actor("Lala");
+        Actor actor3 = new Actor("Sisi");
+        List<Actor> actors = new ArrayList<>();
+        SActorImpl sActor = new SActorImpl("Lulu", ACTOR_ID, true);
+        SUserImpl sUser = new SUserImpl();
+        sUser.setId(ACTOR_ID);
+        sActor.setId(ACTOR_ID);
+        SRoleImpl sRole = new SRoleImpl();
+        sRole.setId(ACTOR_ID);
+        SGroupImpl sGroup = new SGroupImpl();
+        sGroup.setId(ACTOR_ID);
+        actors.add(actor1);
+        actors.add(actor2);
+        actors.add(actor3);
+        for (final Actor actor : actors) {
+            actor.addUser("mockUser");
+            actor.addRole("mockRole");
+            actor.addGroup("mockGroup");
+            actor.addMembership("mockRole", "mockGroup");
         }
+        doReturn(actors).when(actorMapping).getActors();
+        when(actorMappingService.getActor(anyString(), anyLong())).thenReturn(sActor);
+        when(identityService.getUserByUserName(anyString())).thenReturn(sUser);
+        when(identityService.getRoleByName(anyString())).thenReturn(sRole);
+        when(identityService.getGroupByPath(anyString())).thenReturn(sGroup);
+
+        //when
+        importActorMapping.execute(actorMapping, ACTOR_ID);
+        //then
+        verify(identityService, times(3)).getUserByUserName(anyString());
+        verify(actorMappingService, times(3)).addRoleToActor(anyLong(), anyLong());
+        verify(actorMappingService, times(3)).addGroupToActor(anyLong(), anyLong());
+        verify(actorMappingService, times(3)).addRoleAndGroupToActor(anyLong(), anyLong(), anyLong());
     }
+
+
 }
