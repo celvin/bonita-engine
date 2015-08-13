@@ -238,7 +238,6 @@ public class ImportActorMappingIT extends TestWithTechnicalUser {
         final BusinessArchiveBuilder businessArchive = new BusinessArchiveBuilder().createNewBusinessArchive();
         businessArchive.setProcessDefinition(processDefinition);
         ActorMapping actormapping = new ActorMappingMarshaller().deserializeFromXML(xmlToByteArray(xmlFileName));
-        //final byte[] actormapping = xmlToByteArray(xmlFileName);
         if (actormapping != null) {
             businessArchive.setActorMapping(actormapping);
         }
