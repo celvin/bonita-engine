@@ -14,7 +14,6 @@
 
 package org.bonitasoft.engine;
 
-import javax.naming.Context;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
@@ -24,6 +23,8 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+
+import javax.naming.Context;
 
 import org.apache.commons.io.FileUtils;
 import org.bonitasoft.engine.exception.BonitaException;
@@ -240,6 +241,8 @@ public class LocalServerTestsInitializer {
 
     public void initPlatformAndTenant() throws Exception {
         System.out.println("=========  INIT PLATFORM =======");
+        APITestFactory.getInstance.getPlatformAPITest();
+        platAPITest.createPlatformStructure()
         new APITestUtil().createPlatformStructure();
         new APITestUtil().initializeAndStartPlatformWithDefaultTenant(true);
     }
